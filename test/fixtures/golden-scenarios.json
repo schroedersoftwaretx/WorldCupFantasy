@@ -1,0 +1,90 @@
+{
+  "_description": "Hand-crafted match scenarios derived from section 5.1/5.2 of WORLDCUP_FANTASY_PLAN.md. Each scenario is one player's line in one fixture, with the expected point total an attentive reader of the spec would compute. The scoring engine must produce exactly these totals.",
+  "_rulesetExpected": "DEFAULT_RULESET",
+  "scenarios": [
+    {
+      "name": "Unused substitute (no minutes)",
+      "position": "FWD",
+      "stat": { "minutesPlayed": 0 },
+      "expected": { "points": 0 }
+    },
+    {
+      "name": "Cameo: 5' off the bench, no other events",
+      "position": "MID",
+      "stat": { "minutesPlayed": 5, "teamConcededInRegulationAndEt": 2 },
+      "expected": { "points": 1 }
+    },
+    {
+      "name": "Played 60+ minutes, otherwise quiet (MID, conceded 1)",
+      "position": "MID",
+      "stat": { "minutesPlayed": 75, "teamConcededInRegulationAndEt": 1 },
+      "expected": { "points": 2 }
+    },
+    {
+      "name": "DEF, 90 minutes, clean sheet, no other events",
+      "position": "DEF",
+      "stat": { "minutesPlayed": 90, "teamConcededInRegulationAndEt": 0 },
+      "expected": { "points": 7 }
+    },
+    {
+      "name": "GK, 90 minutes, clean sheet, 4 saves",
+      "position": "GK",
+      "stat": { "minutesPlayed": 90, "saves": 4, "teamConcededInRegulationAndEt": 0 },
+      "expected": { "points": 11 }
+    },
+    {
+      "name": "Hero GK: clean sheet + penalty saved + 6 saves",
+      "position": "GK",
+      "stat": { "minutesPlayed": 90, "saves": 6, "penaltiesSaved": 1, "teamConcededInRegulationAndEt": 0 },
+      "expected": { "points": 18 }
+    },
+    {
+      "name": "DEF brace + clean sheet + yellow card",
+      "position": "DEF",
+      "stat": { "minutesPlayed": 90, "goals": 2, "yellowCards": 1, "teamConcededInRegulationAndEt": 0 },
+      "expected": { "points": 18 }
+    },
+    {
+      "name": "DEF subbed at 55' with 0-0 score: NO clean sheet",
+      "position": "DEF",
+      "stat": { "minutesPlayed": 55, "teamConcededInRegulationAndEt": 0 },
+      "expected": { "points": 1 }
+    },
+    {
+      "name": "FWD brace + yellow",
+      "position": "FWD",
+      "stat": { "minutesPlayed": 90, "goals": 2, "yellowCards": 1, "teamConcededInRegulationAndEt": 1 },
+      "expected": { "points": 9 }
+    },
+    {
+      "name": "MID red card before 60': no 60+ bonus, no clean sheet",
+      "position": "MID",
+      "stat": { "minutesPlayed": 50, "redCards": 1, "teamConcededInRegulationAndEt": 0 },
+      "expected": { "points": -2 }
+    },
+    {
+      "name": "MID second-yellow dismissal: per-type cards (not escalating)",
+      "position": "MID",
+      "stat": { "minutesPlayed": 67, "yellowCards": 2, "redCards": 1, "teamConcededInRegulationAndEt": 1 },
+      "expected": { "points": -3 }
+    },
+    {
+      "name": "FWD scored AND missed a (different) penalty",
+      "position": "FWD",
+      "stat": { "minutesPlayed": 90, "goals": 1, "penaltiesMissed": 1, "teamConcededInRegulationAndEt": 1 },
+      "expected": { "points": 4 }
+    },
+    {
+      "name": "DEF own goal, otherwise unremarkable, conceded 1",
+      "position": "DEF",
+      "stat": { "minutesPlayed": 90, "ownGoals": 1, "teamConcededInRegulationAndEt": 1 },
+      "expected": { "points": 0 }
+    },
+    {
+      "name": "MID 90' with assist, conceded 1",
+      "position": "MID",
+      "stat": { "minutesPlayed": 90, "assists": 1, "teamConcededInRegulationAndEt": 1 },
+      "expected": { "points": 6 }
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "get": "fixtures/players",
+  "parameters": { "fixture": "8001" },
+  "errors": [],
+  "results": 2,
+  "response": [
+    {
+      "team": { "id": 26, "name": "Argentina", "logo": "https://example/26.png", "update": "2026-06-11T19:50:00+00:00" },
+      "players": [
+        {
+          "player": { "id": 1001, "name": "Emiliano Martínez", "photo": "https://example/p/1001.png" },
+          "statistics": [
+            {
+              "games":   { "minutes": 90, "number": 23, "position": "G", "rating": "7.8", "captain": false, "substitute": false },
+              "offsides": null,
+              "shots":   { "total": 0, "on": 0 },
+              "goals":   { "total": 0, "conceded": 1, "assists": 0, "saves": 4 },
+              "passes":  { "total": 32, "key": 0, "accuracy": "78%" },
+              "tackles": { "total": null, "blocks": null, "interceptions": null },
+              "duels":   { "total": null, "won": null },
+              "dribbles": { "attempts": null, "success": null, "past": null },
+              "fouls":   { "drawn": 0, "committed": 0 },
+              "cards":   { "yellow": 0, "red": 0 },
+              "penalty": { "won": null, "commited": null, "scored": 0, "missed": 0, "saved": 0 }
+            }
+          ]
+        },
+        {
+          "player": { "id": 1002, "name": "Cristian Romero", "photo": "https://example/p/1002.png" },
+          "statistics": [
+            {
+              "games":   { "minutes": 90, "number": 13, "position": "D", "rating": "7.1", "captain": false, "substitute": false },
+              "offsides": null,
+              "shots":   { "total": 1, "on": 0 },
+              "goals":   { "total": 0, "conceded": 0, "assists": 0, "saves": 0 },
+              "passes":  { "total": 56, "key": 0, "accuracy": "89%" },
+              "tackles": { "total": 4, "blocks": 1, "interceptions": 2 },
+              "duels":   { "total": 12, "won": 8 },
+              "dribbles": { "attempts": 1, "success": 0, "past": 0 },
+              "fouls":   { "drawn": 2, "committed": 3 },
+              "cards":   { "yellow": 1, "red": 0 },
+              "penalty": { "won": null, "commited": null, "scored": 0, "missed": 0, "saved": 0 }
+            }
+          ]
+        },
+        {
+          "player": { "id": 1003, "name": "Lionel Messi", "photo": "https://example/p/1003.png" },
+          "statistics": [
+            {
+              "games":   { "minutes": 90, "number": 10, "position": "F", "rating": "9.4", "captain": true,  "substitute": false },
+              "offsides": 1,
+              "shots":   { "total": 5, "on": 4 },
+              "goals":   { "total": 2, "conceded": 0, "assists": 0, "saves": 0 },
+              "passes":  { "total": 41, "key": 3, "accuracy": "82%" },
+              "tackles": { "total": 1, "blocks": 0, "interceptions": 0 },
+              "duels":   { "total": 14, "won": 9 },
+              "dribbles": { "attempts": 7, "success": 5, "past": 0 },
+              "fouls":   { "drawn": 4, "committed": 1 },
+              "cards":   { "yellow": 0, "red": 0 },
+              "penalty": { "won": null, "commited": null, "scored": 0, "missed": 0, "saved": 0 }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "team": { "id": 6, "name": "Brazil", "logo": "https://example/6.png", "update": "2026-06-11T19:50:00+00:00" },
+      "players": [
+        {
+          "player": { "id": 2001, "name": "Alisson Becker", "photo": "https://example/p/2001.png" },
+          "statistics": [
+            {
+              "games":   { "minutes": 90, "number": 1, "position": "G", "rating": "6.8", "captain": false, "substitute": false },
+              "offsides": null,
+              "shots":   { "total": 0, "on": 0 },
+              "goals":   { "total": 0, "conceded": 2, "assists": 0, "saves": 3 },
+              "passes":  { "total": 28, "key": 0, "accuracy": "71%" },
+              "tackles": { "total": null, "blocks": null, "interceptions": null },
+              "duels":   { "total": null, "won": null },
+              "dribbles": { "attempts": null, "success": null, "past": null },
+              "fouls":   { "drawn": 0, "committed": 0 },
+              "cards":   { "yellow": 0, "red": 0 },
+              "penalty": { "won": null, "commited": null, "scored": 0, "missed": 0, "saved": 0 }
+            }
+          ]
+        },
+        {
+          "player": { "id": 2002, "name": "Casemiro", "photo": "https://example/p/2002.png" },
+          "statistics": [
+            {
+              "games":   { "minutes": 75, "number": 5, "position": "M", "rating": "7.5", "captain": false, "substitute": false },
+              "offsides": 0,
+              "shots":   { "total": 3, "on": 2 },
+              "goals":   { "total": 1, "conceded": 0, "assists": 0, "saves": 0 },
+              "passes":  { "total": 47, "key": 1, "accuracy": "86%" },
+              "tackles": { "total": 5, "blocks": 0, "interceptions": 3 },
+              "duels":   { "total": 16, "won": 11 },
+              "dribbles": { "attempts": 2, "success": 1, "past": 0 },
+              "fouls":   { "drawn": 1, "committed": 2 },
+              "cards":   { "yellow": 0, "red": 0 },
+              "penalty": { "won": null, "commited": null, "scored": 0, "missed": 0, "saved": 0 }
+            }
+          ]
+        },
+        {
+          "player": { "id": 2003, "name": "Vinícius Júnior", "photo": "https://example/p/2003.png" },
+          "statistics": [
+            {
+              "games":   { "minutes": 90, "number": 7, "position": "F", "rating": "7.2", "captain": false, "substitute": false },
+              "offsides": 2,
+              "shots":   { "total": 4, "on": 1 },
+              "goals":   { "total": 0, "conceded": 0, "assists": 1, "saves": 0 },
+              "passes":  { "total": 33, "key": 2, "accuracy": "75%" },
+              "tackles": { "total": 1, "blocks": 0, "interceptions": 0 },
+              "duels":   { "total": 18, "won": 9 },
+              "dribbles": { "attempts": 9, "success": 4, "past": 0 },
+              "fouls":   { "drawn": 5, "committed": 1 },
+              "cards":   { "yellow": 0, "red": 0 },
+              "penalty": { "won": null, "commited": null, "scored": 0, "missed": 0, "saved": 0 }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

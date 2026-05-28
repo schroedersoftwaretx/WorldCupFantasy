@@ -1,0 +1,34 @@
+[
+  {
+    "team": { "id": 26, "name": "Argentina", "logo": "https://example/26.png" },
+    "players": [
+      { "id": 1001, "name": "Emiliano Martínez",   "age": 33, "number": 23, "position": "Goalkeeper", "photo": "https://example/p/1001.png" },
+      { "id": 1002, "name": "Cristian Romero",      "age": 28, "number": 13, "position": "Defender",   "photo": "https://example/p/1002.png" },
+      { "id": 1003, "name": "Lionel Messi",         "age": 38, "number": 10, "position": "Attacker",   "photo": "https://example/p/1003.png" }
+    ]
+  },
+  {
+    "team": { "id": 6, "name": "Brazil", "logo": "https://example/6.png" },
+    "players": [
+      { "id": 2001, "name": "Alisson Becker",       "age": 33, "number": 1,  "position": "Goalkeeper", "photo": "https://example/p/2001.png" },
+      { "id": 2002, "name": "Casemiro",             "age": 34, "number": 5,  "position": "Midfielder", "photo": "https://example/p/2002.png" },
+      { "id": 2003, "name": "Vinícius Júnior",      "age": 25, "number": 7,  "position": "Attacker",   "photo": "https://example/p/2003.png" }
+    ]
+  },
+  {
+    "team": { "id": 16, "name": "Mexico", "logo": "https://example/16.png" },
+    "players": [
+      { "id": 3001, "name": "Guillermo Ochoa",      "age": 40, "number": 13, "position": "Goalkeeper", "photo": "https://example/p/3001.png" },
+      { "id": 3002, "name": "César Montes",         "age": 28, "number": 3,  "position": "Defender",   "photo": "https://example/p/3002.png" },
+      { "id": 3003, "name": "Edson Álvarez",        "age": 28, "number": 4,  "position": "Midfielder", "photo": "https://example/p/3003.png" }
+    ]
+  },
+  {
+    "team": { "id": 2, "name": "France", "logo": "https://example/2.png" },
+    "players": [
+      { "id": 4001, "name": "Mike Maignan",         "age": 30, "number": 16, "position": "Goalkeeper", "photo": "https://example/p/4001.png" },
+      { "id": 4002, "name": "William Saliba",       "age": 25, "number": 4,  "position": "Defender",   "photo": "https://example/p/4002.png" },
+      { "id": 4003, "name": "Kylian Mbappé",        "age": 27, "number": 10, "position": "Attacker",   "photo": "https://example/p/4003.png" }
+    ]
+  }
+]

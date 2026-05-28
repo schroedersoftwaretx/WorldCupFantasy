@@ -1,0 +1,41 @@
+{
+  "name": "worldcup-fantasy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "2026 World Cup fantasy draft app: framework-agnostic data layer (src/data), a CLI, and a Next.js web app.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "migrate:generate": "drizzle-kit generate",
+    "migrate": "node --env-file=.env --import tsx src/migrate.ts",
+    "cli": "node --env-file=.env --import tsx src/cli/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.36.0",
+    "firebase": "^11.1.0",
+    "firebase-admin": "^13.0.0",
+    "next": "^15.1.0",
+    "pg": "^8.13.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "@types/pg": "^8.11.10",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "drizzle-kit": "^0.28.0",
+    "testcontainers": "^10.13.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

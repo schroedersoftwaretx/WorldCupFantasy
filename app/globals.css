@@ -1,0 +1,659 @@
+/*
+ * Minimal, functional styling for W1. No design system - W3 introduces
+ * Tailwind. The goal here is a readable layout, nothing more.
+ */
+:root {
+  --fg: #1a1a1a;
+  --muted: #666;
+  --bg: #fafafa;
+  --card: #ffffff;
+  --border: #e2e2e2;
+  --accent: #1f6feb;
+  --accent-bg: #eef4ff;
+  --error: #b3261e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  line-height: 1.5;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.site-header {
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+  padding: 0.85rem 1.5rem;
+}
+
+.site-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--fg);
+}
+
+.site-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem 3rem;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin: 0 0 0.25rem;
+}
+
+h2 {
+  font-size: 1.15rem;
+  margin: 1.75rem 0 0.6rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin: 0 0 1.5rem;
+}
+
+.card-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.card {
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  padding: 0.85rem 1rem;
+}
+
+.card:hover {
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+.card-title {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.card-meta {
+  color: var(--muted);
+  font-size: 0.875rem;
+  margin-top: 0.15rem;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  background: var(--accent-bg);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+td.num,
+th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.notice {
+  color: var(--muted);
+  background: var(--card);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.error {
+  color: var(--error);
+  background: #fdeceb;
+  border: 1px solid #f5c2c0;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+/* --- W2: auth (header user chip, buttons, sign-in card) ------------------- */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.btn-link:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.auth-card {
+  max-width: 420px;
+  margin: 2rem auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  padding: 1.5rem 1.5rem 1.75rem;
+}
+
+.auth-card h1 {
+  margin-top: 0;
+}
+
+/* --- W3: forms, panels, invite link -------------------------------------- */
+.form-card,
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  padding: 1.25rem 1.25rem 1.5rem;
+  margin-top: 1.75rem;
+}
+
+.form-card h2,
+.panel h2 {
+  margin-top: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.9rem;
+  max-width: 360px;
+}
+
+.field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.field input {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.field-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.lead-link {
+  margin: 1.25rem 0;
+  font-weight: 600;
+}
+
+.invite-link-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  max-width: 520px;
+}
+
+.invite-link-input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: var(--bg);
+}
+
+/* --- W4: draft room ------------------------------------------------------- */
+.draft-banner {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+}
+
+.draft-banner.you,
+.draft-banner.done {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.draft-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .draft-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.draft-main {
+  min-width: 0;
+}
+
+.draft-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.draft-side .panel {
+  margin-top: 0;
+}
+
+.counts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.count-chip {
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+}
+
+.count-chip.total {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.roster-list,
+.pick-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.order-list {
+  margin: 0;
+  padding-left: 1.3rem;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.order-list .on-clock {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.pos-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+}
+
+.board-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.board-filters input,
+.board-filters select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.board-filters input {
+  flex: 1;
+  min-width: 160px;
+}
+
+.board-scroll {
+  max-height: 60vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.board-scroll table {
+  border: none;
+}
+
+.board-scroll thead th {
+  position: sticky;
+  top: 0;
+}
+
+.btn-sm {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-sm:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* --- W5: standings / in-season view --------------------------------------- */
+
+/* Small refresh link in standings subtitle */
+.refresh-link {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* Owner recompute banner */
+.recompute-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  background: var(--accent-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  margin-bottom: 1.25rem;
+  color: var(--muted);
+}
+
+.recompute-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.recompute-ok {
+  color: #1a7f37;
+  font-size: 0.85rem;
+}
+
+.recompute-error {
+  color: var(--error);
+  font-size: 0.85rem;
+}
+
+/* Team name links inside tables */
+.team-link {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.team-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* Period table cell — contains either a <details> or plain text */
+.period-cell {
+  padding: 0;
+  vertical-align: top;
+}
+
+.muted-pts {
+  display: block;
+  padding: 0.5rem 0.7rem;
+  color: var(--muted);
+}
+
+/* XI expandable details widget */
+.xi-details {
+  position: relative;
+  display: block;
+}
+
+.xi-summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.5rem 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  justify-content: flex-end;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+.xi-summary::-webkit-details-marker {
+  display: none;
+}
+
+.xi-details[open] .xi-summary {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.xi-badge {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.xi-details[open] .xi-badge {
+  color: var(--accent);
+}
+
+.xi-popup {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 20;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  min-width: 220px;
+  padding-bottom: 0.25rem;
+}
+
+.xi-popup-header {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 0.5rem 0.7rem 0.3rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.xi-table {
+  border: none;
+  border-radius: 0;
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.xi-table th,
+.xi-table td {
+  padding: 0.3rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.xi-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.pos-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  width: 2.5rem;
+}
+
+/* Roster view page */
+.roster-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+
+.xi-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-left: 0.75rem;
+}
+
+.xi-dot:first-child {
+  margin-left: 0;
+}
+
+.in-xi-dot {
+  background: #1a7f37;
+}
+
+.bench-dot {
+  background: var(--border);
+}
+
+/* Roster table: cells for players in vs out of the XI */
+.cell-in-xi {
+  background: #f0faf4;
+  color: #1a7f37;
+  font-weight: 600;
+}
+
+.cell-bench {
+  color: var(--muted);
+}
+
+.muted-cell {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.player-total {
+  font-weight: 600;
+}
+
+.row-has-xi {
+  /* subtle left accent for rows where the player contributed at least one period */
+}
