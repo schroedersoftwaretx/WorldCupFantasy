@@ -8,9 +8,9 @@ idempotent ingestion CLI.
 No scoring, league, draft, lineup, auth, or UI code lives here. Phases 2–5
 build on top of this layer; the contracts here (`StatsProvider`, `stat_line`
 immutability) are deliberately stable so that scoring can be recomputed any
-time from raw stat records.
+time from raw stat records!
 
-## Layout
+## Layout 
 
 ```
 src/
