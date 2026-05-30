@@ -150,6 +150,11 @@ export interface RawStandingEntry {
   group?: string | null;
 }
 
+/** Shape of one element in /teams `response[*]` (pre-tournament team discovery). */
+export interface RawTeamEntry {
+  team: { id: number | string; name: string };
+}
+
 /** Shape of one element in /fixtures `response[*]`. */
 export interface RawFixtureResponse {
   fixture: {

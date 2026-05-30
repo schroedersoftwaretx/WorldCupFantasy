@@ -174,6 +174,11 @@ export interface DraftBoardPlayer {
   position: string;
   nationalTeam: string;
   draftRank: number | null;
+  /**
+   * Sum of projected fantasy points across all remaining SCHEDULED fixtures.
+   * Null when no odds data is available yet.
+   */
+  projectedTotalPoints: number | null;
   /** Whether adding this player would be a legal roster move for the viewer. */
   legal: boolean;
 }

@@ -7,6 +7,7 @@
  *                        fantasy_team, roster_slot.
  * Phase 4 (draft):       draft_room, draft_order, draft_pick,
  *                        draft_notification (+ player.draft_rank).
+ * Phase 6 (projections): match_odds, projected_score_entry.
  *
  * Invariants worth remembering:
  *   - stat_line is the immutable SOURCE OF TRUTH; only the ingestion path
@@ -26,6 +27,7 @@ import {
   pgEnum,
   pgTable,
   primaryKey,
+  real,
   serial,
   text,
   timestamp,
@@ -568,3 +570,71 @@ export type InviteStatus = (typeof inviteStatusEnum.enumValues)[number];
 export type DraftStatus = (typeof draftStatusEnum.enumValues)[number];
 export type DraftNotificationType = (typeof draftNotificationTypeEnum.enumValues)[number];
 export type NotificationStatus = (typeof notificationStatusEnum.enumValues)[number];
+
+// --- match_odds -------------------------------------------------------------
+
+/**
+ * Fetched-from-The-Odds-API probabilities for a single upcoming fixture.
+ * Disposable: recomputable by re-fetching odds. One row per fixture.
+ */
+export const matchOdds = pgTable(
+  "match_odds",
+  {
+    fixtureId: integer("fixture_id")
+      .primaryKey()
+      .references(() => fixture.id, { onDelete: "restrict" }),
+    /** Implied probability home team wins (0-1). */
+    homeWinP: real("home_win_p").notNull(),
+    /** Implied probability draw (0-1). */
+    drawP: real("draw_p").notNull(),
+    /** Implied probability away team wins (0-1). */
+    awayWinP: real("away_win_p").notNull(),
+    /** Market-implied expected total goals for the match. */
+    expectedTotalGoals: real("expected_total_goals").notNull(),
+    /** Implied probability home team keeps a clean sheet (0-1). */
+    homeCleanSheetP: real("home_clean_sheet_p").notNull(),
+    /** Implied probability away team keeps a clean sheet (0-1). */
+    awayCleanSheetP: real("away_clean_sheet_p").notNull(),
+    /** When these odds were last fetched from the provider. */
+    fetchedAt: timestamp("fetched_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+);
+
+// --- projected_score_entry --------------------------------------------------
+
+/**
+ * DERIVED per-player, per-fixture PROJECTED points for SCHEDULED fixtures.
+ * Disposable; recomputable from match_odds + stat_line shares + ruleset.
+ * Mirrors score_entry but for games not yet played.
+ */
+export const projectedScoreEntry = pgTable(
+  "projected_score_entry",
+  {
+    playerId: integer("player_id")
+      .notNull()
+      .references(() => player.id, { onDelete: "restrict" }),
+    fixtureId: integer("fixture_id")
+      .notNull()
+      .references(() => fixture.id, { onDelete: "restrict" }),
+    rulesetVersion: text("ruleset_version").notNull(),
+    projectedPoints: real("projected_points").notNull(),
+    computedAt: timestamp("computed_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (t) => ({
+    pk: primaryKey({
+      columns: [t.playerId, t.fixtureId, t.rulesetVersion],
+    }),
+    playerIdx: index("projected_score_entry_player_id_idx").on(t.playerId),
+  }),
+);
+
+// --- Type helpers (continued) ------------------------------------------------
+
+export type MatchOddsRow = typeof matchOdds.$inferSelect;
+export type MatchOddsInsert = typeof matchOdds.$inferInsert;
+export type ProjectedScoreEntryRow = typeof projectedScoreEntry.$inferSelect;
+export type ProjectedScoreEntryInsert = typeof projectedScoreEntry.$inferInsert;

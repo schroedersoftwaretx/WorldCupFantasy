@@ -24,6 +24,7 @@ import {
   type RawFixtureResponse,
   type RawSquadResponse,
   type RawStandingEntry,
+  type RawTeamEntry,
 } from "./api-football-mapping.js";
 import {
   ProviderMappingError,
@@ -90,11 +91,23 @@ export class ApiFootballProvider implements StatsProvider {
 
   async fetchSquads(): Promise<ProviderSquad[]> {
     // 1) Standings → group labels per team and the canonical list of teams.
+    //    Falls back to /teams when standings are empty (pre-tournament).
     const standingsRaw = await this.get<{
       response: Array<{ league: { standings: RawStandingEntry[][] } }>;
     }>("/standings", { league: this.cfg.leagueId, season: this.cfg.season });
     const standings: RawStandingEntry[] = (standingsRaw.response[0]?.league.standings ?? []).flat();
-    const teamGroups = indexStandings(standings);
+    let teamGroups = indexStandings(standings);
+
+    if (teamGroups.size === 0) {
+      // Standings not yet published (pre-tournament). Discover teams via /teams.
+      const teamsRaw = await this.get<{ response: RawTeamEntry[] }>("/teams", {
+        league: this.cfg.leagueId,
+        season: this.cfg.season,
+      });
+      for (const entry of teamsRaw.response) {
+        teamGroups.set(String(entry.team.id), null);
+      }
+    }
 
     // 2) For each team, fetch its squad.
     const rawSquads: RawSquadResponse[] = [];
@@ -176,7 +189,22 @@ export class ApiFootballProvider implements StatsProvider {
           const body = await resp.text().catch(() => "");
           throw new Error(`HTTP ${resp.status} from ${url}: ${body.slice(0, 200)}`);
         }
-        return (await resp.json()) as T;
+        const data = (await resp.json()) as T & {
+          errors?: Record<string, unknown> | unknown[];
+          results?: number;
+        };
+        // api-sports.io returns HTTP 200 even for auth/quota errors.
+        // Surface them explicitly rather than silently returning empty data.
+        const errs = data.errors;
+        if (errs) {
+          const hasErrors = Array.isArray(errs)
+            ? errs.length > 0
+            : Object.keys(errs as Record<string, unknown>).length > 0;
+          if (hasErrors) {
+            throw new Error(`API error from ${path}: ${JSON.stringify(errs)}`);
+          }
+        }
+        return data;
       } catch (err) {
         if (attempt >= this.cfg.maxRetries) throw err;
         const wait = this.cfg.backoffBaseMs * 2 ** attempt + Math.floor(Math.random() * 250);
@@ -211,3 +239,4 @@ function trailingSlash(s: string): string {
 function defaultSleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+      

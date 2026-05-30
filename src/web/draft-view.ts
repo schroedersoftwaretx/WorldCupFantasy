@@ -7,7 +7,7 @@
  * whether it would be a legal pick for the viewer). Pure reads; every write
  * goes through the backend draft service.
  */
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
 import type { Db } from "../data/db/client.js";
 import {
@@ -15,16 +15,19 @@ import {
   draftPick,
   draftRoom,
   fantasyTeam,
+  fixture,
   league,
   leagueMembership,
   manager,
   nationalTeam,
   player,
+  projectedScoreEntry,
   rosterSlot,
   type DraftRoomRow,
   type FantasyTeamRow,
   type Position,
 } from "../data/db/schema.js";
+import { DEFAULT_RULESET } from "../data/scoring/ruleset.js";
 import { roundForPick, slotForPick } from "../data/draft/snake.js";
 import { canAddPlayer, countsFromPositions } from "../data/roster/validator.js";
 import type {
@@ -280,6 +283,33 @@ export async function getDraftBoard(
     .from(player)
     .innerJoin(nationalTeam, eq(nationalTeam.id, player.nationalTeamId));
 
+  // Projected total points per player: sum of projected_score_entry for all
+  // SCHEDULED fixtures using the current ruleset.
+  // Wrapped in try-catch so the board still loads if the table doesn't exist
+  // yet (e.g. migration hasn't been applied to the local dev DB).
+  let projByPlayer = new Map<number, number>();
+  try {
+    const projRows = await db
+      .select({
+        playerId: projectedScoreEntry.playerId,
+        total: sql<number>`sum(${projectedScoreEntry.projectedPoints})`,
+      })
+      .from(projectedScoreEntry)
+      .innerJoin(fixture, eq(projectedScoreEntry.fixtureId, fixture.id))
+      .where(
+        and(
+          eq(projectedScoreEntry.rulesetVersion, DEFAULT_RULESET.version),
+          eq(fixture.status, "SCHEDULED"),
+        ),
+      )
+      .groupBy(projectedScoreEntry.playerId);
+    projByPlayer = new Map<number, number>(
+      projRows.map((r) => [r.playerId, r.total]),
+    );
+  } catch {
+    // Table not yet migrated — projected points will show as null.
+  }
+
   const players: DraftBoardPlayer[] = rows
     .filter((r) => !takenIds.has(r.id))
     .map((r) => ({
@@ -288,9 +318,14 @@ export async function getDraftBoard(
       position: r.position,
       nationalTeam: r.nationalTeam,
       draftRank: r.draftRank,
+      projectedTotalPoints: projByPlayer.get(r.id) ?? null,
       legal: canAddPlayer(counts, r.position).ok,
     }))
     .sort((a, b) => {
+      // Default sort: projected total points desc, then draft rank, then name.
+      const pa = a.projectedTotalPoints ?? -1;
+      const pb = b.projectedTotalPoints ?? -1;
+      if (pb !== pa) return pb - pa;
       const ra = a.draftRank ?? Number.MAX_SAFE_INTEGER;
       const rb = b.draftRank ?? Number.MAX_SAFE_INTEGER;
       if (ra !== rb) return ra - rb;

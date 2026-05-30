@@ -98,6 +98,7 @@ export default function PlayerBoard({
             <thead>
               <tr>
                 <th className="num">Rank</th>
+                <th className="num">Proj. Pts</th>
                 <th>Player</th>
                 <th>Pos</th>
                 <th>Team</th>
@@ -108,6 +109,11 @@ export default function PlayerBoard({
               {shown.map((p) => (
                 <tr key={p.id}>
                   <td className="num">{p.draftRank ?? "-"}</td>
+                  <td className="num">
+                    {p.projectedTotalPoints !== null
+                      ? p.projectedTotalPoints.toFixed(1)
+                      : "-"}
+                  </td>
                   <td>{p.fullName}</td>
                   <td>
                     <span className="pos-badge">{p.position}</span>

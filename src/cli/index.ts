@@ -27,6 +27,7 @@
  */
 
 import { eq } from "drizzle-orm";
+import { pathToFileURL } from "node:url";
 
 import { closeDb, createDb, type Db } from "../data/db/client.js";
 import { draftRoom, fantasyTeam, fixture, manager, player, statLine } from "../data/db/schema.js";
@@ -50,10 +51,13 @@ import {
   inviteManager,
 } from "../data/league/service.js";
 import { apiFootballFromEnv } from "../data/provider/api-football.js";
+import { footballDataFromEnv } from "../data/provider/football-data.js";
 import { FixtureMockProvider } from "../data/provider/mock.js";
 import type { StatsProvider } from "../data/provider/types.js";
 import { addPlayerToRoster, getRoster, getRosterCounts } from "../data/roster/service.js";
 import { recomputeAll, recomputeForFixture } from "../data/scoring/recompute.js";
+import { oddsProviderFromEnv } from "../data/odds/odds-provider.js";
+import { recomputeProjections } from "../data/projection/recompute-projections.js";
 import { DEFAULT_RULESET } from "../data/scoring/ruleset.js";
 import { computeStandings } from "../data/standings/standings.js";
 
@@ -154,6 +158,49 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
     const ruleset = DEFAULT_RULESET;
     const summary = await recomputeAll(db, ruleset);
     console.log(`score all ruleset=${ruleset.version} ${formatSummary(summary)}`);
+  },
+  "ingest:odds": async ({ db }) => {
+    const env = process.env as NodeJS.ProcessEnv;
+    if (!env["ODDS_API_KEY"]) {
+      throw new Error("ODDS_API_KEY is not set. Add it to your .env file.");
+    }
+    const oddsProvider = oddsProviderFromEnv(env);
+    console.log("fetching odds from The Odds API...");
+    const oddsSummary = await oddsProvider.ingestOdds(db);
+    console.log(
+      `odds: fetched=${oddsSummary.fetched} matched=${oddsSummary.matched} skipped=${oddsSummary.skipped}`,
+    );
+    if (oddsSummary.matched === 0 && oddsSummary.skipped === 0) {
+      console.log(
+        "  (no fixtures matched -- run ingest:schedule first, or check the tournament hasn't started yet)",
+      );
+      return;
+    }
+    console.log("recomputing projections...");
+    const projSummary = await recomputeProjections(db, DEFAULT_RULESET);
+    console.log(
+      `projections: fixtures=${projSummary.fixturesProcessed} players=${projSummary.playersProjected} ruleset=${projSummary.rulesetVersion}`,
+    );
+  },
+  "provider:test": async ({ getProvider }) => {
+    // Diagnostic: verify API connectivity and report raw result counts.
+    // Run this first if ingest:squads returns all zeros.
+    const provider = getProvider();
+    // Access internal cfg via cast to inspect what league/season we're hitting.
+    const cfg = (provider as unknown as { cfg: { leagueId: number; season: number; baseUrl: string } }).cfg;
+    console.log(`provider: ${cfg.baseUrl}  league=${cfg.leagueId}  season=${cfg.season}`);
+    console.log("fetching squads (this calls /standings then /teams then /players/squads per team)...");
+    try {
+      const squads = await provider.fetchSquads();
+      console.log(`fetchSquads => ${squads.length} team(s)`);
+      if (squads.length > 0) {
+        const totalPlayers = squads.reduce((n, s) => n + s.players.length, 0);
+        console.log(`  sample team: ${squads[0]!.team.name}  players: ${squads[0]!.players.length}`);
+        console.log(`  total players across all teams: ${totalPlayers}`);
+      }
+    } catch (err) {
+      console.error("fetchSquads FAILED:", err instanceof Error ? err.message : String(err));
+    }
   },
   "score:recompute": async ({ db, args }) => {
     const ruleset = DEFAULT_RULESET;
@@ -350,6 +397,8 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
 function selectProvider(env: NodeJS.ProcessEnv): StatsProvider {
   const mockDir = env["MOCK_FIXTURES_DIR"];
   if (mockDir) return new FixtureMockProvider({ root: mockDir });
+  // Prefer football-data.org if its key is set; fall back to API-Football.
+  if (env["FOOTBALL_DATA_KEY"]) return footballDataFromEnv(env);
   return apiFootballFromEnv(env);
 }
 
@@ -382,6 +431,7 @@ function printUsage(): void {
     [
       "Usage:",
       "  cli ingest:squads | ingest:schedule | ingest:fixture-stats <id> | ingest:all-finished",
+      "  cli ingest:odds",
       "  cli fixtures:list",
       "  cli score:recompute [sourceFixtureId]",
       "  cli manager:create <firebaseUid> <displayName> <email>",
@@ -401,14 +451,15 @@ function printUsage(): void {
       "Environment:",
       "  DATABASE_URL          Required.",
       "  API_FOOTBALL_KEY      Required for live ingest.",
+      "  ODDS_API_KEY          Optional. Required for ingest:odds (projected points).",
       "  MOCK_FIXTURES_DIR     Optional. Use FixtureMockProvider against this dir.",
     ].join("\n"),
   );
 }
 
 const isMain =
-  import.meta.url === `file://${process.argv[1]}` ||
-  import.meta.url.endsWith(process.argv[1] ?? "");
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(process.argv[1]).href;
 
 if (isMain) {
   runCli(process.argv.slice(2)).then(
