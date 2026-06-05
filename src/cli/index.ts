@@ -26,11 +26,13 @@
  * required to run scoring, league, draft, or standings operations.
  */
 
-import { eq } from "drizzle-orm";
+import { eq, ilike } from "drizzle-orm";
+import { createReadStream } from "node:fs";
+import { createInterface } from "node:readline";
 import { pathToFileURL } from "node:url";
 
 import { closeDb, createDb, type Db } from "../data/db/client.js";
-import { draftRoom, fantasyTeam, fixture, manager, player, statLine } from "../data/db/schema.js";
+import { draftRoom, fantasyTeam, fixture, manager, nationalTeam, player, statLine } from "../data/db/schema.js";
 import { ConsoleNotifier } from "../data/draft/notifier.js";
 import {
   createDraftRoom,
@@ -182,6 +184,161 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
       `projections: fixtures=${projSummary.fixturesProcessed} players=${projSummary.playersProjected} ruleset=${projSummary.rulesetVersion}`,
     );
   },
+  "ingest:rankings": async ({ db, args }) => {
+    const csvPath = args[0];
+    if (!csvPath) {
+      throw new Error("usage: ingest:rankings <path/to/draft_import.csv>");
+    }
+
+    // Known mismatches between the draft_import.csv country_name values
+    // and the football-data.org names stored in our national_team table.
+    const COUNTRY_ALIASES: Record<string, string> = {
+      "usa":                      "united states",
+      "united states":            "united states",
+      "south korea":              "korea republic",
+      "ivory coast":              "côte d'ivoire",
+      "congo dr":                 "congo dr",
+      "dr congo":                 "congo dr",
+      // Czech Republic — football-data.org uses "Czechia" in recent data
+      "czech republic":           "czechia",
+      "czechia":                  "czech republic",
+      // Bosnia — football-data.org uses "Bosnia-Herzegovina" (hyphen, no "and")
+      "bosnia and herzegovina":   "bosnia-herzegovina",
+      "bosnia & herzegovina":     "bosnia-herzegovina",
+      "bosnia-herzegovina":       "bosnia and herzegovina",
+    };
+
+    // Read CSV into memory.
+    const rows: Record<string, string>[] = [];
+    await new Promise<void>((resolve, reject) => {
+      const rl = createInterface({ input: createReadStream(csvPath), crlfDelay: Infinity });
+      let headers: string[] = [];
+      rl.on("line", (line) => {
+        if (!headers.length) { headers = line.split(","); return; }
+        const vals = line.split(",");
+        const row: Record<string, string> = {};
+        headers.forEach((h, i) => { row[h.trim()] = (vals[i] ?? "").trim(); });
+        rows.push(row);
+      });
+      rl.on("close", resolve);
+      rl.on("error", reject);
+    });
+
+    if (rows.length === 0) {
+      console.log("CSV is empty — nothing to import.");
+      return;
+    }
+
+    // Load all teams from DB, build name→id map (case-insensitive).
+    const teams = await db.select({ id: nationalTeam.id, name: nationalTeam.name }).from(nationalTeam);
+    const teamByName = new Map<string, number>();
+    for (const t of teams) teamByName.set(t.name.toLowerCase().trim(), t.id);
+
+    function resolveTeam(csvName: string): number | undefined {
+      const key = csvName.toLowerCase().trim();
+      // Never match an empty key — would incorrectly hit every team via includes("").
+      if (!key) return undefined;
+      // 1. Direct match.
+      if (teamByName.has(key)) return teamByName.get(key);
+      // 2. Alias map (also try the alias in the other direction).
+      const alias = COUNTRY_ALIASES[key];
+      if (alias && teamByName.has(alias)) return teamByName.get(alias);
+      // 3. Substring match.
+      for (const [dbName, id] of teamByName) {
+        if (dbName.includes(key) || key.includes(dbName)) return id;
+      }
+      // 4. Word-overlap match — normalise hyphens and conjunctions so
+      //    "Bosnia and Herzegovina" ≈ "Bosnia-Herzegovina",
+      //    "United States" ≈ "USA" (after alias), etc.
+      const keyWords = key.replace(/[-–—]/g, " ").replace(/\band\b/g, "").replace(/[^a-z0-9 ]/g, "").split(/\s+/).filter((w) => w.length > 2);
+      for (const [dbName, id] of teamByName) {
+        const dbWords = dbName.replace(/[-–—]/g, " ").replace(/\band\b/g, "").replace(/[^a-z0-9 ]/g, "").split(/\s+/).filter((w) => w.length > 2);
+        if (keyWords.length === 0 || dbWords.length === 0) continue;
+        const overlap = keyWords.filter((w) => dbWords.includes(w));
+        if (overlap.length >= Math.min(keyWords.length, dbWords.length)) return id;
+      }
+      return undefined;
+    }
+
+    // Load all players, group by teamId.
+    const players = await db
+      .select({ id: player.id, fullName: player.fullName, nationalTeamId: player.nationalTeamId })
+      .from(player);
+
+    type PlayerEntry = { id: number; fullName: string };
+    const playersByTeam = new Map<number, PlayerEntry[]>();
+    for (const p of players) {
+      const list = playersByTeam.get(p.nationalTeamId) ?? [];
+      list.push({ id: p.id, fullName: p.fullName });
+      playersByTeam.set(p.nationalTeamId, list);
+    }
+
+    let matched = 0;
+    let skipped = 0;
+    const noTeam: string[] = [];
+    const noPlayer: string[] = [];
+
+    for (const row of rows) {
+      if (row["on_confirmed_squad"] !== "true") { skipped++; continue; }
+
+      const adpRaw = Number(row["adp"]);
+      const nameNorm = (row["name_normalized"] ?? "").toLowerCase();
+      const countryName = row["country_name"] ?? "";
+      const adp = Math.round(adpRaw);
+
+      // Resolve team with alias fallback.
+      const teamId = resolveTeam(countryName);
+      if (!teamId) {
+        noTeam.push(`${row["full_name"]} / ${countryName}`);
+        skipped++;
+        continue;
+      }
+
+      // Find best player match by name (normalized, diacritics stripped, then fuzzy).
+      const candidates = playersByTeam.get(teamId) ?? [];
+      const match =
+        // 1. Exact normalized match
+        candidates.find((p) => stripDiacritics(p.fullName) === stripDiacritics(row["full_name"] ?? "")) ??
+        // 2. Normalized name from CSV field
+        candidates.find((p) => stripDiacritics(p.fullName).toLowerCase() === nameNorm) ??
+        // 3. Last-name match (handles "Raphinha" stored as "Raphinha" vs "R. Raphinha")
+        candidates.find((p) => {
+          const last = lastName(stripDiacritics(p.fullName));
+          const csvLast = lastName(stripDiacritics(row["full_name"] ?? ""));
+          return last.length > 2 && last === csvLast;
+        }) ??
+        // 4. High-confidence fuzzy match
+        candidates.find((p) => nameScore(p.fullName, row["full_name"] ?? "") >= 0.75) ??
+        // 5. Relaxed fuzzy match — catches longer multi-part names where one
+        //    word differs (e.g. "Jhon Cordoba" vs "Jhon Emerson Cordoba Mosquera")
+        candidates.find((p) => nameScore(p.fullName, row["full_name"] ?? "") >= 0.55);
+
+      if (!match) {
+        noPlayer.push(`${row["full_name"]} (${countryName})`);
+        skipped++;
+        continue;
+      }
+
+      await db.update(player).set({ draftRank: adp, updatedAt: new Date() }).where(eq(player.id, match.id));
+      console.log(`  rank=${adp.toString().padStart(4)}  ${match.fullName.padEnd(30)} ← ${row["full_name"]}`);
+      matched++;
+    }
+
+    if (noTeam.length > 0) {
+      console.log("\n--- No team match (add to COUNTRY_ALIASES in cli/index.ts) ---");
+      noTeam.forEach((s) => console.log(`  ${s}`));
+    }
+    if (noPlayer.length > 0) {
+      console.log("\n--- No player match (use player:rank <sourcePlayerId> <rank> manually) ---");
+      noPlayer.forEach((s) => console.log(`  ${s}`));
+    }
+
+    console.log(`\nDone: ${matched} ranked, ${skipped} skipped.`);
+    if (matched > 0) {
+      console.log("Run `ingest:odds` to recompute projections with the new rankings.");
+    }
+  },
+
   "provider:test": async ({ getProvider }) => {
     // Diagnostic: verify API connectivity and report raw result counts.
     // Run this first if ingest:squads returns all zeros.
@@ -402,6 +559,49 @@ function selectProvider(env: NodeJS.ProcessEnv): StatsProvider {
   return apiFootballFromEnv(env);
 }
 
+
+// ---------------------------------------------------------------------------
+// Name matching helpers for ingest:rankings
+// ---------------------------------------------------------------------------
+
+/**
+ * Remove common diacritics so "Oyarzabal" matches "Oyarzabal".
+ * Also handles chars that do not decompose under NFD (Ø, ø, ı, Æ, æ, Ł, ł,
+ * Đ, đ, ß, Þ/þ, ð) — common in Scandinavian, Turkish, and Slavic names.
+ */
+const DIACRITIC_MAP: Record<string, string> = {
+  "Ø": "O", "ø": "o",
+  "Æ": "Ae", "æ": "ae",
+  "Ł": "L", "ł": "l",
+  "Đ": "D", "đ": "d",
+  "ı": "i", "İ": "I",
+  "ß": "ss",
+  "Þ": "Th", "þ": "th",
+  "ð": "d", "Ð": "D",
+};
+function stripDiacritics(s: string): string {
+  const substituted = [...s].map((c) => DIACRITIC_MAP[c] ?? c).join("");
+    return substituted.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+/** Last word of a name — "Kylian Mbappe" → "mbappe". */
+function lastName(s: string): string {
+  const parts = s.toLowerCase().trim().split(/\s+/);
+  return parts[parts.length - 1] ?? "";
+}
+
+function nameScore(a: string, b: string): number {
+  const na = stripDiacritics(a).toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+  const nb = stripDiacritics(b).toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+  if (na === nb) return 1.0;
+  if (na.includes(nb) || nb.includes(na)) return 0.85;
+  const wa = new Set(na.split(" ").filter((w) => w.length > 1));
+  const wb = nb.split(" ").filter((w) => w.length > 1);
+  const overlap = wb.filter((w) => wa.has(w)).length;
+  const total = Math.max(wa.size, wb.length);
+  return total > 0 ? overlap / total : 0;
+}
+
 export async function runCli(argv: string[], env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const [name, ...rest] = argv;
   if (!name) {
@@ -431,6 +631,7 @@ function printUsage(): void {
     [
       "Usage:",
       "  cli ingest:squads | ingest:schedule | ingest:fixture-stats <id> | ingest:all-finished",
+      "  cli ingest:rankings <path/to/draft_import.csv>",
       "  cli ingest:odds",
       "  cli fixtures:list",
       "  cli score:recompute [sourceFixtureId]",

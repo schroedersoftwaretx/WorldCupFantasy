@@ -20,6 +20,13 @@ interface PlayerBoardProps {
 
 const POSITIONS = ["GK", "DEF", "MID", "FWD"];
 const MAX_ROWS = 200;
+type SortKey = "rank" | "proj" | "name" | "pos";
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "rank", label: "Rank" },
+  { value: "proj", label: "Proj. Pts" },
+  { value: "name", label: "Name" },
+  { value: "pos",  label: "Position" },
+];
 
 export default function PlayerBoard({
   players,
@@ -30,6 +37,7 @@ export default function PlayerBoard({
   const [search, setSearch] = useState("");
   const [position, setPosition] = useState("ALL");
   const [team, setTeam] = useState("ALL");
+  const [sort, setSort] = useState<SortKey>("rank");
 
   const teams = useMemo(
     () => Array.from(new Set(players.map((p) => p.nationalTeam))).sort(),
@@ -38,13 +46,21 @@ export default function PlayerBoard({
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return players.filter((p) => {
+    const list = players.filter((p) => {
       if (position !== "ALL" && p.position !== position) return false;
       if (team !== "ALL" && p.nationalTeam !== team) return false;
       if (q && !p.fullName.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [players, search, position, team]);
+    const POS_ORDER: Record<string, number> = { GK: 0, DEF: 1, MID: 2, FWD: 3 };
+    list.sort((a, b) => {
+      if (sort === "proj") return (b.projectedTotalPoints ?? -1) - (a.projectedTotalPoints ?? -1);
+      if (sort === "name") return a.fullName.localeCompare(b.fullName);
+      if (sort === "pos")  return (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9);
+      return (a.draftRank ?? 9999) - (b.draftRank ?? 9999);
+    });
+    return list;
+  }, [players, search, position, team, sort]);
 
   const shown = filtered.slice(0, MAX_ROWS);
 
@@ -82,6 +98,17 @@ export default function PlayerBoard({
             </option>
           ))}
         </select>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as SortKey)}
+          aria-label="Sort by"
+        >
+          {SORT_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              Sort: {o.label}
+            </option>
+          ))}
+        </select>
       </div>
       <p className="field-hint">
         {filtered.length} available
@@ -108,7 +135,7 @@ export default function PlayerBoard({
             <tbody>
               {shown.map((p) => (
                 <tr key={p.id}>
-                  <td className="num">{p.draftRank ?? "-"}</td>
+                  <td className="num">{p.draftRank != null ? p.draftRank : "-"}</td>
                   <td className="num">
                     {p.projectedTotalPoints !== null
                       ? p.projectedTotalPoints.toFixed(1)
