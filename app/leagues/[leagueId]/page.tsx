@@ -15,6 +15,7 @@ import { getDb } from "@/web/db";
 import { getLeagueDetail, getMembershipRole } from "@/web/queries";
 
 import InvitePanel from "./invite-panel";
+import RenameTeamForm from "./rename-team-form";
 
 export const dynamic = "force-dynamic";
 
@@ -103,7 +104,16 @@ export default async function LeagueOverviewPage({
           {detail.members.map((m) => (
             <tr key={m.managerId}>
               <td>{m.displayName}</td>
-              <td>{m.teamName ?? "-"}</td>
+              <td>
+                {m.managerId === user.manager.id ? (
+                  <RenameTeamForm
+                    leagueId={detail.id}
+                    currentName={m.teamName ?? ""}
+                  />
+                ) : (
+                  m.teamName ?? "-"
+                )}
+              </td>
               <td>{m.role}</td>
             </tr>
           ))}

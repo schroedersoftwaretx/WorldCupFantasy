@@ -22,8 +22,10 @@
 import { getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import {
   GoogleAuthProvider,
+  browserLocalPersistence,
   getAuth,
   getRedirectResult,
+  setPersistence,
   signInWithPopup,
   signInWithRedirect,
   type Auth,
@@ -68,6 +70,9 @@ const POPUP_BLOCKED_CODES = new Set([
   "auth/popup-blocked",
   "auth/cancelled-popup-request",
   "auth/popup-closed-by-user",
+  // Safari private/restricted mode has no web storage at all.
+  "auth/web-storage-unsupported",
+  "auth/operation-not-supported-in-this-environment",
 ]);
 
 /**
@@ -89,6 +94,14 @@ export async function signInWithGoogle(): Promise<string | null> {
     const code = (err as { code?: string }).code ?? "";
     if (POPUP_BLOCKED_CODES.has(code)) {
       // Popup was blocked (common on mobile) — fall back to redirect flow.
+      // Set browserLocalPersistence before redirecting: Safari ITP blocks
+      // the default IndexedDB cross-origin reads when the page returns from
+      // the Google OAuth redirect. localStorage (same-origin) survives ITP.
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+      } catch {
+        // Ignore — best-effort; storage may be fully blocked in private mode.
+      }
       await signInWithRedirect(auth, provider);
       return null; // page will redirect; caller should not proceed
     }
@@ -101,14 +114,29 @@ export async function signInWithGoogle(): Promise<string | null> {
  * Call this on the login page mount. Returns an ID token if a redirect
  * result is pending, or null if not (normal page load / popup flow).
  */
+/**
+ * Check if we are returning from a redirect sign-in flow.
+ * Returns the ID token if a redirect result is pending, null if not.
+ * Throws on real auth errors (e.g. account disabled, ITP-blocked storage).
+ */
 export async function checkRedirectResult(): Promise<string | null> {
+  const auth = getClientAuth();
   try {
-    const auth = getClientAuth();
     const result = await getRedirectResult(auth);
     if (!result) return null;
     return result.user.getIdToken();
-  } catch {
-    // Not a redirect return or redirect was cancelled — ignore.
-    return null;
+  } catch (err: unknown) {
+    const code = (err as { code?: string }).code ?? "";
+    // These are non-fatal: no pending redirect, or user cancelled.
+    if (
+      code === "auth/no-auth-event" ||
+      code === "auth/null-user" ||
+      !code
+    ) {
+      return null;
+    }
+    // Real error (ITP-blocked storage shows as credential-related errors).
+    // Re-throw so the login page can show a meaningful message.
+    throw err;
   }
 }
