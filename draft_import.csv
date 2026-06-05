@@ -1,0 +1,715 @@
+full_name,name_normalized,country_code_3,country_name,position_gk_def_mid_fwd,jersey_no,adp,model_points_12t,expected_games,on_confirmed_squad,landmine_flag,hidden_value_flag_12t,vor_12t
+Kylian Mbappe,kylian mbappe,FRA,France,FWD,10,1.1,124.77714285714286,5.3,true,false,false,100.52714285714286
+Harry Kane,harry kane,ENG,England,FWD,9,2.3,115.14285714285714,5.0,true,false,false,90.89285714285714
+Lamine Yamal,lamine yamal,ESP,Spain,FWD,19,3.3,116.64,5.4,true,false,false,92.39
+Michael Olise,michael olise,FRA,France,FWD,11,4.3,55.87714285714285,5.3,true,false,false,31.62714285714285
+Lionel Messi,lionel messi,ARG,Argentina,FWD,10,5.8,102.76000000000002,4.9,true,false,false,78.51000000000002
+Ousmane Dembele,ousmane dembele,FRA,France,FWD,7,6.1,83.74,5.3,true,false,false,59.489999999999995
+Mikel Oyarzabal,mikel oyarzabal,ESP,Spain,FWD,21,7.3,99.20571428571428,5.4,true,false,false,74.95571428571428
+Mike Maignan,mike maignan,FRA,France,GK,16,8.5,48.760000000000005,5.3,true,false,false,12.260000000000005
+Raphinha,raphinha,BRA,Brazil,FWD,11,10.0,60.57142857142857,5.0,true,false,false,36.32142857142857
+Unai Simon,unai simon,ESP,Spain,GK,23,10.1,57.39428571428572,5.4,true,false,false,20.894285714285722
+Jordan Pickford,jordan pickford,ENG,England,GK,1,12.1,43.57142857142857,5.0,true,false,false,7.071428571428569
+Bruno Fernandes,bruno fernandes,PRT,Portugal,MID,8,12.5,45.38857142857143,4.7,true,false,false,7.8885714285714315
+Vinicius Junior,vinicius junior,BRA,Brazil,FWD,7,14.2,0.0,5.0,true,false,false,-24.25
+Nico Williams Arthuer,nico williams arthuer,ESP,Spain,FWD,17,14.8,10.645714285714286,5.4,true,false,false,-13.604285714285714
+Julian Alvarez,julian alvarez,ARG,Argentina,FWD,9,16.1,63.98000000000001,4.9,true,false,false,39.73000000000001
+Jude Bellingham,jude bellingham,ENG,England,MID,10,16.9,61.14285714285714,5.0,true,false,false,23.64285714285714
+Pedri,pedri,ESP,Spain,MID,20,18.0,72.66857142857144,5.4,true,false,false,35.16857142857144
+Emiliano Martinez,emiliano martinez,ARG,Argentina,GK,23,19.3,39.2,4.9,true,false,false,2.700000000000003
+Cristiano Ronaldo,cristiano ronaldo,PRT,Portugal,FWD,7,19.6,78.55714285714286,4.7,true,false,false,54.307142857142864
+Bukayo Saka,bukayo saka,ENG,England,FWD,7,20.4,58.285714285714285,5.0,true,false,false,34.035714285714285
+Rayan Cherki,rayan cherki,FRA,France,MID,24,20.8,6.057142857142857,5.3,true,false,false,-31.442857142857143
+Erling Haaland,erling haaland,NOR,Norway,FWD,9,22.4,58.7,3.5,true,false,false,34.45
+Desire Doue,desire doue,FRA,France,FWD,20,23.0,56.028571428571425,5.3,true,false,false,31.778571428571425
+Alisson,alisson,BRA,Brazil,GK,1,23.7,41.42857142857143,5.0,true,false,false,4.928571428571431
+Dani Olmo,dani olmo,ESP,Spain,MID,10,26.1,96.42857142857143,5.4,true,false,false,58.92857142857143
+Rodri,rodri,ESP,Spain,MID,16,27.4,70.04571428571428,5.4,true,false,false,32.54571428571428
+Jules Kounde,jules kounde,FRA,France,DEF,5,28.2,52.394285714285715,5.3,true,false,false,13.894285714285715
+Diogo Costa,diogo costa,PRT,Portugal,GK,1,28.5,34.78,4.7,true,false,false,-1.7199999999999989
+Ferran Torres,ferran torres,ESP,Spain,FWD,7,30.2,11.417142857142858,5.4,true,false,false,-12.832857142857142
+Declan Rice,declan rice,ENG,England,MID,4,31.2,52.714285714285715,5.0,true,false,false,15.214285714285715
+Nuno Mendes,nuno mendes,PRT,Portugal,DEF,25,31.6,53.71428571428572,4.7,true,false,false,15.214285714285722
+Pedro Porro,pedro porro,ESP,Spain,DEF,12,34.0,54.46285714285714,5.4,true,false,false,15.962857142857139
+Marc Cucurella,marc cucurella,ESP,Spain,DEF,24,35.8,64.64571428571429,5.4,true,false,false,26.14571428571429
+Kai Havertz,kai havertz,DEU,Germany,FWD,7,36.3,67.94857142857144,4.7,true,false,false,43.69857142857144
+Florian Wirtz,florian wirtz,DEU,Germany,MID,17,36.5,47.805714285714295,4.7,true,false,false,10.305714285714295
+Enzo Fernandez,enzo fernandez,ARG,Argentina,MID,24,36.7,44.38,4.9,true,false,false,6.880000000000003
+Aurelien Tchouameni,aurelien tchouameni,FRA,France,MID,8,38.3,57.542857142857144,5.3,true,false,false,20.042857142857144
+Lautaro Javier Martinez,lautaro javier martinez,ARG,Argentina,FWD,22,38.9,8.540000000000001,4.9,true,false,false,-15.709999999999999
+Reece James,reece james,ENG,England,DEF,24,39.0,49.14285714285714,5.0,true,false,false,10.642857142857139
+Bruno Guimaraes,bruno guimaraes,BRA,Brazil,MID,8,40.5,48.85714285714286,5.0,true,false,false,11.357142857142861
+Marcus Rashford,marcus rashford,ENG,England,FWD,11,42.7,53.142857142857146,5.0,true,false,false,28.892857142857146
+Theo Hernandez,theo hernandez,FRA,France,DEF,19,44.2,47.699999999999996,5.3,true,false,false,9.199999999999996
+Gabriel Magalhaes,gabriel magalhaes,BRA,Brazil,DEF,3,44.9,58.57142857142857,5.0,true,false,false,20.07142857142857
+Matheus Cunha,matheus cunha,BRA,Brazil,FWD,9,47.5,60.85714285714286,5.0,true,false,false,36.60714285714286
+Rafael Leao,rafael leao,PRT,Portugal,FWD,17,48.4,49.954285714285724,4.7,true,false,false,25.704285714285724
+Kevin De Bruyne,kevin de bruyne,BEL,Belgium,MID,7,49.2,35.04,4.2,true,false,false,-2.460000000000001
+Vitinha,vitinha,PRT,Portugal,MID,23,49.3,44.98571428571429,4.7,true,false,false,7.4857142857142875
+Joshua Kimmich,joshua kimmich,DEU,Germany,DEF,6,49.4,41.22571428571429,4.7,true,false,false,2.7257142857142895
+Jamal Musiala,jamal musiala,DEU,Germany,MID,10,49.4,49.01428571428572,4.7,true,false,false,11.51428571428572
+Cody Gakpo,cody gakpo,NLD,Netherlands,FWD,11,52.2,47.52,4.4,true,false,false,23.270000000000003
+Jeremy Doku,jeremy doku,BEL,Belgium,FWD,11,52.3,33.239999999999995,4.2,true,false,false,8.989999999999995
+Nahuel Molina,nahuel molina,ARG,Argentina,DEF,26,55.2,56.14000000000001,4.9,true,false,false,17.640000000000008
+Pau Cubarsi,pau cubarsi,ESP,Spain,DEF,22,56.2,62.02285714285715,5.4,true,false,false,23.52285714285715
+Luis Diaz,luis diaz,COL,Colombia,FWD,7,56.9,28.0,4.0,true,false,false,3.75
+Thibaut Courtois,thibaut courtois,BEL,Belgium,GK,1,58.1,26.88,4.2,true,false,false,-9.620000000000001
+Adrien Rabiot,adrien rabiot,FRA,France,MID,14,58.9,57.542857142857144,5.3,true,false,false,20.042857142857144
+Bart Verbruggen,bart verbruggen,NLD,Netherlands,GK,1,60.1,33.18857142857143,4.4,true,false,false,-3.3114285714285714
+William Saliba,william saliba,FRA,France,DEF,17,60.3,58.45142857142857,5.3,true,false,false,19.951428571428572
+Marc Guehi,marc guehi,ENG,England,DEF,6,61.8,51.14285714285714,5.0,true,false,false,12.642857142857139
+Pedro Neto,pedro neto,PRT,Portugal,FWD,18,64.7,47.940000000000005,4.7,true,false,false,23.690000000000005
+Elliot Anderson,elliot anderson,ENG,England,MID,8,64.9,57.42857142857143,5.0,true,false,false,19.92857142857143
+Dayot Upamecano,dayot upamecano,FRA,France,DEF,4,65.0,60.87428571428572,5.3,true,false,false,22.37428571428572
+Alexis Mac Allister,alexis mac allister,ARG,Argentina,MID,20,65.4,40.6,4.9,true,false,false,3.1000000000000014
+Bernardo Silva,bernardo silva,PRT,Portugal,MID,10,65.8,53.71428571428572,4.7,true,false,false,16.214285714285722
+Virgil Van Dijk,virgil van dijk,NLD,Netherlands,DEF,4,66.0,50.160000000000004,4.4,true,false,false,11.660000000000004
+Christian Pulisic,christian pulisic,USA,USA,FWD,10,66.2,24.7,3.5,true,false,false,0.4499999999999993
+Martin Odegaard,martin odegaard,NOR,Norway,MID,10,66.8,25.8,3.5,true,false,false,-11.7
+Memphis Depay,memphis depay,NLD,Netherlands,FWD,10,67.1,42.74285714285715,4.4,true,false,false,18.492857142857147
+Achraf Hakimi,achraf hakimi,MAR,Morocco,DEF,2,67.2,23.734285714285715,3.9,true,false,false,-14.765714285714285
+Oliver Baumann,oliver baumann,DEU,Germany,GK,12,67.4,27.662857142857145,4.7,true,false,false,-8.837142857142855
+Marquinhos,marquinhos,BRA,Brazil,DEF,4,67.5,47.28571428571429,5.0,true,false,false,8.785714285714292
+Casemiro,casemiro,BRA,Brazil,MID,5,68.2,48.85714285714286,5.0,true,false,false,11.357142857142861
+Ruben Dias,ruben dias,PRT,Portugal,DEF,3,68.7,53.98285714285715,4.7,true,false,false,15.48285714285715
+Joao Neves,joao neves,PRT,Portugal,MID,15,68.7,53.71428571428572,4.7,true,false,false,16.214285714285722
+Anthony Gordon,anthony gordon,ENG,England,FWD,18,69.4,7.571428571428571,5.0,true,false,false,-16.67857142857143
+Marcos Llorente,marcos llorente,ESP,Spain,DEF,5,69.4,58.62857142857143,5.4,true,false,false,20.128571428571433
+Orjan Nyland,orjan nyland,NOR,Norway,GK,1,69.5,25.1,3.5,true,false,false,-11.399999999999999
+James Rodriguez,james rodriguez,COL,Colombia,MID,10,69.5,32.34285714285714,4.0,true,false,false,-5.157142857142858
+Nico Ivan Gonzalez,nico ivan gonzalez,ARG,Argentina,MID,15,69.6,58.940000000000005,4.9,true,false,false,21.440000000000005
+Julian Ryerson,julian ryerson,NOR,Norway,FWD,26,69.7,39.9,3.5,true,false,false,15.649999999999999
+Marcus Thuram,marcus thuram,FRA,France,FWD,9,69.7,8.32857142857143,5.3,true,false,false,-15.92142857142857
+Frenkie De Jong,frenkie de jong,NLD,Netherlands,MID,21,70.0,49.90857142857144,4.4,true,false,false,12.408571428571442
+Matt Freese,matt freese,USA,USA,GK,24,70.0,39.7,3.5,true,false,false,3.200000000000003
+Ezri Konsa,ezri konsa,ENG,England,DEF,2,70.0,58.42857142857143,5.0,true,false,false,19.92857142857143
+Maxime De Cuyper,maxime de cuyper,BEL,Belgium,DEF,5,70.1,27.24,4.2,true,false,false,-11.260000000000002
+Joao Cancelo,joao cancelo,PRT,Portugal,DEF,20,70.2,41.89714285714286,4.7,true,false,false,3.3971428571428604
+Denzel Dumfries,denzel dumfries,NLD,Netherlands,DEF,22,70.2,43.74857142857143,4.4,true,false,false,5.248571428571431
+Federico Valverde,federico valverde,URY,Uruguay,MID,8,70.4,21.437142857142856,4.1,true,false,false,-16.062857142857144
+Charles De Ketelaere,charles de ketelaere,BEL,Belgium,FWD,17,70.5,32.879999999999995,4.2,true,false,false,8.629999999999995
+Nick Woltemade,nick woltemade,DEU,Germany,FWD,11,70.5,53.580000000000005,4.7,true,false,false,29.330000000000005
+Raul Jimenez,raul jimenez,MEX,Mexico,FWD,9,70.6,22.1,3.5,true,false,false,-2.1499999999999986
+Nicolas Tagliafico,nicolas tagliafico,ARG,Argentina,DEF,3,70.7,40.040000000000006,4.9,true,false,false,1.5400000000000063
+Brahim Diaz,brahim diaz,MAR,Morocco,FWD,10,70.8,25.517142857142858,3.9,true,false,false,1.2671428571428578
+Camilo Vargas,camilo vargas,COL,Colombia,GK,12,70.8,24.685714285714287,4.0,true,false,false,-11.814285714285713
+Arda Guler,arda guler,TUR,Turkey,FWD,8,70.9,0.0,3.7,true,false,false,-24.25
+Tijani Reijnders,tijani reijnders,NLD,Netherlands,MID,14,70.9,34.57142857142858,4.4,true,false,false,-2.9285714285714235
+Rodrigo De Paul,rodrigo de paul,ARG,Argentina,MID,7,71.0,41.02,4.9,true,false,false,3.520000000000003
+Gregor Kobel,gregor kobel,CHE,Switzerland,GK,1,71.0,20.880000000000003,3.6,true,false,false,-15.619999999999997
+Aymeric Laporte,aymeric laporte,ESP,Spain,DEF,14,71.0,60.17142857142857,5.4,true,false,false,21.67142857142857
+Nico OReilly,nico oreilly,ENG,England,DEF,3,71.0,43.57142857142857,5.0,true,false,false,5.071428571428569
+David Raum,david raum,DEU,Germany,DEF,22,71.0,37.19714285714286,4.7,true,false,false,-1.3028571428571425
+Morgan Rogers,morgan rogers,ENG,England,MID,17,71.0,7.571428571428571,5.0,true,false,false,-29.92857142857143
+Breel Embolo,breel embolo,CHE,Switzerland,FWD,7,71.2,23.348571428571432,3.6,true,false,false,-0.9014285714285677
+Donyell Malen,donyell malen,NLD,Netherlands,FWD,18,71.2,33.69142857142858,4.4,true,false,false,9.441428571428581
+Darwin Nunez,darwin nunez,URY,Uruguay,FWD,9,71.2,31.511428571428564,4.1,true,false,false,7.261428571428564
+David Raya,david raya,ESP,Spain,GK,1,71.2,2.468571428571429,5.4,true,false,false,-34.03142857142857
+Igor Thiago,igor thiago,BRA,Brazil,FWD,25,71.2,6.2857142857142865,5.0,true,false,false,-17.964285714285715
+Folarin Balogun,folarin balogun,USA,USA,FWD,20,71.3,23.8,3.5,true,false,false,-0.4499999999999993
+Gabriel Martinelli,gabriel martinelli,BRA,Brazil,FWD,22,71.3,6.2857142857142865,5.0,true,false,false,-17.964285714285715
+Leandro Trossard,leandro trossard,BEL,Belgium,FWD,10,71.3,34.08,4.2,true,false,false,9.829999999999998
+Kenan Yildiz,kenan yildiz,TUR,Turkey,FWD,11,71.3,21.77714285714286,3.7,true,false,false,-2.4728571428571406
+Ivan Perisic,ivan perisic,HRV,Croatia,FWD,14,71.4,48.262857142857136,4.1,true,false,false,24.012857142857136
+Nico Schlotterbeck,nico schlotterbeck,DEU,Germany,DEF,15,71.4,54.251428571428576,4.7,true,false,false,15.751428571428576
+Luis Suarez,luis suarez,COL,Colombia,FWD,25,71.4,30.857142857142854,4.0,true,false,false,6.607142857142854
+Ayase Ueda,ayase ueda,JPN,Japan,FWD,18,71.4,22.954285714285717,3.9,true,false,false,-1.2957142857142827
+Takefusa Kubo,takefusa kubo,JPN,Japan,MID,8,71.5,26.520000000000003,3.9,true,false,false,-10.979999999999997
+Alexander Sorloth,alexander sorloth,NOR,Norway,FWD,7,71.5,37.2,3.5,true,false,false,12.950000000000003
+Granit Xhaka,granit xhaka,CHE,Switzerland,MID,10,71.5,21.805714285714288,3.6,true,false,false,-15.694285714285712
+Endrick,endrick,BRA,Brazil,FWD,19,71.6,7.142857142857143,5.0,true,false,false,-17.107142857142858
+Dominik Livakovic,dominik livakovic,HRV,Croatia,GK,1,71.6,23.897142857142853,4.1,true,false,false,-12.602857142857147
+Romelu Lukaku,romelu lukaku,BEL,Belgium,FWD,9,71.6,6.84,4.2,true,false,false,-17.41
+Sadio Mane,sadio mane,SEN,Senegal,FWD,10,71.6,24.091428571428573,3.4,true,false,false,-0.15857142857142748
+Lisandro Martinez,lisandro martinez,ARG,Argentina,DEF,6,71.6,46.06,4.9,true,false,false,7.560000000000002
+Weston McKennie,weston mckennie,USA,USA,MID,8,71.6,17.7,3.5,true,false,false,-19.8
+Daniel Munoz,daniel munoz,COL,Colombia,DEF,2,71.6,27.428571428571427,4.0,true,false,false,-11.071428571428573
+Guillermo Ochoa,guillermo ochoa,MEX,Mexico,GK,13,71.6,0.4,3.5,true,false,false,-36.1
+Leroy Sane,leroy sane,DEU,Germany,MID,19,71.6,6.311428571428572,4.7,true,false,false,-31.18857142857143
+Roberto Alvarado,roberto alvarado,MEX,Mexico,FWD,25,71.7,19.1,3.5,true,false,false,-5.149999999999999
+Ugurcan Cakir,ugurcan cakir,TUR,Turkey,GK,23,71.7,22.094285714285714,3.7,true,false,false,-14.405714285714286
+Lucas Digne,lucas digne,FRA,France,DEF,3,71.7,55.72571428571428,5.3,true,false,false,17.225714285714282
+Thomas Meunier,thomas meunier,BEL,Belgium,DEF,15,71.7,47.879999999999995,4.2,true,false,false,9.379999999999995
+Gilberto Mora,gilberto mora,MEX,Mexico,MID,19,71.7,0.0,3.5,true,false,false,-37.5
+Neymar,neymar,BRA,Brazil,FWD,10,71.7,7.142857142857143,5.0,true,false,false,-17.107142857142858
+Antonio Nusa,antonio nusa,NOR,Norway,FWD,20,71.7,25.7,3.5,true,false,false,1.4499999999999993
+Cristian Romero,cristian romero,ARG,Argentina,DEF,13,71.7,5.32,4.9,true,false,false,-33.18
+Zion Suzuki,zion suzuki,JPN,Japan,GK,1,71.7,24.625714285714288,3.9,true,false,false,-11.874285714285712
+Jonathan Tah,jonathan tah,DEU,Germany,DEF,4,71.7,54.11714285714286,4.7,true,false,false,15.61714285714286
+Youri Tielemans,youri tielemans,BEL,Belgium,MID,8,71.7,31.56,4.2,true,false,false,-5.940000000000001
+Johan Vasquez,johan vasquez,MEX,Mexico,DEF,5,71.7,20.1,3.5,true,false,false,-18.4
+Kerem Akturkoglu,kerem akturkoglu,TUR,Turkey,FWD,7,71.8,26.217142857142857,3.7,true,false,false,1.967142857142857
+Moises Caicedo,moises caicedo,ECU,Ecuador,MID,23,71.8,16.708571428571428,3.4,true,false,false,-20.791428571428572
+Hakan Calhanoglu,hakan calhanoglu,TUR,Turkey,MID,10,71.8,20.825714285714284,3.7,true,false,false,-16.674285714285716
+Goncalo Inacio,goncalo inacio,PRT,Portugal,DEF,14,71.8,43.37428571428571,4.7,true,false,false,4.874285714285712
+Ryan Gravenberch,ryan gravenberch,NLD,Netherlands,MID,8,71.8,35.074285714285715,4.4,true,false,false,-2.4257142857142853
+Viktor Gyokeres,viktor gyokeres,SWE,,FWD,17,71.8,18.428571428571427,3.0,true,false,false,-5.821428571428573
+Luka Modric,luka modric,HRV,Croatia,MID,10,71.8,27.06,4.1,true,false,false,-10.440000000000001
+Nicolas Otamendi,nicolas otamendi,ARG,Argentina,DEF,19,71.8,46.06,4.9,true,false,false,7.560000000000002
+Willian Pacho,willian pacho,ECU,Ecuador,DEF,6,71.8,18.748571428571427,3.4,true,false,false,-19.751428571428573
+Goncalo Ramos,goncalo ramos,PRT,Portugal,FWD,9,71.8,7.654285714285715,4.7,true,false,false,-16.595714285714287
+Jose Raul Rangel,jose raul rangel,MEX,Mexico,GK,1,71.8,20.6,3.5,true,false,false,-15.899999999999999
+Antonee Robinson,antonee robinson,USA,USA,DEF,5,71.8,17.9,3.5,true,false,false,-20.6
+Deniz Undav,deniz undav,DEU,Germany,FWD,26,71.8,5.640000000000001,4.7,true,false,false,-18.61
+Tyler Adams,tyler adams,USA,USA,MID,4,71.9,17.7,3.5,true,false,false,-19.8
+Ronald Araujo,ronald araujo,URY,Uruguay,DEF,4,71.9,22.959999999999997,4.1,true,false,true,-15.540000000000003
+Marko Arnautovic,marko arnautovic,AUT,Austria,FWD,7,71.9,19.23428571428571,3.3,true,false,false,-5.015714285714289
+Alex Baena,alex baena,ESP,Spain,MID,15,71.9,0.0,5.4,true,false,false,-37.5
+Jonathan David,jonathan david,CAN,Canada,FWD,10,71.9,18.15714285714286,3.1,true,false,false,-6.092857142857142
+Nicolas De La Cruz,nicolas de la cruz,URY,Uruguay,MID,7,71.9,46.154285714285706,4.1,true,false,true,8.654285714285706
+Yan Diomande,yan diomande,CIV,Ivory Coast,FWD,11,71.9,0.0,3.4,true,false,false,-24.25
+Ayoub El Kaabi,ayoub el kaabi,MAR,Morocco,FWD,20,71.9,2.8971428571428572,3.9,true,false,false,-21.352857142857143
+Abde Ezzalzouli,abde ezzalzouli,MAR,Morocco,FWD,17,71.9,22.285714285714285,3.9,true,false,true,-1.9642857142857153
+Joao Felix,joao felix,PRT,Portugal,FWD,11,71.9,5.640000000000001,4.7,true,false,false,-18.61
+Alvaro Fidalgo,alvaro fidalgo,MEX,Mexico,MID,8,71.9,17.9,3.5,true,false,false,-19.6
+Joan Garcia,joan garcia,ESP,Spain,GK,13,71.9,2.468571428571429,5.4,true,false,false,-34.03142857142857
+Leon Goretzka,leon goretzka,DEU,Germany,MID,8,71.9,44.18,4.7,true,false,true,6.68
+Alex Grimaldo,alex grimaldo,ESP,Spain,DEF,3,71.9,8.485714285714286,5.4,true,false,false,-30.014285714285712
+Brian Gutierrez,brian gutierrez,MEX,Mexico,MID,26,71.9,2.3,3.5,true,false,false,-35.2
+Josko Gvardiol,josko gvardiol,HRV,Croatia,DEF,4,71.9,20.382857142857137,4.1,true,false,false,-18.117142857142863
+Caio Henrique,caio henrique,BRA,Brazil,DEF,21,71.9,56.857142857142854,5.0,true,false,true,18.357142857142854
+Son Heung-min,son heung min,KOR,South Korea,FWD,7,71.9,11.408571428571427,3.3,true,false,false,-12.841428571428573
+Piero Hincapie,piero hincapie,ECU,Ecuador,DEF,3,71.9,18.748571428571427,3.4,true,false,false,-19.751428571428573
+N'Golo Kante,n golo kante,FRA,France,MID,13,71.9,6.057142857142857,5.3,true,false,false,-31.442857142857143
+Lennart Karl,lennart karl,DEU,Germany,MID,25,71.9,0.0,4.7,true,false,false,-37.5
+Ibrahima Konate,ibrahima konate,FRA,France,DEF,15,71.9,6.057142857142857,5.3,true,false,false,-32.44285714285714
+Manu Kone,manu kone,FRA,France,MID,6,71.9,6.057142857142857,5.3,true,false,false,-31.442857142857143
+Luiz Henrique,luiz henrique,BRA,Brazil,FWD,21,71.9,6.2857142857142865,5.0,true,false,false,-17.964285714285715
+Kobbie Mainoo,kobbie mainoo,ENG,England,MID,16,71.9,5.571428571428571,5.0,true,false,false,-31.92857142857143
+Fernando Muslera,fernando muslera,URY,Uruguay,GK,23,71.9,23.545714285714283,4.1,true,false,true,-12.954285714285717
+Dan Ndoye,dan ndoye,CHE,Switzerland,FWD,11,71.9,2.674285714285715,3.6,true,false,false,-21.575714285714284
+Aleksandar Pavlovic,aleksandar pavlovic,DEU,Germany,MID,5,71.9,44.18,4.7,true,false,true,6.68
+Nico Paz,nico paz,ARG,Argentina,FWD,18,71.9,6.300000000000001,4.9,true,false,false,-17.95
+Yeremy Pino,yeremy pino,ESP,Spain,FWD,11,71.9,0.0,5.4,true,false,false,-24.25
+Rayan,rayan,BRA,Brazil,FWD,26,71.9,6.2857142857142865,5.0,true,false,false,-17.964285714285715
+Ismael Saibari,ismael saibari,MAR,Morocco,MID,11,71.9,23.734285714285715,3.9,true,false,true,-13.765714285714285
+Mohamed Salah,mohamed salah,EGY,Egypt,FWD,10,71.9,15.46285714285714,3.3,true,false,false,-8.78714285714286
+Davinson Sanchez,davinson sanchez,COL,Colombia,DEF,23,71.9,28.34285714285714,4.0,true,false,true,-10.157142857142858
+Patrik Schick,patrik schick,CZE,Czech Republic,FWD,10,71.9,17.44857142857143,3.1,true,false,false,-6.80142857142857
+Malik Tillman,malik tillman,USA,USA,MID,17,71.9,20.3,3.5,true,false,false,-17.2
+Enner Valencia,enner valencia,ECU,Ecuador,FWD,13,71.9,24.091428571428573,3.4,true,false,true,-0.15857142857142748
+Warren Zaire-Emery,warren zaire emery,FRA,France,MID,18,71.9,6.057142857142857,5.3,true,false,false,-31.442857142857143
+Luca Zidane,luca zidane,DZA,Algeria,GK,23,71.9,14.657142857142858,3.0,true,false,false,-21.84285714285714
+Martin Zubimendi,martin zubimendi,ESP,Spain,MID,18,71.9,8.022857142857143,5.4,true,false,false,-29.47714285714286
+Micky van de Ven,micky van de ven,NLD,Netherlands,DEF,15,71.9,30.04571428571429,4.4,true,false,true,-8.45428571428571
+Carlos Acevedo,carlos acevedo,MEX,Mexico,GK,12,72.0,0.4,3.5,true,false,false,-36.1
+Kristoffer Ajer,kristoffer ajer,NOR,Norway,DEF,3,72.0,25.5,3.5,true,false,true,-13.0
+Manuel Akanji,manuel akanji,CHE,Switzerland,DEF,5,72.0,20.571428571428573,3.6,true,false,true,-17.928571428571427
+David Alaba,david alaba,AUT,Austria,DEF,8,72.0,16.217142857142857,3.3,true,false,false,-22.282857142857143
+Thiago Almada,thiago almada,ARG,Argentina,FWD,16,72.0,5.32,4.9,true,false,false,-18.93
+Edson Alvarez,edson alvarez,MEX,Mexico,DEF,4,72.0,2.3,3.5,true,false,false,-36.2
+Maxi Araujo,maxi araujo,URY,Uruguay,MID,4,72.0,21.554285714285708,4.1,true,false,true,-15.945714285714292
+Jhon Arias,jhon arias,COL,Colombia,MID,11,72.0,26.97142857142857,4.0,true,false,true,-10.528571428571428
+Yasin Ayari,yasin ayari,SWE,,MID,18,72.0,13.028571428571427,3.0,true,false,false,-24.471428571428575
+Valentin Barco,valentin barco,ARG,Argentina,MID,8,72.0,5.32,4.9,true,false,false,-32.18
+Sander Berge,sander berge,NOR,Norway,MID,8,72.0,26.8,3.5,true,false,true,-10.7
+Oscar Bobb,oscar bobb,NOR,Norway,MID,22,72.0,25.9,3.5,true,false,true,-11.600000000000001
+Gleison Bremer,gleison bremer,BRA,Brazil,DEF,14,72.0,5.428571428571429,5.0,true,false,false,-33.07142857142857
+Ante Budimir,ante budimir,HRV,Croatia,FWD,11,72.0,23.311428571428568,4.1,true,false,true,-0.9385714285714322
+Timothy Castagne,timothy castagne,BEL,Belgium,DEF,21,72.0,3.24,4.2,true,false,false,-35.26
+Francisco Conceicao,francisco conceicao,PRT,Portugal,FWD,26,72.0,5.640000000000001,4.7,true,false,false,-18.61
+Vladimir Coufal,vladimir coufal,CZE,Czech Republic,DEF,5,72.0,14.082857142857144,3.1,true,false,false,-24.417142857142856
+Maxime Crepeau,maxime crepeau,CAN,Canada,GK,16,72.0,8.502857142857144,3.1,true,false,false,-27.997142857142855
+Danilo,danilo,BRA,Brazil,DEF,13,72.0,5.428571428571429,5.0,true,false,false,-33.07142857142857
+Alphonso Davies,alphonso davies,CAN,Canada,DEF,19,72.0,13.905714285714286,3.1,true,false,false,-24.594285714285714
+Merih Demiral,merih demiral,TUR,Turkey,DEF,3,72.0,19.98,3.7,true,false,false,-18.52
+Amad Diallo,amad diallo,CIV,Ivory Coast,FWD,15,72.0,18.554285714285715,3.4,true,false,false,-5.695714285714285
+Krepin Diatta,krepin diatta,SEN,Senegal,DEF,15,72.0,18.65142857142857,3.4,true,false,false,-19.84857142857143
+Ritsu Doan,ritsu doan,JPN,Japan,MID,10,72.0,23.622857142857143,3.9,true,false,true,-13.877142857142857
+Edin Dzeko,edin dzeko,BIH,Bosnia and Herzegovina,FWD,11,72.0,11.657142857142857,3.0,true,false,false,-12.592857142857143
+Ederson,ederson,BRA,Brazil,GK,23,72.0,1.142857142857143,5.0,true,false,false,-35.357142857142854
+Bilal El Khannouss,bilal el khannouss,MAR,Morocco,MID,23,72.0,0.0,3.9,true,false,false,-37.5
+Nico Elvedi,nico elvedi,CHE,Switzerland,DEF,4,72.0,20.571428571428573,3.6,true,false,true,-17.928571428571427
+Pervis Estupinan,pervis estupinan,ECU,Ecuador,DEF,7,72.0,17.194285714285712,3.4,true,false,false,-21.305714285714288
+Eberechi Eze,eberechi eze,ENG,England,MID,21,72.0,5.571428571428571,5.0,true,false,false,-31.92857142857143
+Fabinho,fabinho,BRA,Brazil,MID,17,72.0,5.428571428571429,5.0,true,false,false,-32.07142857142857
+Gabriel,gabriel,BRA,Brazil,MID,3,72.0,5.2857142857142865,5.0,true,false,false,-32.214285714285715
+Jesus Gallardo,jesus gallardo,MEX,Mexico,DEF,23,72.0,18.0,3.5,true,false,false,-20.5
+Armando Gonzalez Alba,armando gonzalez alba,MEX,Mexico,FWD,14,72.0,2.6,3.5,true,false,false,-21.65
+Gabriel Gudmundsson,gabriel gudmundsson,SWE,,DEF,5,72.0,14.057142857142855,3.0,true,false,false,-24.442857142857143
+Pape Gueye,pape gueye,SEN,Senegal,MID,26,72.0,16.805714285714288,3.4,true,false,false,-20.694285714285712
+Angus Gunn,angus gunn,SCO,Scotland,GK,1,72.0,16.45714285714286,3.2,true,false,false,-20.04285714285714
+Borja Iglesias,borja iglesias,ESP,Spain,FWD,26,72.0,9.72,5.4,true,false,false,-14.53
+Alexander Isak,alexander isak,SWE,,FWD,9,72.0,19.114285714285714,3.0,true,false,false,-5.135714285714286
+Ko Itakura,ko itakura,JPN,Japan,DEF,4,72.0,22.50857142857143,3.9,true,false,true,-15.991428571428571
+Junya Ito,junya ito,JPN,Japan,MID,14,72.0,23.400000000000002,3.9,true,false,true,-14.099999999999998
+Hiroki Ito,hiroki ito,JPN,Japan,DEF,21,72.0,22.50857142857143,3.9,true,false,true,-15.991428571428571
+Nicolas Jackson,nicolas jackson,SEN,Senegal,FWD,11,72.0,21.274285714285714,3.4,true,false,false,-2.975714285714286
+Ferdi Kadioglu,ferdi kadioglu,TUR,Turkey,DEF,20,72.0,17.125714285714285,3.7,true,false,false,-21.374285714285715
+Lee Kang-in,lee kang in,KOR,South Korea,MID,19,72.0,11.22,3.3,true,false,false,-26.28
+Franck Kessie,franck kessie,CIV,Ivory Coast,MID,8,72.0,13.308571428571428,3.4,true,false,false,-24.191428571428574
+Matej Kovar,matej kovar,CZE,Czech Republic,GK,1,72.0,16.74,3.1,true,false,false,-19.76
+Jorgen Strand Larsen,jorgen strand larsen,NOR,Norway,FWD,11,72.0,4.0,3.5,true,false,false,-20.25
+Jefferson Lerma,jefferson lerma,COL,Colombia,MID,16,72.0,29.142857142857142,4.0,true,false,true,-8.357142857142858
+Erik Lira,erik lira,MEX,Mexico,MID,6,72.0,20.9,3.5,true,false,true,-16.6
+Dodi Lukebakio,dodi lukebakio,BEL,Belgium,FWD,14,72.0,3.84,4.2,true,false,false,-20.41
+Noni Madueke,noni madueke,ENG,England,FWD,20,72.0,7.571428571428571,5.0,true,false,false,-16.67857142857143
+Daizen Maeda,daizen maeda,JPN,Japan,MID,11,72.0,3.008571428571429,3.9,true,false,false,-34.49142857142857
+Scott McTominay,scott mctominay,SCO,Scotland,MID,4,72.0,15.360000000000001,3.2,true,false,false,-22.14
+Johan Mojica,johan mojica,COL,Colombia,DEF,17,72.0,24.57142857142857,4.0,true,false,true,-13.92857142857143
+Cesar Montes,cesar montes,MEX,Mexico,DEF,3,72.0,20.1,3.5,true,false,false,-18.4
+Victor Munoz,victor munoz,ESP,Spain,FWD,25,72.0,0.0,5.4,true,false,false,-24.25
+Ruben Neves,ruben neves,PRT,Portugal,MID,21,72.0,41.89714285714286,4.7,true,false,true,4.39714285714286
+Kristoffer Nordfeldt,kristoffer nordfeldt,SWE,,GK,23,72.0,18.17142857142857,3.0,true,false,false,-18.32857142857143
+Alexander Nubel,alexander nubel,DEU,Germany,GK,21,72.0,1.0742857142857145,4.7,true,false,false,-35.425714285714285
+Danilo Oliveira,danilo oliveira,BRA,Brazil,MID,13,72.0,5.428571428571429,5.0,true,false,false,-32.07142857142857
+Amadou Onana,amadou onana,BEL,Belgium,MID,24,72.0,31.56,4.2,true,false,true,-5.940000000000001
+Joel Ordonez,joel ordonez,ECU,Ecuador,DEF,4,72.0,18.942857142857143,3.4,true,false,false,-19.557142857142857
+Orbelin Pineda,orbelin pineda,MEX,Mexico,MID,17,72.0,2.3,3.5,true,false,false,-35.2
+Gio Reyna,gio reyna,USA,USA,MID,7,72.0,2.4,3.5,true,false,false,-35.1
+Chris Richards,chris richards,USA,USA,DEF,3,72.0,19.2,3.5,true,false,false,-19.3
+Fabian Rieder,fabian rieder,CHE,Switzerland,MID,22,72.0,20.880000000000003,3.6,true,false,true,-16.619999999999997
+Sergio Rochet,sergio rochet,URY,Uruguay,GK,1,72.0,0.5857142857142856,4.1,true,false,false,-35.91428571428571
+Ricardo Rodriguez,ricardo rodriguez,CHE,Switzerland,DEF,13,72.0,18.720000000000002,3.6,true,false,false,-19.779999999999998
+Geronimo Rulli,geronimo rulli,ARG,Argentina,GK,12,72.0,1.12,4.9,true,false,false,-35.38
+Marcel Sabitzer,marcel sabitzer,AUT,Austria,MID,9,72.0,16.217142857142857,3.3,true,false,false,-21.282857142857143
+Brice Samba,brice samba,FRA,France,GK,1,72.0,1.3628571428571428,5.3,true,false,false,-35.137142857142855
+Jorge Sanchez,jorge sanchez,MEX,Mexico,DEF,2,72.0,19.7,3.5,true,false,false,-18.8
+Andrey Santos,andrey santos,BRA,Brazil,MID,16,72.0,0.0,5.0,true,false,false,-37.5
+Pape Matar Sarr,pape matar sarr,SEN,Senegal,MID,17,72.0,2.234285714285714,3.4,true,false,false,-35.26571428571429
+Alexander Schlager,alexander schlager,AUT,Austria,GK,1,72.0,17.63142857142857,3.3,true,false,false,-18.86857142857143
+Antoine Semenyo,antoine semenyo,GHA,Ghana,MID,11,72.0,14.348571428571429,3.1,true,false,false,-23.15142857142857
+Giuliano Simeone,giuliano simeone,ARG,Argentina,FWD,17,72.0,6.300000000000001,4.9,true,false,false,-17.95
+Dayne St. Clair,dayne st clair,CAN,Canada,GK,1,72.0,16.651428571428575,3.1,true,false,false,-19.848571428571425
+Josip Stanisic,josip stanisic,HRV,Croatia,DEF,2,72.0,22.491428571428568,4.1,true,false,true,-16.008571428571432
+John Stones,john stones,ENG,England,DEF,5,72.0,5.571428571428571,5.0,true,false,false,-32.92857142857143
+Yukinari Sugawara,yukinari sugawara,JPN,Japan,DEF,2,72.0,2.4514285714285715,3.9,true,false,false,-36.04857142857143
+Pavel Sulc,pavel sulc,CZE,Czech Republic,FWD,15,72.0,15.234285714285715,3.1,true,false,false,-9.015714285714285
+Arthur Theate,arthur theate,BEL,Belgium,DEF,3,72.0,31.2,4.2,true,false,true,-7.300000000000001
+Matt Turner,matt turner,USA,USA,GK,1,72.0,21.4,3.5,true,false,false,-15.100000000000001
+Guillermo Varela,guillermo varela,URY,Uruguay,DEF,13,72.0,22.959999999999997,4.1,true,false,true,-15.540000000000003
+Ruben Vargas,ruben vargas,CHE,Switzerland,FWD,17,72.0,18.925714285714285,3.6,true,false,false,-5.324285714285715
+Alexis Vega,alexis vega,MEX,Mexico,FWD,10,72.0,2.6,3.5,true,false,false,-21.65
+Federico Vinas,federico vinas,URY,Uruguay,FWD,21,72.0,3.0457142857142854,4.1,true,false,false,-21.204285714285714
+Luka Vuskovic,luka vuskovic,HRV,Croatia,DEF,22,72.0,22.257142857142853,4.1,true,false,true,-16.242857142857147
+Tim Weah,tim weah,USA,USA,FWD,21,72.0,20.9,3.5,true,false,false,-3.3500000000000014
+Silvan Widmer,silvan widmer,CHE,Switzerland,DEF,3,72.0,20.67428571428572,3.6,true,false,true,-17.82571428571428
+Yoane Wissa,yoane wissa,COD,Congo DR,MID,20,72.0,10.057142857142859,3.2,true,false,false,-27.442857142857143
+Brenden Aaronson,brenden aaronson,USA,USA,FWD,11,,2.4,3.5,true,false,false,-21.85
+Saud Abdulhamid,saud abdulhamid,SAU,Saudi Arabia,DEF,12,,8.365714285714285,3.05,true,false,false,-30.134285714285717
+Elias Achouri,elias achouri,TUN,Tunisia,FWD,7,,11.514285714285716,3.1,true,false,false,-12.735714285714284
+Che Adams,che adams,SCO,Scotland,FWD,10,,16.0,3.2,true,false,false,-8.25
+Michel Aebischer,michel aebischer,CHE,Switzerland,MID,20,,19.851428571428574,3.6,true,false,false,-17.648571428571426
+David Affengruber,david affengruber,AUT,Austria,DEF,2,,1.697142857142857,3.3,true,false,false,-36.80285714285714
+Emmanuel Agbadou,emmanuel agbadou,CIV,Ivory Coast,DEF,20,,15.057142857142857,3.4,true,false,false,-23.442857142857143
+Nayef Aguerd,nayef aguerd,MAR,Morocco,DEF,5,,2.4514285714285715,3.9,true,false,false,-36.04857142857143
+Rodrigo Aguirre,rodrigo aguirre,URY,Uruguay,FWD,19,,3.0457142857142854,4.1,true,false,false,-21.204285714285714
+Ali Ahmed,ali ahmed,CAN,Canada,FWD,20,,13.551428571428573,3.1,true,false,false,-10.698571428571427
+Rayan Ait-Nouri,rayan ait nouri,DZA,Algeria,DEF,15,,11.228571428571428,3.0,true,false,false,-27.271428571428572
+Samet Akaydin,samet akaydin,TUR,Turkey,DEF,25,,2.22,3.7,true,false,false,-36.28
+Nathan Ake,nathan ake,NLD,Netherlands,DEF,5,,34.44571428571429,4.4,true,false,false,-4.054285714285712
+Yunus Akgun,yunus akgun,TUR,Turkey,FWD,19,,3.065714285714286,3.7,true,false,false,-21.184285714285714
+Maghnes Akliouche,maghnes akliouche,FRA,France,MID,25,,6.057142857142857,5.3,true,false,false,-31.442857142857143
+Mousa Al Tamari,mousa al tamari,JOR,Jordan,FWD,10,,7.114285714285715,3.0,true,false,false,-17.135714285714286
+Omar Alderete,omar alderete,PRY,Paraguay,DEF,3,,13.905714285714286,3.1,true,false,false,-24.594285714285714
+Miguel Almiron,miguel almiron,PRY,Paraguay,MID,10,,14.968571428571428,3.1,true,false,false,-22.53142857142857
+Aurele Amenda,aurele amenda,CHE,Switzerland,DEF,24,,2.16,3.6,true,false,false,-36.34
+Youssef Amyn,youssef amyn,IRQ,Iraq,MID,7,,6.771428571428571,3.0,true,false,false,-30.728571428571428
+Joseph Anang,joseph anang,GHA,Ghana,GK,12,,0.26571428571428574,3.1,true,false,false,-36.23428571428571
+Waldemar Anton,waldemar anton,DEU,Germany,DEF,3,,4.7,4.7,true,false,false,-33.8
+Houssem Aouar,houssem aouar,DZA,Algeria,MID,8,,1.457142857142857,3.0,true,false,false,-36.042857142857144
+Tomas Araujo,tomas araujo,PRT,Portugal,DEF,4,,4.7,4.7,true,false,false,-33.8
+Carlens Arcus,carlens arcus,HTI,Haiti,DEF,2,,8.142857142857142,3.0,true,false,false,-30.357142857142858
+Jeremy Arevalo,jeremy arevalo,ECU,Ecuador,FWD,24,,2.4285714285714284,3.4,true,false,false,-21.821428571428573
+Max Arfsten,max arfsten,USA,USA,DEF,18,,2.4,3.5,true,false,false,-36.1
+Santiago Arias,santiago arias,COL,Colombia,DEF,4,,2.9714285714285715,4.0,true,false,false,-35.528571428571425
+Oguz Aydin,oguz aydin,TUR,Turkey,FWD,24,,3.065714285714286,3.7,true,false,false,-21.184285714285714
+Jordan Ayew,jordan ayew,GHA,Ghana,FWD,9,,14.348571428571429,3.1,true,false,false,-9.901428571428571
+Kaan Ayhan,kaan ayhan,TUR,Turkey,MID,22,,2.22,3.7,true,false,false,-35.28
+Esmir Bajraktarevic,esmir bajraktarevic,BIH,Bosnia and Herzegovina,FWD,20,,9.17142857142857,3.0,true,false,false,-15.07857142857143
+Cedric Bakambu,cedric bakambu,COD,Congo DR,FWD,17,,10.057142857142859,3.2,true,false,false,-14.192857142857141
+Simon Banza,simon banza,COD,Congo DR,FWD,23,,1.28,3.2,true,false,false,-22.97
+Yoel Barcenas,yoel barcenas,PAN,Panama,MID,11,,0.7714285714285714,3.0,true,false,false,-36.72857142857143
+Abdulkerim Bardakci,abdulkerim bardakci,TUR,Turkey,DEF,14,,19.98,3.7,true,false,false,-18.52
+Dylan Batubinsika,dylan batubinsika,COD,Congo DR,DEF,5,,0.7314285714285715,3.2,true,false,false,-37.76857142857143
+Martin Baturina,martin baturina,HRV,Croatia,MID,16,,2.6942857142857135,4.1,true,false,false,-34.80571428571429
+Altay Bayindir,altay bayindir,TUR,Turkey,GK,12,,0.4228571428571429,3.7,true,false,false,-36.07714285714286
+Jean-Ricner Bellegarde,jean ricner bellegarde,HTI,Haiti,MID,10,,7.114285714285715,3.0,true,false,false,-30.385714285714286
+Anis Ben Slimane,anis ben slimane,TUN,Tunisia,MID,25,,8.680000000000001,3.1,true,false,false,-28.82
+Ramy Bensebaini,ramy bensebaini,DZA,Algeria,DEF,21,,12.857142857142856,3.0,true,false,false,-25.642857142857146
+Patrick Berg,patrick berg,NOR,Norway,MID,6,,23.0,3.5,true,false,false,-14.5
+Lucas Bergvall,lucas bergvall,SWE,,MID,7,,0.0,3.0,true,false,false,-37.5
+Sebastian Berhalter,sebastian berhalter,USA,USA,MID,14,,2.4,3.5,true,false,false,-35.1
+Tyler Bindon,tyler bindon,NZL,New Zealand,DEF,4,,7.755714285714285,3.05,true,false,false,-30.744285714285716
+Fredrik Bjorkan,fredrik bjorkan,NOR,Norway,DEF,15,,2.7,3.5,true,false,false,-35.8
+Moise Bombito,moise bombito,CAN,Canada,DEF,15,,14.171428571428573,3.1,true,false,false,-24.32857142857143
+Jordan Bos,jordan bos,AUS,Australia,DEF,5,,12.160000000000002,3.2,true,false,false,-26.339999999999996
+Hichem Boudaoui,hichem boudaoui,DZA,Algeria,MID,14,,11.4,3.0,true,false,false,-26.1
+Michael Boxall,michael boxall,NZL,New Zealand,DEF,5,,7.755714285714285,3.05,true,false,false,-30.744285714285716
+Chris Brady,chris brady,USA,USA,GK,25,,0.4,3.5,true,false,false,-36.1
+Brian Brobbey,brian brobbey,NLD,Netherlands,FWD,19,,4.274285714285715,4.4,true,false,false,-19.975714285714286
+Dylan Bronn,dylan bronn,TUN,Tunisia,DEF,6,,9.565714285714288,3.1,true,false,false,-28.934285714285714
+Nathaniel Brown,nathaniel brown,DEU,Germany,DEF,18,,0.0,4.7,true,false,false,-38.5
+Tajon Buchanan,tajon buchanan,CAN,Canada,FWD,17,,12.931428571428572,3.1,true,false,false,-11.318571428571428
+Santiago Bueno,santiago bueno,URY,Uruguay,DEF,24,,2.577142857142857,4.1,true,false,false,-35.92285714285714
+Cameron Burgess,cameron burgess,AUS,Australia,DEF,21,,13.257142857142858,3.2,true,false,false,-25.24285714285714
+Dan Burn,dan burn,ENG,England,DEF,15,,5.571428571428571,5.0,true,false,false,-32.92857142857143
+Dzenis Burnic,dzenis burnic,BIH,Bosnia and Herzegovina,MID,17,,1.1142857142857143,3.0,true,false,false,-36.385714285714286
+Jovane Cabral,jovane cabral,CPV,Cape Verde,MID,7,,8.057142857142857,3.0,true,false,false,-29.442857142857143
+Liberato Cacace,liberato cacace,NZL,New Zealand,DEF,13,,7.929999999999999,3.05,true,false,false,-30.57
+Sebastian Caceres,sebastian caceres,URY,Uruguay,DEF,3,,2.577142857142857,4.1,true,false,false,-35.92285714285714
+Jordy Caicedo,jordy caicedo,ECU,Ecuador,FWD,16,,2.4285714285714284,3.4,true,false,false,-21.821428571428573
+Duje Caleta-Car,duje caleta car,HRV,Croatia,DEF,5,,22.257142857142853,4.1,true,false,false,-16.242857142857147
+Lamine Camara,lamine camara,SEN,Senegal,MID,8,,2.234285714285714,3.4,true,false,false,-35.26571428571429
+Agustin Canobbio,agustin canobbio,URY,Uruguay,MID,14,,3.0457142857142854,4.1,true,false,false,-34.45428571428572
+Adalberto Carrasquilla,adalberto carrasquilla,PAN,Panama,MID,8,,0.7714285714285714,3.0,true,false,false,-36.72857142857143
+Kevin Castano,kevin castano,COL,Colombia,MID,5,,2.9714285714285715,4.0,true,false,false,-34.528571428571425
+Denil Castillo,denil castillo,ECU,Ecuador,MID,18,,2.3314285714285714,3.4,true,false,false,-35.168571428571425
+Zeki Celik,zeki celik,TUR,Turkey,DEF,2,,0.0,3.7,true,false,false,-38.5
+Lukas Cerv,lukas cerv,CZE,Czech Republic,MID,12,,1.5057142857142858,3.1,true,false,false,-35.994285714285716
+Fares Chaibi,fares chaibi,DZA,Algeria,MID,10,,11.4,3.0,true,false,false,-26.1
+Samir Chergui,samir chergui,DZA,Algeria,MID,26,,1.1142857142857143,3.0,true,false,false,-36.385714285714286
+Mathieu Choiniere,mathieu choiniere,CAN,Canada,MID,6,,1.6828571428571428,3.1,true,false,false,-35.817142857142855
+Tahith Chong,tahith chong,CUW,Curaçao,MID,,,6.942857142857142,3.0,true,false,false,-30.557142857142857
+Tomas Chory,tomas chory,CZE,Czech Republic,FWD,19,,2.2142857142857144,3.1,true,false,false,-22.035714285714285
+Ryan Christie,ryan christie,SCO,Scotland,MID,11,,14.994285714285715,3.2,true,false,false,-22.505714285714284
+Carney Chukwuemeka,carney chukwuemeka,AUT,Austria,MID,17,,1.7914285714285714,3.3,true,false,false,-35.70857142857143
+Mojmir Chytil,mojmir chytil,CZE,Czech Republic,FWD,13,,2.2142857142857144,3.1,true,false,false,-22.035714285714285
+Alessandro Circati,alessandro circati,AUS,Australia,DEF,3,,13.257142857142858,3.2,true,false,false,-25.24285714285714
+Pathe Ciss,pathe ciss,SEN,Senegal,MID,6,,2.234285714285714,3.4,true,false,false,-35.26571428571429
+Livano Comenencia,livano comenencia,CUW,Curaçao,MID,,,6.857142857142857,3.0,true,false,false,-30.642857142857142
+Eray Comert,eray comert,CHE,Switzerland,DEF,18,,2.16,3.6,true,false,false,-36.34
+Jhon Emerson Cordoba Mosquera,jhon emerson cordoba mosquera,COL,Colombia,FWD,9,,0.0,4.0,true,false,false,-24.25
+Derek Cornelius,derek cornelius,CAN,Canada,DEF,13,,14.171428571428573,3.1,true,false,false,-24.32857142857143
+Logan Costa,logan costa,CPV,Cape Verde,DEF,5,,8.142857142857142,3.0,true,false,false,-30.357142857142858
+Samu Costa,samu costa,PRT,Portugal,DEF,24,,4.7,4.7,true,false,false,-33.8
+Max Crocombe,max crocombe,NZL,New Zealand,GK,1,,9.934285714285714,3.05,true,false,false,-26.565714285714286
+Andres Cubas,andres cubas,PRY,Paraguay,MID,14,,14.791428571428572,3.1,true,false,false,-22.708571428571428
+Diogo Dalot,diogo dalot,PRT,Portugal,DEF,5,,4.7,4.7,true,false,false,-33.8
+Kevin Danso,kevin danso,AUT,Austria,DEF,3,,1.697142857142857,3.3,true,false,false,-36.80285714285714
+Vladimir Darida,vladimir darida,CZE,Czech Republic,MID,8,,12.4,3.1,true,false,false,-25.1
+Eric Davis,eric davis,PAN,Panama,DEF,15,,7.628571428571428,3.0,true,false,false,-30.871428571428574
+Giorgian De Arrascaeta,giorgian de arrascaeta,URY,Uruguay,MID,10,,2.811428571428571,4.1,true,false,false,-34.68857142857143
+Luc De Fougerolles,luc de fougerolles,CAN,Canada,DEF,4,,1.5942857142857145,3.1,true,false,false,-36.90571428571428
+Koni De Winter,koni de winter,BEL,Belgium,DEF,16,,31.2,4.2,true,false,false,-7.300000000000001
+Zeno Debast,zeno debast,BEL,Belgium,DEF,2,,3.24,4.2,true,false,false,-35.26
+Milos Degenek,milos degenek,AUS,Australia,DEF,2,,13.257142857142858,3.2,true,false,false,-25.24285714285714
+Hannes Delcroix,hannes delcroix,HTI,Haiti,DEF,5,,7.9714285714285715,3.0,true,false,false,-30.52857142857143
+Ermedin Demirovic,ermedin demirovic,BIH,Bosnia and Herzegovina,FWD,10,,11.657142857142857,3.0,true,false,false,-12.592857142857143
+Oumar Diakite,oumar diakite,CIV,Ivory Coast,FWD,14,,2.4285714285714284,3.4,true,false,false,-21.821428571428573
+Assane Diao Diaoune,assane diao diaoune,SEN,Senegal,FWD,7,,2.4285714285714284,3.4,true,false,false,-21.821428571428573
+Habib Diarra,habib diarra,SEN,Senegal,MID,21,,16.805714285714288,3.4,true,false,false,-20.694285714285712
+Mory Diaw,mory diaw,SEN,Senegal,GK,23,,0.38857142857142857,3.4,true,false,false,-36.11142857142857
+Ousmane Diomande,ousmane diomande,CIV,Ivory Coast,DEF,2,,0.0,3.4,true,false,false,-38.5
+Issa Diop,issa diop,MAR,Morocco,DEF,14,,23.288571428571426,3.9,true,false,false,-15.211428571428574
+El Hadji Malick Diouf,el hadji malick diouf,SEN,Senegal,DEF,25,,16.805714285714288,3.4,true,false,false,-21.694285714285712
+Yehvann Diouf,yehvann diouf,SEN,Senegal,GK,1,,0.38857142857142857,3.4,true,false,false,-36.11142857142857
+Guela Doue,guela doue,CIV,Ivory Coast,DEF,17,,14.96,3.4,true,false,false,-23.54
+Jean-Kevin Duverne,jean kevin duverne,HTI,Haiti,DEF,22,,0.7714285714285714,3.0,true,false,false,-37.72857142857143
+Lyndon Dykes,lyndon dykes,SCO,Scotland,FWD,9,,1.9200000000000002,3.2,true,false,false,-22.33
+Dennis Eckert Ayensa,dennis eckert ayensa,IRN,Iran,FWD,24,,1.462857142857143,3.2,true,false,false,-22.787142857142857
+Ali El Abdi,ali el abdi,TUN,Tunisia,DEF,2,,0.8857142857142858,3.1,true,false,false,-37.614285714285714
+Neil El Aynaoui,neil el aynaoui,MAR,Morocco,MID,24,,24.291428571428572,3.9,true,false,false,-13.208571428571428
+Anthony Elanga,anthony elanga,SWE,,FWD,11,,17.65714285714286,3.0,true,false,false,-6.592857142857142
+Mechak Elia,mechak elia,COD,Congo DR,FWD,13,,1.28,3.2,true,false,false,-22.97
+Evren Eren Elmali,evren eren elmali,TUR,Turkey,DEF,13,,2.22,3.7,true,false,false,-36.28
+Julio Enciso,julio enciso,PRY,Paraguay,FWD,19,,13.72857142857143,3.1,true,false,false,-10.52142857142857
+Wataru Endo,wataru endo,JPN,Japan,MID,6,,20.837142857142858,3.9,true,false,false,-16.662857142857142
+Martin Erlic,martin erlic,HRV,Croatia,DEF,25,,2.46,4.1,true,false,false,-36.04
+Derrick Etienne,derrick etienne,HTI,Haiti,FWD,7,,0.9428571428571428,3.0,true,false,false,-23.307142857142857
+Stephen Eustaquio,stephen eustaquio,CAN,Canada,MID,7,,13.02,3.1,true,false,false,-24.48
+Jose Fajardo,jose fajardo,PAN,Panama,FWD,17,,1.2,3.0,true,false,false,-23.05
+Abdul Fatawu,abdul fatawu,GHA,Ghana,FWD,7,,2.0371428571428574,3.1,true,false,false,-22.212857142857143
+Lewis Ferguson,lewis ferguson,SCO,Scotland,MID,19,,1.5542857142857145,3.2,true,false,false,-35.94571428571429
+Mateus Fernandes,mateus fernandes,PRT,Portugal,MID,8,,4.565714285714286,4.7,true,false,false,-32.934285714285714
+Mark Flekken,mark flekken,NLD,Netherlands,GK,23,,0.8800000000000001,4.4,true,false,false,-35.62
+Yahia Fofana,yahia fofana,CIV,Ivory Coast,GK,1,,17.582857142857144,3.4,true,false,false,-18.917142857142856
+Seko Fofana,seko fofana,CIV,Ivory Coast,MID,6,,13.308571428571428,3.4,true,false,false,-24.191428571428574
+Lyle Foster,lyle foster,ZAF,South Africa,FWD,9,,9.585714285714285,3.05,true,false,false,-14.664285714285715
+Alex Freeman,alex freeman,USA,USA,DEF,16,,2.2,3.5,true,false,false,-36.3
+Remo Freuler,remo freuler,CHE,Switzerland,MID,8,,21.805714285714288,3.6,true,false,false,-15.694285714285712
+Marco Friedl,marco friedl,AUT,Austria,DEF,23,,1.697142857142857,3.3,true,false,false,-36.80285714285714
+Toni Fruk,toni fruk,HRV,Croatia,MID,19,,2.6942857142857135,4.1,true,false,false,-34.80571428571429
+Matthew Garbett,matthew garbett,NZL,New Zealand,MID,7,,7.058571428571428,3.05,true,false,false,-30.441428571428574
+Ismael Gharbi,ismael gharbi,TUN,Tunisia,FWD,11,,1.3285714285714287,3.1,true,false,false,-22.92142857142857
+Saman Ghoddos,saman ghoddos,IRN,Iran,MID,14,,8.22857142857143,3.2,true,false,false,-29.271428571428572
+Armin Gigovic,armin gigovic,BIH,Bosnia and Herzegovina,MID,8,,1.1142857142857143,3.0,true,false,false,-36.385714285714286
+Jose Gimenez,jose gimenez,URY,Uruguay,DEF,2,,22.959999999999997,4.1,true,false,false,-15.540000000000003
+Santiago Gimenez,santiago gimenez,MEX,Mexico,FWD,11,,3.4,3.5,true,false,false,-20.85
+Anibal Godoy,anibal godoy,PAN,Panama,MID,20,,7.542857142857143,3.0,true,false,false,-29.957142857142856
+Diego Gomez,diego gomez,PRY,Paraguay,MID,8,,15.145714285714288,3.1,true,false,false,-22.354285714285712
+Andres Gomez,andres gomez,COL,Colombia,FWD,26,,4.0,4.0,true,false,false,-20.25
+Owen Goodman,owen goodman,CAN,Canada,GK,18,,0.3542857142857143,3.1,true,false,false,-36.145714285714284
+Amine Gouiri,amine gouiri,DZA,Algeria,FWD,9,,15.942857142857143,3.0,true,false,false,-8.307142857142857
+Michael Gregoritsch,michael gregoritsch,AUT,Austria,FWD,11,,17.819999999999997,3.3,true,false,false,-6.430000000000003
+Florian Grillitsch,florian grillitsch,AUT,Austria,MID,10,,1.7914285714285714,3.3,true,false,false,-35.70857142857143
+Pascal Gross,pascal gross,DEU,Germany,MID,13,,4.7,4.7,true,false,false,-32.8
+Cho Gue-sung,cho gue sung,KOR,South Korea,FWD,9,,1.6028571428571428,3.3,true,false,false,-22.647142857142857
+Goncalo Guedes,goncalo guedes,PRT,Portugal,FWD,19,,5.640000000000001,4.7,true,false,false,-18.61
+Evann Guessand,evann guessand,CIV,Ivory Coast,FWD,22,,19.33142857142857,3.4,true,false,false,-4.918571428571429
+Idrissa Gana Gueye,idrissa gana gueye,SEN,Senegal,MID,5,,16.805714285714288,3.4,true,false,false,-20.694285714285712
+Deniz Daniel Gul,deniz daniel gul,TUR,Turkey,FWD,9,,3.065714285714286,3.7,true,false,false,-21.184285714285714
+Mert Gunok,mert gunok,TUR,Turkey,GK,1,,0.4228571428571429,3.7,true,false,false,-36.07714285714286
+Malo Gusto,malo gusto,FRA,France,DEF,2,,6.057142857142857,5.3,true,false,false,-32.44285714285714
+Jaouen Hadjam,jaouen hadjam,DZA,Algeria,DEF,13,,1.1142857142857143,3.0,true,false,false,-37.385714285714286
+Amir Hadziahmetovic,amir hadziahmetovic,BIH,Bosnia and Herzegovina,MID,16,,1.1142857142857143,3.0,true,false,false,-36.385714285714286
+Ehsan Hajsafi,ehsan hajsafi,IRN,Iran,DEF,3,,0.822857142857143,3.2,true,false,false,-37.677142857142854
+Redouane Halhal,redouane halhal,MAR,Morocco,DEF,25,,2.4514285714285715,3.9,true,false,false,-36.04857142857143
+Grant Hanley,grant hanley,SCO,Scotland,DEF,5,,1.462857142857143,3.2,true,false,false,-37.037142857142854
+Carlos Harvey,carlos harvey,PAN,Panama,DEF,14,,8.314285714285713,3.0,true,false,false,-30.185714285714287
+Haissem Hassan,haissem hassan,EGY,Egypt,FWD,12,,1.98,3.3,true,false,false,-22.27
+Jorrel Hato,jorrel hato,NLD,Netherlands,DEF,25,,3.7714285714285722,4.4,true,false,false,-34.72857142857143
+Jens Hauge,jens hauge,NOR,Norway,MID,23,,2.8,3.5,true,false,false,-34.7
+Hwang Hee-chan,hwang hee chan,KOR,South Korea,MID,11,,12.540000000000001,3.3,true,false,false,-24.96
+Torbjorn Heggem,torbjorn heggem,NOR,Norway,DEF,17,,25.5,3.5,true,false,false,-13.0
+Jordan Henderson,jordan henderson,ENG,England,MID,14,,5.571428571428571,5.0,true,false,false,-31.92857142857143
+Dean Henderson,dean henderson,ENG,England,GK,13,,1.2857142857142858,5.0,true,false,false,-35.214285714285715
+Jack Hendry,jack hendry,SCO,Scotland,DEF,13,,1.462857142857143,3.2,true,false,false,-37.037142857142854
+Lucas Hernandez,lucas hernandez,FRA,France,DEF,21,,6.057142857142857,5.3,true,false,false,-32.44285714285714
+Isak Hien,isak hien,SWE,,DEF,4,,14.314285714285713,3.0,true,false,false,-24.185714285714287
+George Hirst,george hirst,SCO,Scotland,FWD,18,,1.9200000000000002,3.2,true,false,false,-22.33
+Tomas Holes,tomas holes,CZE,Czech Republic,DEF,3,,1.1514285714285715,3.1,true,false,false,-37.348571428571425
+Marcus Holmgren Pedersen,marcus holmgren pedersen,NOR,Norway,DEF,16,,2.7,3.5,true,false,false,-35.8
+Robin Hranac,robin hranac,CZE,Czech Republic,DEF,4,,13.72857142857143,3.1,true,false,false,-24.771428571428572
+Ajdin Hrustic,ajdin hrustic,AUS,Australia,FWD,10,,1.5542857142857145,3.2,true,false,false,-22.695714285714285
+Dominic Hyam,dominic hyam,SCO,Scotland,DEF,16,,1.462857142857143,3.2,true,false,false,-37.037142857142854
+Oh Hyeon-gyu,oh hyeon gyu,KOR,South Korea,FWD,18,,1.6028571428571428,3.3,true,false,false,-22.647142857142857
+Yang Hyun-jun,yang hyun jun,KOR,South Korea,MID,20,,1.6028571428571428,3.3,true,false,false,-35.89714285714286
+Roger Ibanez,roger ibanez,BRA,Brazil,DEF,24,,5.428571428571429,5.0,true,false,false,-33.07142857142857
+Hwang In-beom,hwang in beom,KOR,South Korea,MID,6,,9.428571428571429,3.3,true,false,false,-28.07142857142857
+Zidane Iqbal,zidane iqbal,IRQ,Iraq,MID,14,,6.857142857142857,3.0,true,false,false,-30.642857142857142
+Nestory Irankunda,nestory irankunda,AUS,Australia,FWD,17,,2.468571428571429,3.2,true,false,false,-21.78142857142857
+Jackson Irvine,jackson irvine,AUS,Australia,MID,22,,12.251428571428573,3.2,true,false,false,-25.248571428571427
+Wilson Isidor,wilson isidor,HTI,Haiti,FWD,18,,6.685714285714285,3.0,true,false,false,-17.564285714285717
+Jacob Italiano,jacob italiano,AUS,Australia,DEF,4,,1.3714285714285714,3.2,true,false,false,-37.128571428571426
+Alireza Jahanbakhsh,alireza jahanbakhsh,IRN,Iran,MID,7,,1.462857142857143,3.2,true,false,false,-36.037142857142854
+Kristijan Jakic,kristijan jakic,HRV,Croatia,DEF,18,,2.6942857142857135,4.1,true,false,false,-35.80571428571429
+Ismail Jakobs,ismail jakobs,SEN,Senegal,DEF,14,,2.04,3.4,true,false,false,-36.46
+Ardon Jashari,ardon jashari,CHE,Switzerland,MID,14,,2.468571428571429,3.6,true,false,false,-35.03142857142857
+Danley Jean-Jacques,danley jean jacques,HTI,Haiti,MID,17,,0.7714285714285714,3.0,true,false,false,-36.72857142857143
+Alistair Johnston,alistair johnston,CAN,Canada,DEF,2,,14.791428571428572,3.1,true,false,false,-23.708571428571428
+David Jurasek,david jurasek,CZE,Czech Republic,DEF,14,,13.462857142857143,3.1,true,false,false,-25.037142857142857
+Ozan Kabak,ozan kabak,TUR,Turkey,DEF,15,,2.22,3.7,true,false,false,-36.28
+Irfan Kahveci,irfan kahveci,TUR,Turkey,FWD,17,,2.4314285714285715,3.7,true,false,false,-21.818571428571428
+Sasa Kalajdzic,sasa kalajdzic,AUT,Austria,FWD,14,,2.168571428571428,3.3,true,false,false,-22.08142857142857
+Daichi Kamada,daichi kamada,JPN,Japan,MID,15,,23.065714285714286,3.9,true,false,false,-14.434285714285714
+Nikola Katic,nikola katic,BIH,Bosnia and Herzegovina,DEF,18,,9.257142857142858,3.0,true,false,false,-29.24285714285714
+Edo Kayembe,edo kayembe,COD,Congo DR,MID,25,,0.822857142857143,3.2,true,false,false,-36.677142857142854
+Kayembe,kayembe,COD,Congo DR,DEF,12,,0.7314285714285715,3.2,true,false,false,-37.76857142857143
+Marvin Keller,marvin keller,CHE,Switzerland,GK,21,,0.5142857142857143,3.6,true,false,false,-35.98571428571429
+Liam Kelly,liam kelly,SCO,Scotland,GK,12,,0.2742857142857143,3.2,true,false,false,-36.22571428571428
+Rani Khedira,rani khedira,TUN,Tunisia,MID,13,,1.062857142857143,3.1,true,false,false,-36.43714285714286
+Abdukodir Khusanov,abdukodir khusanov,UZB,Uzbekistan,DEF,2,,7.7142857142857135,3.0,true,false,false,-30.785714285714285
+Orkun Kokcu,orkun kokcu,TUR,Turkey,MID,6,,2.4314285714285715,3.7,true,false,false,-35.06857142857143
+Sead Kolasinac,sead kolasinac,BIH,Bosnia and Herzegovina,DEF,5,,8.142857142857142,3.0,true,false,false,-30.357142857142858
+Ismael Kone,ismael kone,CAN,Canada,MID,8,,12.931428571428572,3.1,true,false,false,-24.568571428571428
+Teun Koopmeiners,teun koopmeiners,NLD,Netherlands,MID,20,,3.7714285714285722,4.4,true,false,false,-33.72857142857143
+Odilon Kossounou,odilon kossounou,CIV,Ivory Coast,DEF,7,,15.057142857142857,3.4,true,false,false,-23.442857142857143
+Andrej Kramaric,andrej kramaric,HRV,Croatia,FWD,9,,28.23142857142857,4.1,true,false,false,3.9814285714285695
+Ladislav Krejci,ladislav krejci,CZE,Czech Republic,DEF,7,,13.72857142857143,3.1,true,false,false,-24.771428571428572
+Maxence Lacroix,maxence lacroix,FRA,France,DEF,26,,6.057142857142857,5.3,true,false,false,-32.44285714285714
+Alban Lafont,alban lafont,CIV,Ivory Coast,GK,23,,0.38857142857142857,3.4,true,false,false,-36.11142857142857
+Gustaf Lagerbielke,gustaf lagerbielke,SWE,,DEF,2,,14.314285714285713,3.0,true,false,false,-24.185714285714287
+Konrad Laimer,konrad laimer,AUT,Austria,MID,20,,16.594285714285714,3.3,true,false,false,-20.905714285714286
+Senne Lammens,senne lammens,BEL,Belgium,GK,12,,0.72,4.2,true,false,false,-35.78
+Noa Lang,noa lang,NLD,Netherlands,FWD,17,,4.274285714285715,4.4,true,false,false,-19.975714285714286
+Cyle Larin,cyle larin,CAN,Canada,FWD,9,,1.9485714285714288,3.1,true,false,false,-22.30142857142857
+Richie Laryea,richie laryea,CAN,Canada,DEF,22,,1.5942857142857145,3.1,true,false,false,-36.90571428571428
+Jamie Leweling,jamie leweling,DEU,Germany,MID,9,,5.640000000000001,4.7,true,false,false,-31.86
+Philipp Lienhart,philipp lienhart,AUT,Austria,DEF,15,,16.217142857142857,3.3,true,false,false,-22.282857142857143
+Victor Lindelof,victor lindelof,SWE,,DEF,3,,14.314285714285713,3.0,true,false,false,-24.185714285714287
+Valentino Livramento,valentino livramento,ENG,England,DEF,12,,5.571428571428571,5.0,true,false,false,-32.92857142857143
+Derrick Luckassen,derrick luckassen,GHA,Ghana,DEF,23,,1.1514285714285715,3.1,true,false,false,-37.348571428571425
+Jhon Lucumi,jhon lucumi,COL,Colombia,DEF,3,,28.34285714285714,4.0,true,false,false,-10.157142857142858
+Awer Mabil,awer mabil,AUS,Australia,FWD,11,,1.5542857142857145,3.2,true,false,false,-22.695714285714285
+Deiver Machado,deiver machado,COL,Colombia,DEF,22,,2.9714285714285715,4.0,true,false,false,-35.528571428571425
+Riyad Mahrez,riyad mahrez,DZA,Algeria,FWD,7,,15.428571428571427,3.0,true,false,false,-8.821428571428573
+Aissa Mandi,aissa mandi,DZA,Algeria,DEF,2,,12.857142857142856,3.0,true,false,false,-25.642857142857146
+Omar Marmoush,omar marmoush,EGY,Egypt,FWD,22,,16.217142857142857,3.3,true,false,false,-8.032857142857143
+Ar'jany Martha,ar jany martha,CUW,Curaçao,MID,,,0.7714285714285714,3.0,true,false,false,-36.72857142857143
+Guillermo Martinez,guillermo martinez,MEX,Mexico,FWD,22,,2.6,3.5,true,false,false,-21.65
+Emiliano Martinez Toranza,emiliano martinez toranza,URY,Uruguay,MID,15,,2.811428571428571,4.1,true,false,false,-34.68857142857143
+Arthur Masuaku,arthur masuaku,COD,Congo DR,DEF,26,,7.771428571428572,3.2,true,false,false,-30.728571428571428
+Igor Matanovic,igor matanovic,HRV,Croatia,FWD,20,,2.928571428571428,4.1,true,false,false,-21.321428571428573
+Ibrahim Maza,ibrahim maza,DZA,Algeria,MID,22,,1.971428571428571,3.0,true,false,false,-35.52857142857143
+Noussair Mazraoui,noussair mazraoui,MAR,Morocco,DEF,3,,0.0,3.9,true,false,false,-38.5
+Chancel Mbemba,chancel mbemba,COD,Congo DR,DEF,22,,8.411428571428571,3.2,true,false,false,-30.088571428571427
+Nathanael Mbuku,nathanael mbuku,COD,Congo DR,MID,7,,1.28,3.2,true,false,false,-36.22
+John McGinn,john mcginn,SCO,Scotland,MID,7,,13.897142857142859,3.2,true,false,false,-23.60285714285714
+Scott McKenna,scott mckenna,SCO,Scotland,DEF,26,,14.354285714285714,3.2,true,false,false,-24.145714285714284
+Mark McKenzie,mark mckenzie,USA,USA,DEF,22,,19.2,3.5,true,false,false,-19.3
+Kenny McLean,kenny mclean,SCO,Scotland,MID,23,,14.994285714285715,3.2,true,false,false,-22.505714285714284
+Brandon Mechele,brandon mechele,BEL,Belgium,DEF,4,,3.24,4.2,true,false,false,-35.26
+Hannibal Mejbri,hannibal mejbri,TUN,Tunisia,MID,10,,8.680000000000001,3.1,true,false,false,-28.82
+Antoine Mendy,antoine mendy,SEN,Senegal,DEF,24,,2.04,3.4,true,false,false,-36.46
+Gideon Mensah,gideon mensah,GHA,Ghana,DEF,14,,12.577142857142858,3.1,true,false,false,-25.92285714285714
+Conor Metcalfe,conor metcalfe,AUS,Australia,MID,8,,12.251428571428573,3.2,true,false,false,-25.248571428571427
+Liam Millar,liam millar,CAN,Canada,MID,11,,1.9485714285714288,3.1,true,false,false,-35.55142857142857
+Kim Min-jae,kim min jae,KOR,South Korea,DEF,4,,10.182857142857143,3.3,true,false,false,-28.317142857142855
+Mostafa Mohamed,mostafa mohamed,EGY,Egypt,FWD,1,,1.5085714285714287,3.3,true,false,false,-22.74142857142857
+Milad Mohammadi,milad mohammadi,IRN,Iran,DEF,5,,7.954285714285715,3.2,true,false,false,-30.545714285714286
+Jamiro Monteiro,jamiro monteiro,CPV,Cape Verde,MID,10,,8.4,3.0,true,false,false,-29.1
+Steven Moreira,steven moreira,CPV,Cape Verde,DEF,22,,8.057142857142857,3.0,true,false,false,-30.442857142857143
+Nikola Moro,nikola moro,HRV,Croatia,MID,7,,2.6942857142857135,4.1,true,false,false,-34.80571428571429
+Samuel Moutoussamy,samuel moutoussamy,COD,Congo DR,MID,8,,7.771428571428572,3.2,true,false,false,-29.728571428571428
+Tarik Muharemovic,tarik muharemovic,BIH,Bosnia and Herzegovina,DEF,4,,9.257142857142858,3.0,true,false,false,-29.24285714285714
+Miro Muheim,miro muheim,CHE,Switzerland,DEF,2,,2.16,3.6,true,false,false,-36.34
+Mert Muldur,mert muldur,TUR,Turkey,DEF,18,,2.22,3.7,true,false,false,-36.28
+Michael Murillo,michael murillo,PAN,Panama,DEF,23,,8.057142857142857,3.0,true,false,false,-30.442857142857143
+Petar Musa,petar musa,HRV,Croatia,FWD,26,,2.928571428571428,4.1,true,false,false,-21.321428571428573
+Juan Musso,juan musso,ARG,Argentina,GK,1,,1.12,4.9,true,false,false,-35.38
+Yvon Mvogo,yvon mvogo,CHE,Switzerland,GK,12,,0.5142857142857143,3.6,true,false,false,-35.98571428571429
+Phillipp Mwene,phillipp mwene,AUT,Austria,DEF,16,,14.897142857142857,3.3,true,false,false,-23.602857142857143
+Evan N'Dicka,evan n dicka,CIV,Ivory Coast,DEF,21,,1.5542857142857143,3.4,true,false,false,-36.94571428571429
+Keito Nakamura,keito nakamura,JPN,Japan,MID,13,,20.837142857142858,3.9,true,false,false,-16.662857142857142
+Iliman Ndiaye,iliman ndiaye,SEN,Senegal,FWD,13,,19.525714285714287,3.4,true,false,false,-4.724285714285713
+Cherif Ndiaye,cherif ndiaye,SEN,Senegal,FWD,12,,2.4285714285714284,3.4,true,false,false,-21.821428571428573
+Nathan Ngoy,nathan ngoy,BEL,Belgium,DEF,25,,3.24,4.2,true,false,false,-35.26
+Moussa Niakhate,moussa niakhate,SEN,Senegal,DEF,19,,18.457142857142856,3.4,true,false,false,-20.042857142857144
+Ernest Nuamah,ernest nuamah,GHA,Ghana,FWD,24,,2.0371428571428574,3.1,true,false,false,-22.212857142857143
+Matheus Nunes,matheus nunes,PRT,Portugal,MID,6,,4.7,4.7,true,false,false,-32.8
+Benjamin Nygren,benjamin nygren,SWE,,MID,10,,2.3142857142857145,3.0,true,false,false,-35.18571428571428
+Aiden O'Neill,aiden o neill,AUS,Australia,MID,13,,1.5542857142857145,3.2,true,false,false,-35.94571428571429
+Armando Obispo,armando obispo,CUW,Curaçao,DEF,,,7.628571428571428,3.0,true,false,false,-30.871428571428574
+Braian Ojeda,braian ojeda,PRY,Paraguay,MID,20,,1.5057142857142858,3.1,true,false,false,-35.994285714285716
+Noah Okafor,noah okafor,CHE,Switzerland,FWD,19,,2.674285714285715,3.6,true,false,false,-21.575714285714284
+Mathias Olivera,mathias olivera,URY,Uruguay,DEF,16,,20.73428571428571,4.1,true,false,false,-17.76571428571429
+Tani Oluwaseyi,tani oluwaseyi,CAN,Canada,FWD,12,,14.525714285714285,3.1,true,false,false,-9.724285714285715
+Christopher Operi,christopher operi,CIV,Ivory Coast,DEF,13,,1.5542857142857143,3.4,true,false,false,-36.94571428571429
+Jonathan Osorio,jonathan osorio,CAN,Canada,MID,21,,1.6828571428571428,3.1,true,false,false,-35.817142857142855
+David Ospina,david ospina,COL,Colombia,GK,1,,24.114285714285714,4.0,true,false,false,-12.385714285714286
+Leo Ostigard,leo ostigard,NOR,Norway,DEF,4,,2.7,3.5,true,false,false,-35.8
+Azzedine Ounahi,azzedine ounahi,MAR,Morocco,MID,8,,2.7857142857142856,3.9,true,false,false,-34.714285714285715
+Elisha Owusu,elisha owusu,GHA,Ghana,MID,15,,1.5057142857142858,3.1,true,false,false,-35.994285714285716
+Salih Ozcan,salih ozcan,TUR,Turkey,MID,5,,2.4314285714285715,3.7,true,false,false,-35.06857142857143
+Exequiel Palacios,exequiel palacios,ARG,Argentina,MID,14,,5.32,4.9,true,false,false,-32.18
+Ivor Pandur,ivor pandur,HRV,Croatia,GK,12,,0.4685714285714285,4.1,true,false,false,-36.03142857142857
+Leandro Paredes,leandro paredes,ARG,Argentina,MID,5,,5.32,4.9,true,false,false,-32.18
+Thomas Partey,thomas partey,GHA,Ghana,MID,5,,12.045714285714286,3.1,true,false,false,-25.454285714285714
+Mario Pasalic,mario pasalic,HRV,Croatia,MID,15,,20.968571428571423,4.1,true,false,false,-16.531428571428577
+Marco Pasalic,marco pasalic,HRV,Croatia,FWD,24,,2.928571428571428,4.1,true,false,false,-21.321428571428573
+Nathan Patterson,nathan patterson,SCO,Scotland,DEF,22,,1.462857142857143,3.2,true,false,false,-37.037142857142854
+Facundo Pellistri,facundo pellistri,URY,Uruguay,FWD,11,,27.06,4.1,true,false,false,2.8099999999999987
+Patrick Pentz,patrick pentz,AUT,Austria,GK,13,,0.37714285714285717,3.3,true,false,false,-36.12285714285714
+Nicolas Pepe,nicolas pepe,CIV,Ivory Coast,FWD,19,,2.4285714285714284,3.4,true,false,false,-21.821428571428573
+Ricardo Pepi,ricardo pepi,USA,USA,FWD,9,,2.7,3.5,true,false,false,-21.55
+Charles Pickel,charles pickel,COD,Congo DR,MID,18,,7.771428571428572,3.2,true,false,false,-29.728571428571428
+Delentz Pierre,delentz pierre,HTI,Haiti,DEF,12,,0.7714285714285714,3.0,true,false,false,-37.72857142857143
+Alexandre Pierre,alexandre pierre,HTI,Haiti,GK,12,,0.17142857142857143,3.0,true,false,false,-36.32857142857143
+Frantzdy Pierrot,frantzdy pierrot,HTI,Haiti,FWD,20,,0.9428571428571428,3.0,true,false,false,-23.307142857142857
+Joaquin Piquerez,joaquin piquerez,URY,Uruguay,MID,22,,2.577142857142857,4.1,true,false,false,-34.92285714285714
+Marin Pongracic,marin pongracic,HRV,Croatia,DEF,3,,2.46,4.1,true,false,false,-36.04
+Jackson Porozo,jackson porozo,ECU,Ecuador,DEF,25,,2.04,3.4,true,false,false,-36.46
+Stefan Posch,stefan posch,AUT,Austria,DEF,5,,1.697142857142857,3.3,true,false,false,-36.80285714285714
+Alexander Prass,alexander prass,AUT,Austria,MID,22,,1.697142857142857,3.3,true,false,false,-35.80285714285714
+Angelo Preciado,angelo preciado,ECU,Ecuador,DEF,17,,2.04,3.4,true,false,false,-36.46
+Lukas Provod,lukas provod,CZE,Czech Republic,MID,17,,15.234285714285715,3.1,true,false,false,-22.265714285714285
+Gustavo Puerta,gustavo puerta,COL,Colombia,DEF,14,,2.9714285714285715,4.0,true,false,false,-35.528571428571425
+Jarell Quansah,jarell quansah,ENG,England,DEF,26,,5.571428571428571,5.0,true,false,false,-32.92857142857143
+Juan Quintero,juan quintero,COL,Colombia,MID,20,,2.9714285714285715,4.0,true,false,false,-34.528571428571425
+Stjepan Radeljic,stjepan radeljic,BIH,Bosnia and Herzegovina,DEF,21,,0.8571428571428571,3.0,true,false,false,-37.642857142857146
+Cristian Ramirez,cristian ramirez,ECU,Ecuador,DEF,12,,1.9428571428571428,3.4,true,false,false,-36.55714285714286
+Bryan Ramirez,bryan ramirez,ECU,Ecuador,FWD,12,,1.9428571428571428,3.4,true,false,false,-22.307142857142857
+Nicolas Raskin,nicolas raskin,BEL,Belgium,MID,23,,3.24,4.2,true,false,false,-34.26
+Tim Ream,tim ream,USA,USA,DEF,13,,19.2,3.5,true,false,false,-19.3
+Omar Rekik,omar rekik,TUN,Tunisia,DEF,4,,8.325714285714287,3.1,true,false,false,-30.174285714285713
+Israel Reyes,israel reyes,MEX,Mexico,DEF,15,,2.1,3.5,true,false,false,-36.4
+Chadi Riad,chadi riad,MAR,Morocco,DEF,18,,23.288571428571426,3.9,true,false,false,-15.211428571428574
+Andy Robertson,andy robertson,SCO,Scotland,DEF,3,,13.440000000000001,3.2,true,false,false,-25.06
+Miles Robinson,miles robinson,USA,USA,DEF,12,,2.2,3.5,true,false,false,-36.3
+Jose Luis Rodriguez,jose luis rodriguez,PAN,Panama,MID,7,,8.571428571428571,3.0,true,false,false,-28.92857142857143
+Brian Rodriguez,brian rodriguez,URY,Uruguay,FWD,18,,3.0457142857142854,4.1,true,false,false,-21.204285714285714
+Kevin Rodriguez,kevin rodriguez,ECU,Ecuador,FWD,11,,2.4285714285714284,3.4,true,false,false,-21.821428571428573
+Cristian Roldan,cristian roldan,USA,USA,MID,15,,2.4,3.5,true,false,false,-35.1
+Eloy Room,eloy room,CUW,Curaçao,GK,,,7.457142857142856,3.0,true,false,false,-29.042857142857144
+Antonio Rudiger,antonio rudiger,DEU,Germany,DEF,2,,4.7,4.7,true,false,false,-33.8
+Mathew Ryan,mathew ryan,AUS,Australia,GK,1,,11.520000000000001,3.2,true,false,false,-24.979999999999997
+Jose Sa,jose sa,PRT,Portugal,GK,12,,1.0742857142857145,4.7,true,false,false,-35.425714285714285
+Elias Saad,elias saad,TUN,Tunisia,FWD,8,,10.894285714285715,3.1,true,false,false,-13.355714285714285
+Noah Sadiki,noah sadiki,COD,Congo DR,MID,14,,7.771428571428572,3.2,true,false,false,-29.728571428571428
+Michal Sadilek,michal sadilek,CZE,Czech Republic,MID,18,,1.5057142857142858,3.1,true,false,false,-35.994285714285716
+Alexis Saelemaekers,alexis saelemaekers,BEL,Belgium,MID,22,,3.84,4.2,true,false,false,-33.66
+Anass Salah-Eddine,anass salah eddine,MAR,Morocco,DEF,26,,2.4514285714285715,3.9,true,false,false,-36.04857142857143
+Nathan Saliba,nathan saliba,CAN,Canada,MID,25,,0.0,3.1,true,false,false,-37.5
+Shurandy Sambo,shurandy sambo,CUW,Curaçao,DEF,,,7.885714285714284,3.0,true,false,false,-30.614285714285714
+Antonio Sanabria,antonio sanabria,PRY,Paraguay,FWD,9,,17.98,3.1,true,false,false,-6.27
+Juan Sanabria,juan sanabria,URY,Uruguay,MID,25,,2.811428571428571,4.1,true,false,false,-34.68857142857143
+Erick Sanchez,erick sanchez,MEX,Mexico,MID,2,,2.2,3.5,true,false,false,-35.3
+Ibrahim Sangare,ibrahim sangare,CIV,Ivory Coast,MID,18,,13.308571428571428,3.4,true,false,false,-24.191428571428574
+Kaishu Sano,kaishu sano,JPN,Japan,MID,24,,2.7857142857142856,3.9,true,false,false,-34.714285714285715
+Ismaila Sarr,ismaila sarr,SEN,Senegal,FWD,18,,2.4285714285714284,3.4,true,false,false,-21.821428571428573
+Mamadou Sarr,mamadou sarr,SEN,Senegal,DEF,2,,2.04,3.4,true,false,false,-36.46
+Joe Scally,joe scally,USA,USA,DEF,23,,2.2,3.5,true,false,false,-36.3
+Andreas Schjelderup,andreas schjelderup,NOR,Norway,MID,21,,4.0,3.5,true,false,false,-33.5
+Xaver Schlager,xaver schlager,AUT,Austria,MID,4,,16.97142857142857,3.3,true,false,false,-20.52857142857143
+Romano Schmid,romano schmid,AUT,Austria,MID,18,,15.368571428571428,3.3,true,false,false,-22.13142857142857
+Alessandro Schopf,alessandro schopf,AUT,Austria,MID,26,,1.7914285714285714,3.3,true,false,false,-35.70857142857143
+Nicolas Seiwald,nicolas seiwald,AUT,Austria,MID,6,,16.97142857142857,3.3,true,false,false,-20.52857142857143
+Ayumu Seko,ayumu seko,JPN,Japan,DEF,20,,2.4514285714285715,3.9,true,false,false,-36.04857142857143
+Nelson Semedo,nelson semedo,PRT,Portugal,DEF,2,,4.7,4.7,true,false,false,-33.8
+Marvin Senaya,marvin senaya,GHA,Ghana,DEF,26,,1.1514285714285715,3.1,true,false,false,-37.348571428571425
+Joaquin Seys,joaquin seys,BEL,Belgium,DEF,18,,3.24,4.2,true,false,false,-35.26
+Eldor Shomurodov,eldor shomurodov,UZB,Uzbekistan,FWD,14,,6.771428571428571,3.0,true,false,false,-17.478571428571428
+Rui Silva,rui silva,PRT,Portugal,GK,22,,1.0742857142857145,4.7,true,false,false,-35.425714285714285
+Antonio Silva,antonio silva,PRT,Portugal,DEF,10,,0.0,4.7,true,false,false,-38.5
+Wilfried Singo,wilfried singo,CIV,Ivory Coast,DEF,5,,1.5542857142857143,3.4,true,false,false,-36.94571428571429
+Ellyes Skhiri,ellyes skhiri,TUN,Tunisia,MID,17,,10.00857142857143,3.1,true,false,false,-27.49142857142857
+Eric Smith,eric smith,SWE,,DEF,20,,1.2857142857142856,3.0,true,false,false,-37.214285714285715
+Tomas Soucek,tomas soucek,CZE,Czech Republic,MID,22,,12.4,3.1,true,false,false,-25.1
+John Souttar,john souttar,SCO,Scotland,DEF,15,,14.354285714285714,3.2,true,false,false,-24.145714285714284
+Harry Souttar,harry souttar,AUS,Australia,DEF,19,,1.3714285714285714,3.2,true,false,false,-37.128571428571426
+Djibril Sow,djibril sow,CHE,Switzerland,MID,15,,2.468571428571429,3.6,true,false,false,-35.03142857142857
+Djed Spence,djed spence,ENG,England,DEF,25,,5.571428571428571,5.0,true,false,false,-32.92857142857143
+Marko Stamenic,marko stamenic,NZL,New Zealand,MID,8,,8.278571428571428,3.05,true,false,false,-29.22142857142857
+Carl Starfelt,carl starfelt,SWE,,DEF,15,,1.2857142857142856,3.0,true,false,false,-37.214285714285715
+Angelo Stiller,angelo stiller,DEU,Germany,MID,16,,4.7,4.7,true,false,false,-32.8
+Petar Sucic,petar sucic,HRV,Croatia,MID,17,,2.6942857142857135,4.1,true,false,false,-34.80571428571429
+Luka Sucic,luka sucic,HRV,Croatia,MID,21,,2.6942857142857135,4.1,true,false,false,-34.80571428571429
+Kamaldeen Sulemana,kamaldeen sulemana,GHA,Ghana,FWD,22,,2.0371428571428574,3.1,true,false,false,-22.212857142857143
+Ivan Sunjic,ivan sunjic,BIH,Bosnia and Herzegovina,MID,14,,8.4,3.0,true,false,false,-29.1
+Josip Sutalo,josip sutalo,HRV,Croatia,DEF,6,,2.46,4.1,true,false,false,-36.04
+Yuito Suzuki,yuito suzuki,JPN,Japan,MID,17,,2.7857142857142856,3.9,true,false,false,-34.714285714285715
+Mattias Svanberg,mattias svanberg,SWE,,MID,19,,1.6285714285714283,3.0,true,false,false,-35.871428571428574
+Michael Svoboda,michael svoboda,AUT,Austria,DEF,25,,1.697142857142857,3.3,true,false,false,-36.80285714285714
+Haris Tabakovic,haris tabakovic,BIH,Bosnia and Herzegovina,FWD,23,,1.5428571428571427,3.0,true,false,false,-22.707142857142856
+Benjamin Tahirovic,benjamin tahirovic,BIH,Bosnia and Herzegovina,MID,6,,8.4,3.0,true,false,false,-29.1
+Montassar Talbi,montassar talbi,TUN,Tunisia,DEF,3,,9.565714285714288,3.1,true,false,false,-28.934285714285714
+Chemsdine Talbi,chemsdine talbi,MAR,Morocco,MID,7,,2.8971428571428572,3.9,true,false,false,-34.60285714285714
+Ao Tanaka,ao tanaka,JPN,Japan,MID,7,,2.7857142857142856,3.9,true,false,false,-34.714285714285715
+Mehdi Taremi,mehdi taremi,IRN,Iran,FWD,9,,11.062857142857144,3.2,true,false,false,-13.187142857142856
+Malick Thiaw,malick thiaw,DEU,Germany,DEF,24,,4.7,4.7,true,false,false,-33.8
+Brandon Thomas-Asante,brandon thomas asante,GHA,Ghana,FWD,10,,2.0371428571428574,3.1,true,false,false,-22.212857142857143
+Morten Thorsby,morten thorsby,NOR,Norway,MID,2,,2.8,3.5,true,false,false,-34.7
+Kristian Thorstvedt,kristian thorstvedt,NOR,Norway,MID,18,,2.8,3.5,true,false,false,-34.7
+Kieran Tierney,kieran tierney,SCO,Scotland,DEF,6,,1.462857142857143,3.2,true,false,false,-37.037142857142854
+Timothy Tillman,timothy tillman,USA,USA,MID,17,,2.4,3.5,true,false,false,-35.1
+Jurrien Timber,jurrien timber,NLD,Netherlands,DEF,2,,3.7714285714285722,4.4,true,false,false,-34.72857142857143
+Quinten Timber,quinten timber,NLD,Netherlands,MID,26,,3.7714285714285722,4.4,true,false,false,-33.72857142857143
+Takehiro Tomiyasu,takehiro tomiyasu,JPN,Japan,DEF,22,,22.50857142857143,3.9,true,false,false,-15.991428571428571
+Sebastian Tounekti,sebastian tounekti,TUN,Tunisia,FWD,26,,1.3285714285714287,3.1,true,false,false,-22.92142857142857
+Mohamed Toure,mohamed toure,AUS,Australia,FWD,9,,2.468571428571429,3.2,true,false,false,-21.78142857142857
+James Trafford,james trafford,ENG,England,GK,23,,1.2857142857142858,5.0,true,false,false,-35.214285714285715
+Kai Trewin,kai trewin,AUS,Australia,DEF,15,,1.3714285714285714,3.2,true,false,false,-37.128571428571426
+Francisco Trincao,francisco trincao,PRT,Portugal,FWD,16,,5.640000000000001,4.7,true,false,false,-18.61
+Auston Trusty,auston trusty,USA,USA,DEF,6,,2.2,3.5,true,false,false,-36.3
+Axel Tuanzebe,axel tuanzebe,COD,Congo DR,DEF,4,,8.411428571428571,3.2,true,false,false,-30.088571428571427
+Manuel Ugarte,manuel ugarte,URY,Uruguay,MID,5,,20.617142857142856,4.1,true,false,false,-16.882857142857144
+Yan Valery,yan valery,TUN,Tunisia,DEF,20,,9.3,3.1,true,false,false,-29.2
+Hans Vanaken,hans vanaken,BEL,Belgium,MID,20,,3.24,4.2,true,false,false,-34.26
+Obed Vargas,obed vargas,MEX,Mexico,MID,18,,2.3,3.5,true,false,false,-35.2
+Nikola Vasilj,nikola vasilj,BIH,Bosnia and Herzegovina,GK,1,,10.457142857142856,3.0,true,false,false,-26.042857142857144
+Renato Veiga,renato veiga,PRT,Portugal,DEF,13,,0.0,4.7,true,false,false,-38.5
+Matias Vina,matias vina,URY,Uruguay,DEF,17,,2.577142857142857,4.1,true,false,false,-35.92285714285714
+Denis Visinsky,denis visinsky,CZE,Czech Republic,FWD,26,,1.5057142857142858,3.1,true,false,false,-22.744285714285713
+Pedro Vite,pedro vite,ECU,Ecuador,MID,15,,16.708571428571428,3.4,true,false,false,-20.791428571428572
+Nikola Vlasic,nikola vlasic,HRV,Croatia,MID,13,,2.6942857142857135,4.1,true,false,false,-34.80571428571429
+Elye Wahi,elye wahi,CIV,Ivory Coast,FWD,12,,2.4285714285714284,3.4,true,false,false,-21.821428571428573
+Ben Waine,ben waine,NZL,New Zealand,FWD,18,,0.9585714285714285,3.05,true,false,false,-23.291428571428572
+Aaron Wan-Bissaka,aaron wan bissaka,COD,Congo DR,DEF,2,,8.868571428571428,3.2,true,false,false,-29.63142857142857
+Paul Wanner,paul wanner,AUT,Austria,MID,24,,1.7914285714285714,3.3,true,false,false,-35.70857142857143
+Tsuyoshi Watanabe,tsuyoshi watanabe,JPN,Japan,DEF,16,,2.4514285714285715,3.9,true,false,false,-36.04857142857143
+Joel Waterman,joel waterman,CAN,Canada,DEF,5,,1.5942857142857145,3.1,true,false,false,-36.90571428571428
+Wout Weghorst,wout weghorst,NLD,Netherlands,FWD,9,,4.777142857142858,4.4,true,false,false,-19.472857142857144
+Florian Wiegele,florian wiegele,AUT,Austria,GK,12,,0.0,3.3,true,false,false,-36.5
+Inaki Williams,inaki williams,GHA,Ghana,FWD,19,,16.12,3.1,true,false,false,-8.129999999999999
+Patrick Wimmer,patrick wimmer,AUT,Austria,FWD,21,,1.7914285714285714,3.3,true,false,false,-22.458571428571428
+Axel Witsel,axel witsel,BEL,Belgium,MID,6,,3.24,4.2,true,false,false,-34.26
+Chris Wood,chris wood,NZL,New Zealand,FWD,9,,6.709999999999999,3.05,true,false,false,-17.54
+John Yeboah,john yeboah,ECU,Ecuador,FWD,9,,2.4285714285714284,3.4,true,false,false,-21.821428571428573
+Baris Yilmaz,baris yilmaz,TUR,Turkey,FWD,21,,0.0,3.7,true,false,false,-24.25
+Ismail Yuksek,ismail yuksek,TUR,Turkey,MID,16,,20.825714285714284,3.7,true,false,false,-16.674285714285716
+Denis Zakaria,denis zakaria,CHE,Switzerland,MID,6,,2.468571428571429,3.6,true,false,false,-35.03142857142857
+Rodrigo Zalazar,rodrigo zalazar,URY,Uruguay,MID,26,,2.811428571428571,4.1,true,false,false,-34.68857142857143
+Jaroslav Zeleny,jaroslav zeleny,CZE,Czech Republic,DEF,20,,1.1514285714285715,3.1,true,false,false,-37.348571428571425
+Ramiz Zerrouki,ramiz zerrouki,DZA,Algeria,MID,6,,1.457142857142857,3.0,true,false,false,-36.042857142857144
+Jan-Paul van Hecke,jan paul van hecke,NLD,Netherlands,DEF,6,,3.7714285714285722,4.4,true,false,false,-34.72857142857143

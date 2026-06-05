@@ -28,24 +28,14 @@ export default function LoginPage() {
   // On mount: check whether we're returning from a redirect sign-in.
   useEffect(() => {
     if (!configured) return;
-    setBusy(true);
+    // Drain any stale redirect state from previous sign-in attempts.
+    // signInWithGoogle now uses popup-only, so this will almost always be
+    // null — but clearing it prevents stale "missing initial state" errors.
     checkRedirectResult()
       .then((idToken) => {
         if (idToken) return completeSignIn(idToken);
       })
-      .catch((e) => {
-        const code = (e as { code?: string }).code ?? "";
-        // Safari ITP can block the redirect result storage. Guide the user.
-        const isSafariItp =
-          code.includes("web-storage") ||
-          code.includes("operation-not-supported") ||
-          code.includes("internal-error");
-        setError(
-          isSafariItp
-            ? "Sign-in blocked by browser privacy settings. Try disabling “Prevent Cross-Site Tracking” in Safari settings, or use a different browser."
-            : (e instanceof Error ? e.message : "sign-in failed"),
-        );
-      })
+      .catch(() => { /* stale state — ignore */ })
       .finally(() => setBusy(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -55,11 +45,7 @@ export default function LoginPage() {
     setError(null);
     try {
       const idToken = await signInWithGoogle();
-      if (idToken) {
-        // Popup flow completed synchronously.
-        await completeSignIn(idToken);
-      }
-      // If idToken is null, a redirect was initiated — page will navigate away.
+      await completeSignIn(idToken);
     } catch (e) {
       setError(e instanceof Error ? e.message : "sign-in failed");
       setBusy(false);
