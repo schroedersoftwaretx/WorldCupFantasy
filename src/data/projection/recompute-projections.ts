@@ -12,7 +12,7 @@
  * same rows.
  */
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import * as schema from "../db/schema.js";
@@ -137,8 +137,8 @@ export async function recomputeProjections(
           schema.projectedScoreEntry.rulesetVersion,
         ],
         set: {
-          projectedPoints: schema.projectedScoreEntry.projectedPoints,
-          computedAt: schema.projectedScoreEntry.computedAt,
+          projectedPoints: sql`excluded.projected_points`,
+          computedAt: sql`now()`,
         },
       });
   }

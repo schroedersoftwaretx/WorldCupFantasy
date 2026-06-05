@@ -1,47 +1,77 @@
 /**
  * Sign-in page.
  *
- * A client component: the Google sign-in popup is browser-only. On success
- * it POSTs the Firebase ID token to /api/auth/session (which sets the
- * httpOnly session cookie) and then navigates to the `?next=` path the user
- * was originally headed for (validated by `safeNextPath`), or to "/".
+ * Supports two flows:
+ *   Popup flow  — signInWithGoogle() returns a token directly (desktop).
+ *   Redirect flow — signInWithGoogle() initiates a redirect (mobile/blocked);
+ *                   on return, checkRedirectResult() picks up the pending token.
+ *
+ * On success either way, POSTs the ID token to /api/auth/session to set the
+ * httpOnly session cookie, then navigates to ?next= or "/".
  */
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { safeNextPath } from "@/web/auth/next-path";
-import { isClientConfigured, signInWithGoogle } from "@/web/firebase/client";
+import {
+  checkRedirectResult,
+  isClientConfigured,
+  signInWithGoogle,
+} from "@/web/firebase/client";
 
 export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const configured = isClientConfigured();
 
+  // On mount: check whether we're returning from a redirect sign-in.
+  useEffect(() => {
+    if (!configured) return;
+    setBusy(true);
+    checkRedirectResult()
+      .then((idToken) => {
+        if (idToken) return completeSignIn(idToken);
+      })
+      .catch((e) => {
+        setError(e instanceof Error ? e.message : "sign-in failed");
+      })
+      .finally(() => setBusy(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleSignIn(): Promise<void> {
     setBusy(true);
     setError(null);
     try {
       const idToken = await signInWithGoogle();
-      const res = await fetch("/api/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as
-          | { error?: { message?: string } }
-          | null;
-        throw new Error(body?.error?.message ?? "sign-in failed");
+      if (idToken) {
+        // Popup flow completed synchronously.
+        await completeSignIn(idToken);
       }
-      const next = safeNextPath(
-        new URLSearchParams(window.location.search).get("next"),
-      );
-      window.location.assign(next);
+      // If idToken is null, a redirect was initiated — page will navigate away.
     } catch (e) {
       setError(e instanceof Error ? e.message : "sign-in failed");
       setBusy(false);
     }
+  }
+
+  async function completeSignIn(idToken: string): Promise<void> {
+    const res = await fetch("/api/auth/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as
+        | { error?: { message?: string } }
+        | null;
+      throw new Error(body?.error?.message ?? "sign-in failed");
+    }
+    const next = safeNextPath(
+      new URLSearchParams(window.location.search).get("next"),
+    );
+    window.location.assign(next);
   }
 
   return (
