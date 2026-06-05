@@ -285,10 +285,27 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
       const nameNorm = (row["name_normalized"] ?? "").toLowerCase();
       const countryName = row["country_name"] ?? "";
       const adp = Math.round(adpRaw);
+      if (!adp || adp <= 0) { skipped++; continue; }
 
       // Resolve team with alias fallback.
       const teamId = resolveTeam(countryName);
       if (!teamId) {
+        // When country is blank, try a global exact/high-confidence name search
+        // across all teams (catches players whose CSV row has an empty country field).
+        if (!countryName.trim()) {
+          const allCandidates = [...playersByTeam.values()].flat();
+          const fullNameRaw = row["full_name"] ?? "";
+          const globalMatch =
+            allCandidates.find((p) => stripDiacritics(p.fullName).toLowerCase() === stripDiacritics(fullNameRaw).toLowerCase()) ??
+            allCandidates.find((p) => stripDiacritics(p.fullName).toLowerCase() === nameNorm) ??
+            allCandidates.find((p) => nameScore(p.fullName, fullNameRaw) >= 0.9);
+          if (globalMatch) {
+            await db.update(player).set({ draftRank: adp, updatedAt: new Date() }).where(eq(player.id, globalMatch.id));
+            console.log(`  rank=${adp.toString().padStart(4)}  ${globalMatch.fullName.padEnd(30)} <- ${fullNameRaw} [global]`);
+            matched++;
+            continue;
+          }
+        }
         noTeam.push(`${row["full_name"]} / ${countryName}`);
         skipped++;
         continue;
@@ -309,8 +326,15 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
         }) ??
         // 4. High-confidence fuzzy match
         candidates.find((p) => nameScore(p.fullName, row["full_name"] ?? "") >= 0.75) ??
-        // 5. Relaxed fuzzy match — catches longer multi-part names where one
-        //    word differs (e.g. "Jhon Cordoba" vs "Jhon Emerson Cordoba Mosquera")
+        // 5. Subset-name match: all words of the shorter name appear in the longer
+        //    (e.g. "Jhon Cordoba" subset of "Jhon Emerson Cordoba Mosquera")
+        candidates.find((p) => {
+          const wa = stripDiacritics(p.fullName).toLowerCase().split(/\s+/).filter((w) => w.length > 1);
+          const wb = stripDiacritics(row["full_name"] ?? "").toLowerCase().split(/\s+/).filter((w) => w.length > 1);
+          const [shorter, longer] = wa.length <= wb.length ? [wa, wb] : [wb, wa];
+          return shorter.length >= 2 && shorter.every((w) => longer.includes(w));
+        }) ??
+        // 6. Relaxed fuzzy match — last resort
         candidates.find((p) => nameScore(p.fullName, row["full_name"] ?? "") >= 0.55);
 
       if (!match) {

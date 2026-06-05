@@ -57,7 +57,9 @@ export default function PlayerBoard({
       if (sort === "proj") return (b.projectedTotalPoints ?? -1) - (a.projectedTotalPoints ?? -1);
       if (sort === "name") return a.fullName.localeCompare(b.fullName);
       if (sort === "pos")  return (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9);
-      return (a.draftRank ?? 9999) - (b.draftRank ?? 9999);
+      const ra = (a.draftRank != null && a.draftRank > 0) ? a.draftRank : 9999;
+      const rb = (b.draftRank != null && b.draftRank > 0) ? b.draftRank : 9999;
+      return ra - rb;
     });
     return list;
   }, [players, search, position, team, sort]);
@@ -135,7 +137,7 @@ export default function PlayerBoard({
             <tbody>
               {shown.map((p) => (
                 <tr key={p.id}>
-                  <td className="num">{p.draftRank != null ? p.draftRank : "-"}</td>
+                  <td className="num">{p.draftRank != null && p.draftRank > 0 ? p.draftRank : "-"}</td>
                   <td className="num">
                     {p.projectedTotalPoints !== null
                       ? p.projectedTotalPoints.toFixed(1)

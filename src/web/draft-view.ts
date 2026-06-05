@@ -200,6 +200,7 @@ export async function getDraftRoomView(
       playerId: p.playerId,
       fullName: pl?.fullName ?? `player #${p.playerId}`,
       position: pl?.position ?? "?",
+      draftRank: pl?.draftRank ?? null,
     };
   });
   const counts = countsFromPositions(

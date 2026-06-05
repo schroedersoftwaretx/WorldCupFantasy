@@ -13,6 +13,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { DraftBoardPlayer, DraftStateData } from "@/web/api-types";
 
 import PlayerBoard from "./player-board";
+import { BestLineupViz } from "./best-lineup";
+import { ScoringRules } from "./scoring-rules";
 
 const POLL_MS = 5000;
 const POSITIONS = ["GK", "DEF", "MID", "FWD"] as const;
@@ -274,6 +276,7 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
           ))}
         </ul>
       )}
+      <BestLineupViz roster={viewer.roster} />
     </section>
   );
 
@@ -370,6 +373,7 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
         </div>
         <aside className="draft-side">
           {rosterPanel}
+          <ScoringRules />
           {orderPanel}
           {inProgress ? picksPanel : null}
           {inProgress ? (

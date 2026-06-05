@@ -105,9 +105,9 @@ export const DEFAULT_RULESET: ScoringRuleset = buildRuleset({
     DEF: 5,
   },
   cleanSheetMinMinutes: 60,
-  penaltySaved: 5,
+  penaltySaved: 2,
   penaltyMissed: -2,
   ownGoal: -2,
   yellowCard: -1,
-  redCard: -3,
+  redCard: -5,
 });

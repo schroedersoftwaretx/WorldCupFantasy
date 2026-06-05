@@ -1,0 +1,19 @@
+// vitest.config.ts
+import { defineConfig } from "file:///sessions/charming-optimistic-rubin/mnt/Fantasy%20World%20Cup/node_modules/vitest/dist/config.js";
+var vitest_config_default = defineConfig({
+  test: {
+    // Integration tests spin up a Testcontainers Postgres — generous timeout.
+    testTimeout: 12e4,
+    hookTimeout: 12e4,
+    // Run integration tests serially: one shared container per file.
+    pool: "forks",
+    poolOptions: {
+      forks: { singleFork: false }
+    },
+    include: ["test/**/*.test.ts"]
+  }
+});
+export {
+  vitest_config_default as default
+};
+//# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsidml0ZXN0LmNvbmZpZy50cyJdLAogICJzb3VyY2VzQ29udGVudCI6IFsiY29uc3QgX192aXRlX2luamVjdGVkX29yaWdpbmFsX2Rpcm5hbWUgPSBcIi9zZXNzaW9ucy9jaGFybWluZy1vcHRpbWlzdGljLXJ1YmluL21udC9GYW50YXN5IFdvcmxkIEN1cFwiO2NvbnN0IF9fdml0ZV9pbmplY3RlZF9vcmlnaW5hbF9maWxlbmFtZSA9IFwiL3Nlc3Npb25zL2NoYXJtaW5nLW9wdGltaXN0aWMtcnViaW4vbW50L0ZhbnRhc3kgV29ybGQgQ3VwL3ZpdGVzdC5jb25maWcudHNcIjtjb25zdCBfX3ZpdGVfaW5qZWN0ZWRfb3JpZ2luYWxfaW1wb3J0X21ldGFfdXJsID0gXCJmaWxlOi8vL3Nlc3Npb25zL2NoYXJtaW5nLW9wdGltaXN0aWMtcnViaW4vbW50L0ZhbnRhc3klMjBXb3JsZCUyMEN1cC92aXRlc3QuY29uZmlnLnRzXCI7aW1wb3J0IHsgZGVmaW5lQ29uZmlnIH0gZnJvbSBcInZpdGVzdC9jb25maWdcIjtcblxuZXhwb3J0IGRlZmF1bHQgZGVmaW5lQ29uZmlnKHtcbiAgdGVzdDoge1xuICAgIC8vIEludGVncmF0aW9uIHRlc3RzIHNwaW4gdXAgYSBUZXN0Y29udGFpbmVycyBQb3N0Z3JlcyBcdTIwMTQgZ2VuZXJvdXMgdGltZW91dC5cbiAgICB0ZXN0VGltZW91dDogMTIwXzAwMCxcbiAgICBob29rVGltZW91dDogMTIwXzAwMCxcbiAgICAvLyBSdW4gaW50ZWdyYXRpb24gdGVzdHMgc2VyaWFsbHk6IG9uZSBzaGFyZWQgY29udGFpbmVyIHBlciBmaWxlLlxuICAgIHBvb2w6IFwiZm9ya3NcIixcbiAgICBwb29sT3B0aW9uczoge1xuICAgICAgZm9ya3M6IHsgc2luZ2xlRm9yazogZmFsc2UgfSxcbiAgICB9LFxuICAgIGluY2x1ZGU6IFtcInRlc3QvKiovKi50ZXN0LnRzXCJdLFxuICB9LFxufSk7XG4iXSwKICAibWFwcGluZ3MiOiAiO0FBQXFXLFNBQVMsb0JBQW9CO0FBRWxZLElBQU8sd0JBQVEsYUFBYTtBQUFBLEVBQzFCLE1BQU07QUFBQTtBQUFBLElBRUosYUFBYTtBQUFBLElBQ2IsYUFBYTtBQUFBO0FBQUEsSUFFYixNQUFNO0FBQUEsSUFDTixhQUFhO0FBQUEsTUFDWCxPQUFPLEVBQUUsWUFBWSxNQUFNO0FBQUEsSUFDN0I7QUFBQSxJQUNBLFNBQVMsQ0FBQyxtQkFBbUI7QUFBQSxFQUMvQjtBQUNGLENBQUM7IiwKICAibmFtZXMiOiBbXQp9Cg==

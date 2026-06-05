@@ -657,3 +657,116 @@ th.num {
 .row-has-xi {
   /* subtle left accent for rows where the player contributed at least one period */
 }
+
+/* ── Best lineup pitch viz ─────────────────────────────────────────── */
+.lineup-viz {
+  margin-top: 1rem;
+}
+
+.lineup-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+}
+
+.pitch-svg {
+  width: 100%;
+  max-width: 280px;
+  display: block;
+  margin: 0 auto;
+  border-radius: 6px;
+}
+
+/* Wrapper on roster page so the pitch doesn't stretch full-width */
+.lineup-roster-wrap {
+  max-width: 300px;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Scoring rules collapsible panel ───────────────────────────────── */
+.scoring-rules-panel {
+  cursor: default;
+}
+
+.scoring-rules-summary {
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+}
+
+.scoring-rules-summary::-webkit-details-marker {
+  display: none;
+}
+
+.scoring-rules-summary::before {
+  content: "▶";
+  font-size: 0.65rem;
+  color: var(--muted);
+  transition: transform 0.15s;
+  display: inline-block;
+}
+
+details[open] .scoring-rules-summary::before {
+  transform: rotate(90deg);
+}
+
+.scoring-rules-body {
+  margin-top: 0.75rem;
+}
+
+.scoring-table {
+  width: 100%;
+  font-size: 0.82rem;
+  border-collapse: collapse;
+}
+
+.scoring-table td,
+.scoring-table th {
+  padding: 0.25rem 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.scoring-table .rule-group {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-top: 0.6rem;
+  border-bottom: none;
+  background: none;
+}
+
+.pts-pos {
+  color: #1a7f37;
+  font-weight: 700;
+}
+
+.pts-neg {
+  color: #cf222e;
+  font-weight: 700;
+}
+
+.scoring-bestball-note {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.scoring-note {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 0.6rem;
+  line-height: 1.4;
+}

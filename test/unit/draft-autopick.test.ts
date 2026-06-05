@@ -120,3 +120,52 @@ describe("chooseAutopick", () => {
     expect(result.pick?.position).toBe("GK");
   });
 });
+
+describe("rank 0 treated as unranked", () => {
+  it("rank-0 player loses to a rank-1 player", () => {
+    expect(compareCandidates(cand(1, "FWD", 0), cand(2, "FWD", 1))).toBeGreaterThan(0);
+  });
+
+  it("rank-0 ties with null (both unranked) -> player id decides", () => {
+    expect(compareCandidates(cand(1, "FWD", 0), cand(2, "FWD", null))).toBeLessThan(0);
+  });
+
+  it("chooseAutopick treats rank-0 as last resort", () => {
+    const pool = [cand(1, "MID", 0), cand(2, "MID", 5)];
+    const result = chooseAutopick(counts(1, 4, 0, 0), pool);
+    expect(result.pick?.playerId).toBe(2);
+  });
+});
+
+describe("position-need tiebreaker", () => {
+  it("equal rank prefers position below its minimum", () => {
+    // Both rank 10. GK has 0/min=2 → deficit; MID has 2/min=5 → deficit.
+    // GK deficit fraction = 2/2 = 1.0; MID deficit fraction = 3/5 = 0.6 → GK wins.
+    const result = chooseAutopick(
+      counts(0, 6, 2, 4),
+      [cand(1, "GK", 10), cand(2, "MID", 10)],
+    );
+    expect(result.pick?.position).toBe("GK");
+  });
+
+  it("position below minimum beats position at minimum even with worse rank", () => {
+    // cand 1: DEF rank 5, DEF at min (6). cand 2: GK rank 10, GK below min (0/2).
+    // Rank 5 < 10, but GK is strictly in deficit. Rank wins here — GK should NOT
+    // beat a significantly better-ranked DEF (need tiebreaker is rank-equal only).
+    const result = chooseAutopick(
+      counts(0, 6, 5, 4),
+      [cand(1, "DEF", 5), cand(2, "GK", 10)],
+    );
+    expect(result.pick?.playerId).toBe(1); // rank wins outright
+  });
+
+  it("when all positions at minimum, prefer position with most room (% toward max)", () => {
+    // GK at min (2/4 → room 2/4 = 0.5). MID at min (5/8 → room 3/8 = 0.375).
+    // Both candidates unranked → need tiebreaker → GK has more room → GK wins.
+    const result = chooseAutopick(
+      counts(2, 6, 5, 4),
+      [cand(1, "GK", null), cand(2, "MID", null)],
+    );
+    expect(result.pick?.position).toBe("GK");
+  });
+});

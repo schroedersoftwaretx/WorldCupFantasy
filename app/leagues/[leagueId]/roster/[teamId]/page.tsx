@@ -8,6 +8,7 @@
  * URL: /leagues/[leagueId]/roster/[teamId]
  */
 import Link from "next/link";
+import { BestLineupViz } from "../../draft/best-lineup";
 import { redirect } from "next/navigation";
 
 import type { RosterViewData } from "@/web/api-types";
@@ -134,6 +135,9 @@ export default async function RosterViewPage({
         </p>
       ) : (
         <>
+          <div className="lineup-roster-wrap">
+            <BestLineupViz roster={data.players} />
+          </div>
           <div className="roster-legend">
             <span className="xi-dot in-xi-dot" /> In best-ball XI
             <span className="xi-dot bench-dot" /> Bench

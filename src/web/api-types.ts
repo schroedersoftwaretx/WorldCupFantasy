@@ -126,6 +126,8 @@ export interface DraftRosterPlayer {
   playerId: number;
   fullName: string;
   position: string;
+  /** Pre-tournament rank; null or 0 = unranked. */
+  draftRank: number | null;
 }
 
 /** Position tallies for a roster. */

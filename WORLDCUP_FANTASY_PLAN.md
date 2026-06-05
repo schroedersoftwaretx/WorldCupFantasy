@@ -115,11 +115,11 @@ replayed.
 | Assist (any position) | +4 |
 | Save (each) | +1 |
 | Clean sheet — GK / DEF | +5 |
-| Penalty saved (GK) | +5 |
+| Penalty saved (GK) | +2 |
 | Penalty missed | −2 |
 | Own goal | −2 |
 | Yellow card | −1 |
-| Red card | −3 |
+| Red card | −5 |
 
 ### 5.2 Edge-case rulings (must be implemented exactly)
 
