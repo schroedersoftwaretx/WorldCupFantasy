@@ -88,6 +88,18 @@ async function isLeagueOwner(
 }
 
 /** The full draft-room view for one viewer. */
+/** Fetch the draft room row for a league, or null if none exists. */
+export async function getDraftRoomRow(
+  db: Db,
+  leagueId: number,
+): Promise<DraftRoomRow | null> {
+  const [row] = await db
+    .select()
+    .from(draftRoom)
+    .where(eq(draftRoom.leagueId, leagueId));
+  return row ?? null;
+}
+
 export async function getDraftRoomView(
   db: Db,
   leagueId: number,

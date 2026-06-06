@@ -412,8 +412,8 @@ export const draftRoom = pgTable(
       .notNull()
       .references(() => league.id, { onDelete: "restrict" }),
     status: draftStatusEnum("status").notNull().default("PENDING"),
-    /** Per-pick timer; 12 in the plan, shortenable for a fast cycle. */
-    pickTimerHours: integer("pick_timer_hours").notNull().default(12),
+    /** Per-pick timer in hours (fractional OK, e.g. 0.25 = 15 min). */
+    pickTimerHours: real("pick_timer_hours").notNull().default(12),
     /** managers * roster_size; 0 until the draft starts. */
     totalPicks: integer("total_picks").notNull().default(0),
     /** 1-based overall pick on the clock; NULL when PENDING / COMPLETE. */

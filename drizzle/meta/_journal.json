@@ -36,6 +36,13 @@
       "when": 1748390400000,
       "tag": "0004_projections",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780705461996,
+      "tag": "0005_thankful_kronos",
+      "breakpoints": true
     }
   ]
 }

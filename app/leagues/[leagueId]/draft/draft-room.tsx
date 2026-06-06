@@ -162,18 +162,44 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
             <h2>Set up the draft</h2>
             <p>Create the draft room, then start it once everyone has joined.</p>
             <div className="field">
-              <label htmlFor="timer">Pick timer (hours)</label>
+              <label htmlFor="timer">Pick timer</label>
+              <div className="timer-presets">
+                {[
+                  { label: "15 min", hours: 0.25 },
+                  { label: "30 min", hours: 0.5 },
+                  { label: "1 hr",   hours: 1 },
+                  { label: "2 hr",   hours: 2 },
+                  { label: "6 hr",   hours: 6 },
+                  { label: "12 hr",  hours: 12 },
+                  { label: "24 hr",  hours: 24 },
+                  { label: "48 hr",  hours: 48 },
+                ].map(({ label, hours }) => (
+                  <button
+                    key={hours}
+                    type="button"
+                    className={
+                      Number(timerInput) === hours
+                        ? "timer-preset timer-preset-active"
+                        : "timer-preset"
+                    }
+                    onClick={() => setTimerInput(String(hours))}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
               <input
                 id="timer"
                 type="number"
                 min={0}
                 max={168}
+                step={0.25}
                 value={timerInput}
                 onChange={(e) => setTimerInput(e.target.value)}
               />
               <span className="field-hint">
-                How long each manager has before their pick is autopicked. A
-                short timer suits a draft done in one sitting.
+                Hours per pick — 12 hr is typical for async drafts, 15–30 min
+                for a draft done in one sitting. Set 0 to disable the timer.
               </span>
             </div>
             <button
@@ -391,6 +417,22 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
               >
                 Process timeouts
               </button>
+              {viewer.isOwner ? (
+                <>
+                  <p className="field-hint" style={{ marginTop: "0.75rem" }}>
+                    Skip the current pick immediately and autopick for them,
+                    even if the timer hasn&apos;t expired.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn-link btn-link-warn"
+                    disabled={actionBusy}
+                    onClick={() => void runAction("/draft/force-pick")}
+                  >
+                    Force autopick now
+                  </button>
+                </>
+              ) : null}
             </section>
           ) : null}
         </aside>

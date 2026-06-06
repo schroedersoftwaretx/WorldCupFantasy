@@ -76,8 +76,8 @@ export async function createDraftRoom(
     throw new DraftError("league already has a draft room", "DRAFT_ALREADY_EXISTS");
   }
   const timer = input.pickTimerHours ?? 12;
-  if (!Number.isInteger(timer) || timer < 0) {
-    throw new DraftError("pickTimerHours must be a non-negative integer", "INVALID_TIMER");
+  if (typeof timer !== "number" || !isFinite(timer) || timer < 0) {
+    throw new DraftError("pickTimerHours must be a non-negative number", "INVALID_TIMER");
   }
   const [room] = await db
     .insert(draftRoom)
@@ -289,6 +289,43 @@ export async function processExpiredPicks(
 
   await deliverPending(db, input.notifier, input.draftRoomId);
   return { autopicks, draftsTouched };
+}
+
+// --- forceCurrentAutopick --------------------------------------------------
+
+export interface ForceAutopickResult {
+  /** The player that was autopicked, or null if the draft is not in progress. */
+  pick: { playerId: number; fullName: string; position: string } | null;
+}
+
+/**
+ * Immediately autopick for the team currently on the clock, bypassing the
+ * timer deadline. Used by the league owner to skip a pick without waiting.
+ * Has no effect when the draft is not IN_PROGRESS.
+ */
+export async function forceCurrentAutopick(
+  db: Db,
+  draftRoomId: number,
+  now: Date = new Date(),
+  notifier?: Notifier,
+): Promise<ForceAutopickResult> {
+  const result = await db.transaction(async (tx) => {
+    const r = await loadRoom(tx, draftRoomId);
+    if (r.status !== "IN_PROGRESS") return null;
+    const order = await loadOrder(tx, r.id);
+    const onClock = teamOnClock(r, order);
+    const pick = await pickAutopickPlayer(tx, r.leagueId, onClock.fantasyTeamId);
+    await applyPick(tx, r, order, {
+      fantasyTeamId: onClock.fantasyTeamId,
+      playerId: pick.playerId,
+      isAutopick: true,
+      now,
+    });
+    return pick;
+  });
+
+  await deliverPending(db, notifier, draftRoomId);
+  return { pick: result };
 }
 
 // --- getDraftState ----------------------------------------------------------

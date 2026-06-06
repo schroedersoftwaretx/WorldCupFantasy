@@ -804,3 +804,40 @@ details[open] .scoring-rules-summary::before {
 .rename-error {
   font-size: 0.78rem;
 }
+
+/* ── Draft timer presets ───────────────────────────────────────────── */
+.timer-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.timer-preset {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.timer-preset:hover {
+  background: var(--border);
+}
+
+.timer-preset-active {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+/* Warning-toned link button (force autopick) */
+.btn-link-warn {
+  color: #cf222e;
+}
+
+.btn-link-warn:hover {
+  color: #a01020;
+}
