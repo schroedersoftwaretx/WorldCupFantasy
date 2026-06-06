@@ -26,7 +26,12 @@ export default function InvitePanel({ leagueId }: { leagueId: number }) {
       if (!res.ok || !body?.data) {
         throw new Error(body?.error?.message ?? "could not create an invite");
       }
-      setLink(window.location.origin + body.data.path);
+      // Prefer NEXT_PUBLIC_APP_URL so the link always points to the
+      // production deployment, not whichever preview URL was used to generate it.
+      const origin =
+        process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+        window.location.origin;
+      setLink(origin + body.data.path);
     } catch (e) {
       setError(e instanceof Error ? e.message : "could not create an invite");
     } finally {
