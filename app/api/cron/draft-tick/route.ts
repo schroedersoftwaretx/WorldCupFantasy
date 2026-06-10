@@ -10,6 +10,7 @@
 import { processExpiredPicks } from "@/data/draft/service";
 import { handle, HttpError } from "@/web/api";
 import { getDb } from "@/web/db";
+import { getNotifier } from "@/web/notifier";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ export function GET(request: Request): Promise<Response> {
         throw new HttpError("unauthorized", "UNAUTHORIZED", 401);
       }
     }
-    return processExpiredPicks(getDb(), {});
+    const notifier = getNotifier();
+    return processExpiredPicks(getDb(), notifier ? { notifier } : {});
   });
 }

@@ -23,9 +23,12 @@ import {
   player,
   projectedScoreEntry,
   rosterSlot,
+  stageOdds,
+  STAGE_ODDS_STAGES,
   type DraftRoomRow,
   type FantasyTeamRow,
   type Position,
+  type StageOddsStage,
 } from "../data/db/schema.js";
 import { DEFAULT_RULESET } from "../data/scoring/ruleset.js";
 import { roundForPick, slotForPick } from "../data/draft/snake.js";
@@ -148,6 +151,7 @@ export async function getDraftRoomView(
       order: [],
       picks: [],
       viewer: emptyViewer(team, owner),
+      emailNotifications: Boolean(process.env["RESEND_API_KEY"]),
     };
   }
 
@@ -246,6 +250,7 @@ export async function getDraftRoomView(
       roster,
       counts,
     },
+    emailNotifications: Boolean(process.env["RESEND_API_KEY"]),
   };
 }
 
@@ -291,10 +296,37 @@ export async function getDraftBoard(
       fullName: player.fullName,
       position: player.position,
       draftRank: player.draftRank,
+      nationalTeamId: player.nationalTeamId,
       nationalTeam: nationalTeam.name,
     })
     .from(player)
     .innerJoin(nationalTeam, eq(nationalTeam.id, player.nationalTeamId));
+
+  // Per national team: the market-implied probability of REACHING each
+  // tournament stage (Round of 16 .. Champion), from the stage_odds table.
+  // Replaces the old "next-match win %" — far more useful for a draft, where
+  // you care how deep a player's team is likely to go (more games = more
+  // fantasy points). Wrapped in try-catch so the board still loads if
+  // stage_odds is missing/unmigrated.
+  const stageByTeam = new Map<number, Partial<Record<StageOddsStage, number>>>();
+  try {
+    const stageRows = await db
+      .select({
+        teamId: stageOdds.nationalTeamId,
+        stage: stageOdds.stage,
+        reachP: stageOdds.reachP,
+      })
+      .from(stageOdds);
+    const known = new Set<string>(STAGE_ODDS_STAGES);
+    for (const r of stageRows) {
+      if (!known.has(r.stage)) continue;
+      const entry = stageByTeam.get(r.teamId) ?? {};
+      entry[r.stage as StageOddsStage] = r.reachP;
+      stageByTeam.set(r.teamId, entry);
+    }
+  } catch {
+    // stage_odds not migrated/populated — stage probabilities show as null.
+  }
 
   // Projected total points per player: sum of projected_score_entry for all
   // SCHEDULED fixtures using the current ruleset.
@@ -332,6 +364,7 @@ export async function getDraftBoard(
       nationalTeam: r.nationalTeam,
       draftRank: r.draftRank,
       projectedTotalPoints: projByPlayer.get(r.id) ?? null,
+      stageProbabilities: stageByTeam.get(r.nationalTeamId) ?? null,
       legal: canAddPlayer(counts, r.position).ok,
     }))
     .sort((a, b) => {

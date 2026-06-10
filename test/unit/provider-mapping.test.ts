@@ -240,6 +240,46 @@ describe("mapFixtureStats", () => {
     for (const line of lines) expect(line.sourceRevision).toBe("rev-1");
   });
 
+  it("derives the v2 detailed-action fields", async () => {
+    const scheduleRaw = await loadJson<{ response: RawFixtureResponse[] }>(
+      "schedule.json",
+    );
+    const playersRaw = await loadJson<{ response: RawFixturePlayersResponse[] }>(
+      "fixture-stats/8001.json",
+    );
+    const fixture = mapFixtures(scheduleRaw.response).find(
+      (f) => f.sourceFixtureId === "8001",
+    )!;
+    const byPid = new Map(
+      mapFixtureStats(playersRaw.response, fixture, "rev-1").map((l) => [
+        l.sourcePlayerId,
+        l,
+      ]),
+    );
+
+    // Messi: shots 5 total / 4 on -> 4 on-target, 1 off-target; tackles total
+    // 1 -> 1 successful (proxy); passes 41 @ 82% -> 34 completed; no crosses;
+    // Argentina (home) scored 2.
+    const messi = byPid.get("1003")!;
+    expect(messi.shotsOnTarget).toBe(4);
+    expect(messi.shotsOffTarget).toBe(1);
+    expect(messi.tacklesSuccessful).toBe(1);
+    expect(messi.passesCompleted).toBe(34);
+    expect(messi.crosses).toBe(0);
+    expect(messi.teamScoredInRegulationAndEt).toBe(2);
+    expect(messi.goalsConceded).toBe(0);
+
+    // Martinez (GK): conceded 1, 25 completed passes (32 @ 78%), team scored 2.
+    const martinez = byPid.get("1001")!;
+    expect(martinez.goalsConceded).toBe(1);
+    expect(martinez.passesCompleted).toBe(25);
+    expect(martinez.teamScoredInRegulationAndEt).toBe(2);
+
+    // Casemiro (Brazil, away): team scored 1.
+    const casemiro = byPid.get("2002")!;
+    expect(casemiro.teamScoredInRegulationAndEt).toBe(1);
+  });
+
   it("throws if a player's team isn't one of the fixture's teams", async () => {
     const scheduleRaw = await loadJson<{ response: RawFixtureResponse[] }>(
       "schedule.json",

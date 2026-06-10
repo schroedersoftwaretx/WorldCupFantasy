@@ -100,9 +100,23 @@ async function upsertStatLines(
         penaltiesSaved: line.penaltiesSaved,
         ownGoals: line.ownGoals,
         teamConcededInRegulationAndEt: line.teamConcededInRegulationAndEt,
+        teamScoredInRegulationAndEt: line.teamScoredInRegulationAndEt,
+        shotsOnTarget: line.shotsOnTarget,
+        shotsOffTarget: line.shotsOffTarget,
+        tacklesSuccessful: line.tacklesSuccessful,
+        crosses: line.crosses,
+        passesCompleted: line.passesCompleted,
+        goalsConceded: line.goalsConceded,
         sourceRevision: line.sourceRevision,
       });
       summary.inserted += 1;
+      continue;
+    }
+
+    // A hand-edited row is locked: never let provider data clobber a manual
+    // correction (e.g. saves reassigned across a keeper substitution).
+    if (existing.manuallyEdited) {
+      summary.skipped += 1;
       continue;
     }
 
@@ -133,6 +147,13 @@ async function upsertStatLines(
         penaltiesSaved: line.penaltiesSaved,
         ownGoals: line.ownGoals,
         teamConcededInRegulationAndEt: line.teamConcededInRegulationAndEt,
+        teamScoredInRegulationAndEt: line.teamScoredInRegulationAndEt,
+        shotsOnTarget: line.shotsOnTarget,
+        shotsOffTarget: line.shotsOffTarget,
+        tacklesSuccessful: line.tacklesSuccessful,
+        crosses: line.crosses,
+        passesCompleted: line.passesCompleted,
+        goalsConceded: line.goalsConceded,
         sourceRevision: line.sourceRevision,
         ingestedAt: new Date(),
       })

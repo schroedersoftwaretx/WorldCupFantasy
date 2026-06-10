@@ -1,10 +1,11 @@
 /**
  * The draft room (client component).
  *
- * Fetches the draft state, polls it every few seconds, and renders the right
- * view for the draft's status: a create form, a start screen, the live room
- * (player board + roster + order + picks), or a completed summary. All
- * mutations go through the POST routes; the state poll reflects the result.
+ * Subscribes to the draft state over Server-Sent Events (falling back to
+ * polling if the stream drops), and renders the right view for the draft's
+ * status: a create form, a start screen, the live room (player board + roster
+ * + order + picks), or a completed summary. All mutations go through the POST
+ * routes; the live stream reflects the result.
  */
 "use client";
 
@@ -55,6 +56,8 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
   const [now, setNow] = useState(() => Date.now());
   const [timerInput, setTimerInput] = useState("12");
   const boardBasis = useRef<number>(-1);
+  const wasOnClock = useRef(false);
+  const baseTitle = useRef<string>("");
 
   const fetchState = useCallback(async () => {
     try {
@@ -87,12 +90,47 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
     }
   }, [leagueId]);
 
-  // Initial load + polling.
+  // Live state via Server-Sent Events: the stream pushes a fresh payload on
+  // connect and whenever a pick or timeout changes the draft, so updates land
+  // in ~1-2s instead of a 5s poll. If the stream errors and the browser gives
+  // up reconnecting, we fall back to polling so the draft never silently stalls.
   useEffect(() => {
-    void fetchState();
-    const t = setInterval(() => void fetchState(), POLL_MS);
-    return () => clearInterval(t);
-  }, [fetchState]);
+    let es: EventSource | null = null;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+    const startPolling = () => {
+      if (pollTimer) return;
+      void fetchState();
+      pollTimer = setInterval(() => void fetchState(), POLL_MS);
+    };
+
+    if (typeof EventSource !== "undefined") {
+      es = new EventSource(`/api/leagues/${leagueId}/draft/stream`);
+      es.onmessage = (e) => {
+        try {
+          setState(JSON.parse(e.data) as DraftStateData);
+          setLoadError(null);
+        } catch {
+          /* ignore a malformed frame; the next one will be clean */
+        }
+      };
+      es.onerror = () => {
+        // The browser auto-retries transient drops (readyState CONNECTING).
+        // Only when it gives up (CLOSED) do we fall back to polling.
+        if (es && es.readyState === EventSource.CLOSED) {
+          es = null;
+          startPolling();
+        }
+      };
+    } else {
+      startPolling();
+    }
+
+    return () => {
+      es?.close();
+      if (pollTimer) clearInterval(pollTimer);
+    };
+  }, [leagueId, fetchState]);
 
   // Refetch the (heavier) board only when the pick count changes.
   useEffect(() => {
@@ -108,6 +146,50 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
+
+  // Ask for notification permission once, so we can alert the manager when
+  // their pick comes up while they're in another tab.
+  useEffect(() => {
+    baseTitle.current = document.title;
+    if (
+      typeof window !== "undefined" &&
+      "Notification" in window &&
+      Notification.permission === "default"
+    ) {
+      void Notification.requestPermission().catch(() => {});
+    }
+    return () => {
+      document.title = baseTitle.current || "Draft Room";
+    };
+  }, []);
+
+  // Make it impossible to miss your turn: flip the tab title and fire a
+  // browser notification the moment the viewer goes on the clock.
+  useEffect(() => {
+    const onClock =
+      state?.status === "IN_PROGRESS" && state.viewer.isOnClock === true;
+
+    document.title = onClock
+      ? "⏰ Your pick! — Draft Room"
+      : baseTitle.current || "Draft Room";
+
+    if (onClock && !wasOnClock.current) {
+      if (
+        typeof window !== "undefined" &&
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        try {
+          new Notification("You're on the clock!", {
+            body: "It's your pick in the draft.",
+          });
+        } catch {
+          /* some browsers throw if constructed outside a SW; ignore */
+        }
+      }
+    }
+    wasOnClock.current = onClock;
+  }, [state]);
 
   const runAction = useCallback(
     async (path: string, payload?: unknown): Promise<void> => {
@@ -150,6 +232,17 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
   const errorBar = actionError ? (
     <p className="error">{actionError}</p>
   ) : null;
+
+  // Owner-only heads-up when email delivery isn't configured, so they know
+  // managers won't get "you're on the clock" emails.
+  const emailWarning =
+    viewer.isOwner && !state.emailNotifications ? (
+      <p className="notice">
+        Email notifications are off (Resend not configured) — managers
+        won&apos;t get &ldquo;you&apos;re on the clock&rdquo; emails. Set
+        <code> RESEND_API_KEY</code> to enable them.
+      </p>
+    ) : null;
 
   // --- no draft room yet ----------------------------------------------------
   if (state.status === "NONE") {
@@ -231,6 +324,7 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
       <>
         <h1>Draft room</h1>
         {errorBar}
+        {emailWarning}
         <p className="subtitle">
           The draft room is ready &mdash; {state.teamCount}{" "}
           {state.teamCount === 1 ? "manager has" : "managers have"} joined.
@@ -355,6 +449,7 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
     <>
       <h1>Draft room</h1>
       {errorBar}
+      {emailWarning}
 
       {inProgress ? (
         <div className={viewer.isOnClock ? "draft-banner you" : "draft-banner"}>

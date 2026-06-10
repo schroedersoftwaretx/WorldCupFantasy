@@ -63,6 +63,36 @@ export interface ScoringRuleset {
   readonly yellowCard: number;
   /** Red card. Negative. Per-type (not escalating). */
   readonly redCard: number;
+
+  // --- Detailed-action rules (v2) -------------------------------------------
+  // These reward on-ball actions that only the richer providers (Sportmonks,
+  // Opta/FBref) expose per player. When a provider can't supply a field it
+  // arrives as 0, so the rule simply contributes nothing until the data is
+  // present (or is hand-entered via the manual stat editor). Several values
+  // are fractional, which is why score_entry.points is a real column.
+
+  /** Each shot on target (any position). */
+  readonly shotOnTarget: number;
+  /** Each shot off target (any position). */
+  readonly shotOffTarget: number;
+  /** Each successful tackle (any position). */
+  readonly tackleSuccessful: number;
+  /** Each cross (any position). */
+  readonly cross: number;
+  /** Each completed pass (any position). Small per-event value. */
+  readonly passCompleted: number;
+  /**
+   * Per goal conceded, charged to the GOALKEEPER only. Negative. Applied to
+   * stat.goalsConceded (the keeper's own conceded count, which for a keeper
+   * who played the whole match equals teamConcededInRegulationAndEt).
+   */
+  readonly goalConcededByKeeper: number;
+  /**
+   * Flat bonus when the player's team WON in regulation + extra time,
+   * awarded to the GOALKEEPER only. Shootout-only wins are not counted here
+   * (edit the stat line manually for those rare cases).
+   */
+  readonly gameWonKeeper: number;
 }
 
 /**
@@ -110,4 +140,11 @@ export const DEFAULT_RULESET: ScoringRuleset = buildRuleset({
   ownGoal: -2,
   yellowCard: -1,
   redCard: -5,
+  shotOnTarget: 1,
+  shotOffTarget: 0.5,
+  tackleSuccessful: 0.5,
+  cross: 0.5,
+  passCompleted: 0.05,
+  goalConcededByKeeper: -1,
+  gameWonKeeper: 5,
 });

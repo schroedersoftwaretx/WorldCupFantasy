@@ -52,13 +52,12 @@ import {
   createManager,
   inviteManager,
 } from "../data/league/service.js";
-import { apiFootballFromEnv } from "../data/provider/api-football.js";
-import { footballDataFromEnv } from "../data/provider/football-data.js";
-import { FixtureMockProvider } from "../data/provider/mock.js";
+import { resolveProviderName, statsProviderFromEnv } from "../data/provider/select.js";
 import type { StatsProvider } from "../data/provider/types.js";
 import { addPlayerToRoster, getRoster, getRosterCounts } from "../data/roster/service.js";
 import { recomputeAll, recomputeForFixture } from "../data/scoring/recompute.js";
 import { oddsProviderFromEnv } from "../data/odds/odds-provider.js";
+import { stageOddsProviderFromEnv } from "../data/odds/stage-odds-provider.js";
 import { recomputeProjections } from "../data/projection/recompute-projections.js";
 import { DEFAULT_RULESET } from "../data/scoring/ruleset.js";
 import { computeStandings } from "../data/standings/standings.js";
@@ -160,6 +159,66 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
     const ruleset = DEFAULT_RULESET;
     const summary = await recomputeAll(db, ruleset);
     console.log(`score all ruleset=${ruleset.version} ${formatSummary(summary)}`);
+  },
+  "ingest:all": async ({ db, getProvider }) => {
+    // One command, whichever source is configured (see STATS_PROVIDER).
+    // Mirrors the Vercel cron: refresh schedule -> ingest newly-finished
+    // fixtures -> recompute scores -> (if ODDS_API_KEY) odds + projections.
+    const env = process.env as NodeJS.ProcessEnv;
+    console.log(`provider: ${resolveProviderName(env)}`);
+
+    const provider = getProvider();
+    const sched = await ingestSchedule(db, provider);
+    console.log(`schedule       ${formatSummary(sched)}`);
+
+    const pending = await getUningestedFinishedFixtures(db);
+    console.log(`stats: ${pending.length} newly-finished fixture(s) to ingest`);
+    for (const fx of pending) {
+      const summary = await ingestFixtureStats(db, provider, fx.sourceFixtureId);
+      console.log(`  fx=${fx.sourceFixtureId} stage=${fx.stage} ${formatSummary(summary)}`);
+    }
+
+    const score = await recomputeAll(db, DEFAULT_RULESET);
+    console.log(`score all ruleset=${DEFAULT_RULESET.version} ${formatSummary(score)}`);
+
+    if (env["ODDS_API_KEY"]) {
+      try {
+        const oddsProvider = oddsProviderFromEnv(env);
+        const odds = await oddsProvider.ingestOdds(db);
+        console.log(`odds: fetched=${odds.fetched} matched=${odds.matched} skipped=${odds.skipped}`);
+        const proj = await recomputeProjections(db, DEFAULT_RULESET);
+        console.log(`projections: fixtures=${proj.fixturesProcessed} players=${proj.playersProjected}`);
+        const stage = await stageOddsProviderFromEnv(env).ingestStageOdds(db);
+        console.log(
+          `stage-odds: fetched=${stage.stagesFetched} skipped=${stage.stagesSkipped} ` +
+            `unavailable=${stage.stagesUnavailable} rows=${stage.rowsUpserted}`,
+        );
+      } catch (err) {
+        console.error(`odds/projections skipped: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+    console.log("ingest:all complete.");
+  },
+  "ingest:stage-odds": async ({ db }) => {
+    const env = process.env as NodeJS.ProcessEnv;
+    if (!env["ODDS_API_KEY"]) {
+      throw new Error("ODDS_API_KEY is not set. Add it to your .env file.");
+    }
+    console.log("fetching stage (reach-round) odds from The Odds API...");
+    const summary = await stageOddsProviderFromEnv(env).ingestStageOdds(db);
+    console.log(
+      `stage-odds: fetched=${summary.stagesFetched} skipped=${summary.stagesSkipped} ` +
+        `unavailable=${summary.stagesUnavailable} rows=${summary.rowsUpserted}`,
+    );
+    if (summary.unmatched.length > 0) {
+      console.log(`  unmatched teams: ${summary.unmatched.join(", ")}`);
+    }
+    if (summary.stagesFetched === 0 && summary.stagesSkipped === 0) {
+      console.log(
+        "  (no stage markets available -- check `GET /v4/sports` for the current WC " +
+          "futures keys and override via STAGE_ODDS_MARKETS if needed)",
+      );
+    }
   },
   "ingest:odds": async ({ db }) => {
     const env = process.env as NodeJS.ProcessEnv;
@@ -576,11 +635,7 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
 };
 
 function selectProvider(env: NodeJS.ProcessEnv): StatsProvider {
-  const mockDir = env["MOCK_FIXTURES_DIR"];
-  if (mockDir) return new FixtureMockProvider({ root: mockDir });
-  // Prefer football-data.org if its key is set; fall back to API-Football.
-  if (env["FOOTBALL_DATA_KEY"]) return footballDataFromEnv(env);
-  return apiFootballFromEnv(env);
+  return statsProviderFromEnv(env);
 }
 
 
@@ -654,9 +709,11 @@ function printUsage(): void {
   console.error(
     [
       "Usage:",
+      "  cli ingest:all        (schedule + stats + scores + odds, one command)",
       "  cli ingest:squads | ingest:schedule | ingest:fixture-stats <id> | ingest:all-finished",
       "  cli ingest:rankings <path/to/draft_import.csv>",
       "  cli ingest:odds",
+      "  cli ingest:stage-odds  (per-team chance to reach R16/QF/SF/Final/Champion)",
       "  cli fixtures:list",
       "  cli score:recompute [sourceFixtureId]",
       "  cli manager:create <firebaseUid> <displayName> <email>",
@@ -675,7 +732,12 @@ function printUsage(): void {
       "",
       "Environment:",
       "  DATABASE_URL          Required.",
-      "  API_FOOTBALL_KEY      Required for live ingest.",
+      "  STATS_PROVIDER        Optional. api-football | football-data | mock | sportmonks.",
+      "                        Auto-detects api-football/football-data if unset.",
+      "  API_FOOTBALL_KEY      Recommended for the WC (shots/tackles/passes/saves;",
+      "                        crosses entered by hand in /admin/stats).",
+      "  FOOTBALL_DATA_KEY     football-data.org key (basic stats only).",
+      "  SPORTMONKS_KEY        Dormant: no affordable WC data; needs STATS_PROVIDER=sportmonks.",
       "  ODDS_API_KEY          Optional. Required for ingest:odds (projected points).",
       "  MOCK_FIXTURES_DIR     Optional. Use FixtureMockProvider against this dir.",
     ].join("\n"),

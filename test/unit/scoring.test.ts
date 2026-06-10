@@ -23,6 +23,13 @@ function makeStat(overrides: Partial<ScorableStatLine> = {}): ScorableStatLine {
     penaltiesSaved: 0,
     ownGoals: 0,
     teamConcededInRegulationAndEt: 0,
+    teamScoredInRegulationAndEt: 0,
+    shotsOnTarget: 0,
+    shotsOffTarget: 0,
+    tacklesSuccessful: 0,
+    crosses: 0,
+    passesCompleted: 0,
+    goalsConceded: 0,
     ...overrides,
   };
 }
@@ -108,13 +115,13 @@ describe("scoreStatLine: assists, saves, penalties saved", () => {
     expect(res.breakdown.saves).toBe(7);
   });
 
-  it("penalty saved is +5", () => {
+  it("penalty saved is +2", () => {
     const res = scoreStatLine(
       makeStat({ minutesPlayed: 90, penaltiesSaved: 1, teamConcededInRegulationAndEt: 1 }),
       "GK",
       DEFAULT_RULESET,
     );
-    expect(res.breakdown.penaltiesSaved).toBe(5);
+    expect(res.breakdown.penaltiesSaved).toBe(2);
   });
 });
 
@@ -204,9 +211,9 @@ describe("scoreStatLine: deductions", () => {
       DEFAULT_RULESET,
     );
     expect(res.breakdown.yellowCards).toBe(-2);
-    expect(res.breakdown.redCards).toBe(-3);
-    // appearance +1, 60+ +1, two yellows -2, red -3 -> -3 total
-    expect(res.points).toBe(-3);
+    expect(res.breakdown.redCards).toBe(-5);
+    // appearance +1, 60+ +1, two yellows -2, red -5 -> -5 total
+    expect(res.points).toBe(-5);
   });
 
   it("own goal -2", () => {
@@ -227,13 +234,13 @@ describe("scoreStatLine: deductions", () => {
     expect(res.breakdown.penaltiesMissed).toBe(-2);
   });
 
-  it("red card -3", () => {
+  it("red card -5", () => {
     const res = scoreStatLine(
       makeStat({ minutesPlayed: 75, redCards: 1, teamConcededInRegulationAndEt: 1 }),
       "DEF",
       DEFAULT_RULESET,
     );
-    expect(res.breakdown.redCards).toBe(-3);
+    expect(res.breakdown.redCards).toBe(-5);
   });
 });
 
@@ -255,7 +262,7 @@ describe("scoreStatLine: full composition", () => {
   });
 
   it("scores a heroic GK performance: 90', CS, penalty saved, 6 saves", () => {
-    // 1 + 1 + 5(CS) + 5(pen saved) + 6(saves) = 18
+    // 1 + 1 + 5(CS) + 2(pen saved) + 6(saves) = 15
     const res = scoreStatLine(
       makeStat({
         minutesPlayed: 90,
@@ -266,27 +273,17 @@ describe("scoreStatLine: full composition", () => {
       "GK",
       DEFAULT_RULESET,
     );
-    expect(res.points).toBe(18);
+    expect(res.points).toBe(15);
   });
 });
 
 describe("ruleset version stability", () => {
   it("two structurally identical rulesets produce the same version", () => {
-    const a = buildRuleset({
-      appearance: 1,
-      played60Plus: 1,
-      goalByPosition: { GK: 10, DEF: 6, MID: 5, FWD: 4 },
-      assist: 4,
-      save: 1,
-      cleanSheetByPosition: { GK: 5, DEF: 5 },
-      cleanSheetMinMinutes: 60,
-      penaltySaved: 5,
-      penaltyMissed: -2,
-      ownGoal: -2,
-      yellowCard: -1,
-      redCard: -3,
-    });
-    expect(a.version).toBe(DEFAULT_RULESET.version);
+    // Rebuild from the default's own values (minus its version) and confirm
+    // the content-hash reproduces — determinism, independent of exact values.
+    const { version, ...values } = DEFAULT_RULESET;
+    const a = buildRuleset(values);
+    expect(a.version).toBe(version);
   });
 
   it("any change to a point value yields a new version", () => {

@@ -280,10 +280,14 @@ export function mapFdSquads(
  *
  * What CAN be derived from football-data.org v4:
  *   goals, assists, yellowCards, redCards, penaltiesScored, ownGoals,
- *   minutesPlayed, teamConcededInRegulationAndEt
+ *   minutesPlayed, teamConcededInRegulationAndEt, teamScoredInRegulationAndEt
  *
  * What CANNOT be derived (set to 0):
- *   saves, penaltiesSaved
+ *   saves, penaltiesSaved, shotsOnTarget, shotsOffTarget, tacklesSuccessful,
+ *   crosses, passesCompleted
+ *
+ * goalsConceded is set to the team's conceded count so the keeper "goal
+ * conceded" rule still works (the scorer only applies it for GKs).
  *
  * penaltiesMissed is derived from the penalties[] array for non-shootout
  * matches only. Shootout matches set it to 0 to avoid false positives from
@@ -351,6 +355,7 @@ export function mapFdFixtureStats(
     ).length;
 
     const teamConcededInRegulationAndEt = isHome ? awayGoals : homeGoals;
+    const teamScoredInRegulationAndEt = isHome ? homeGoals : awayGoals;
 
     lines.push({
       sourceFixtureId: String(match.id),
@@ -366,6 +371,17 @@ export function mapFdFixtureStats(
       penaltiesSaved: 0,
       ownGoals,
       teamConcededInRegulationAndEt,
+      teamScoredInRegulationAndEt,
+      // football-data.org free tier has no per-player on-ball stats; these
+      // stay 0 and can be hand-entered in the admin editor if needed.
+      shotsOnTarget: 0,
+      shotsOffTarget: 0,
+      tacklesSuccessful: 0,
+      crosses: 0,
+      passesCompleted: 0,
+      // No per-player conceded; charge a keeper the team's conceded count so
+      // the "goal conceded by keeper" rule still works on this provider.
+      goalsConceded: teamConcededInRegulationAndEt,
       sourceRevision,
     });
   }

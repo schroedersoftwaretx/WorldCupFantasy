@@ -10,6 +10,7 @@ import { handle, HttpError, parseId } from "@/web/api";
 import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { findDraftRoom, getManagerTeam } from "@/web/draft-view";
+import { getNotifier } from "@/web/notifier";
 import { getMembershipRole } from "@/web/queries";
 
 export const runtime = "nodejs";
@@ -49,10 +50,12 @@ export function POST(
       throw new HttpError("playerId (a number) is required", "BAD_REQUEST", 400);
     }
 
+    const notifier = getNotifier();
     const result = await makePick(db, {
       draftRoomId: room.id,
       fantasyTeamId: team.id,
       playerId,
+      ...(notifier ? { notifier } : {}),
     });
     return {
       pickNumber: result.pickNumber,

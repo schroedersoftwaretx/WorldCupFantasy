@@ -316,6 +316,29 @@ th.num {
   background: var(--accent-bg);
 }
 
+/* When it's your pick, pulse the banner so it's impossible to miss. */
+.draft-banner.you {
+  animation: onclock-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes onclock-pulse {
+  0%,
+  100% {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 0 rgba(31, 111, 235, 0.0);
+  }
+  50% {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(31, 111, 235, 0.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draft-banner.you {
+    animation: none;
+  }
+}
+
 .draft-grid {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
@@ -326,6 +349,15 @@ th.num {
 @media (max-width: 720px) {
   .draft-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Tighter gutters so content gets full use of a narrow (~390px) screen. */
+  .site-main {
+    padding: 1.25rem 0.85rem 2.5rem;
+  }
+
+  .site-header {
+    padding: 0.85rem 0.85rem;
   }
 }
 
@@ -399,6 +431,19 @@ th.num {
   padding: 0.05rem 0.35rem;
 }
 
+/* National-team flag image (rendered via flagcdn; emoji flags don't show on
+   Windows). Sits inline before the country name. */
+.flag {
+  display: inline-block;
+  width: 20px;
+  height: 15px;
+  margin-right: 0.4rem;
+  vertical-align: -2px;
+  border-radius: 2px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
 .board-filters {
   display: flex;
   flex-wrap: wrap;
@@ -436,6 +481,33 @@ th.num {
   top: 0;
 }
 
+/* Clickable column-header sort buttons in the player board. */
+.sort-th {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sort-th:hover {
+  color: var(--accent);
+}
+
+.sort-th[aria-pressed="true"] {
+  color: var(--accent);
+}
+
+.num .sort-th {
+  /* keep the numeric header right-aligned like its column */
+  width: 100%;
+  text-align: right;
+}
+
 .btn-sm {
   background: var(--accent);
   color: #ffffff;
@@ -450,6 +522,12 @@ th.num {
 .btn-sm:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+/* Horizontal-scroll wrapper for wide tables on narrow screens. */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* --- W5: standings / in-season view --------------------------------------- */
@@ -578,6 +656,88 @@ th.num {
   padding: 0.5rem 0.7rem 0.3rem;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
+}
+
+/* Clickable period cell that opens the XI overlay (replaces <summary>). */
+.xi-cell-btn {
+  width: 100%;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.5rem 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  justify-content: flex-end;
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+}
+
+.xi-cell-btn:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.xi-cell-btn.active {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.xi-cell-btn.active .xi-badge {
+  color: var(--accent);
+}
+
+/* Full-page overlay for the XI detail — never clipped by the table. */
+.xi-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.xi-overlay-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 360px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.xi-overlay-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--card);
+}
+
+.xi-overlay-close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--muted);
+  padding: 0 0.2rem;
+}
+
+.xi-overlay-close:hover {
+  color: var(--fg);
 }
 
 .xi-table {

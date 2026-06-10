@@ -81,20 +81,33 @@ describe("Phase 2 recompute (integration)", () => {
       pointsByPlayer.set(p.sourcePlayerId, r.points);
     }
 
-    // Argentina (won 2-1, conceded 1):
-    //   1001 Martinez (GK): 1 + 1 + 4 saves = 6
-    //   1002 Romero  (DEF): 1 + 1 - 1 yellow = 1
-    //   1003 Messi   (FWD): 1 + 1 + 2*4 = 10
-    expect(pointsByPlayer.get("1001")).toBe(6);
-    expect(pointsByPlayer.get("1002")).toBe(1);
-    expect(pointsByPlayer.get("1003")).toBe(10);
-    // Brazil (lost 1-2, conceded 2):
-    //   2001 Alisson (GK):  1 + 1 + 3 saves = 5
-    //   2002 Casemiro(MID): 1 + 1 + 1*5 = 7
-    //   2003 Vini    (FWD): 1 + 1 + 1*4 assist = 6
-    expect(pointsByPlayer.get("2001")).toBe(5);
-    expect(pointsByPlayer.get("2002")).toBe(7);
-    expect(pointsByPlayer.get("2003")).toBe(6);
+    // Values include the v2 detailed-action rules (shots on/off, tackles,
+    // completed passes derived from total*accuracy%), the GK goal-conceded
+    // penalty, and the GK +5 win bonus. Crosses are 0 (api-sports has none).
+    //
+    // Argentina (home, WON 2-1; teamScored 2, conceded 1):
+    //   1001 Martinez (GK): app1 +60' 1 +4 saves +25 passes*0.05(1.25)
+    //                        -1 conceded +5 win = 11.25
+    //   1002 Romero  (DEF): app1 +60' 1 -1 yellow +1 shotOff*0.5(0.5)
+    //                        +4 tackles*0.5(2) +50 passes*0.05(2.5) = 6
+    //   1003 Messi   (FWD): app1 +60' 1 +2 goals*4(8) +4 SoT(4)
+    //                        +1 shotOff*0.5(0.5) +1 tackle*0.5(0.5)
+    //                        +34 passes*0.05(1.7) = 16.7
+    expect(pointsByPlayer.get("1001")).toBe(11.25);
+    expect(pointsByPlayer.get("1002")).toBe(6);
+    expect(pointsByPlayer.get("1003")).toBe(16.7);
+    // Brazil (away, LOST 1-2; teamScored 1, conceded 2; no win bonus):
+    //   2001 Alisson (GK):  app1 +60' 1 +3 saves +20 passes*0.05(1.0)
+    //                        -2 conceded = 4
+    //   2002 Casemiro(MID): app1 +60' 1 +1 goal*5(5) +2 SoT(2)
+    //                        +1 shotOff*0.5(0.5) +5 tackles*0.5(2.5)
+    //                        +40 passes*0.05(2.0) = 14
+    //   2003 Vini    (FWD): app1 +60' 1 +1 assist*4(4) +1 SoT(1)
+    //                        +3 shotOff*0.5(1.5) +1 tackle*0.5(0.5)
+    //                        +25 passes*0.05(1.25) = 10.25
+    expect(pointsByPlayer.get("2001")).toBe(4);
+    expect(pointsByPlayer.get("2002")).toBe(14);
+    expect(pointsByPlayer.get("2003")).toBe(10.25);
   });
 
   it("breakdown decomposition matches the total", async () => {
@@ -102,18 +115,10 @@ describe("Phase 2 recompute (integration)", () => {
     expect(rows.length).toBeGreaterThan(0);
     for (const r of rows) {
       const b = r.breakdown as ScoreBreakdown;
-      const sum =
-        b.appearance +
-        b.played60Plus +
-        b.goals +
-        b.assists +
-        b.saves +
-        b.cleanSheet +
-        b.penaltiesSaved +
-        b.penaltiesMissed +
-        b.ownGoals +
-        b.yellowCards +
-        b.redCards;
+      // Sum every component (incl. the v2 detailed-action fields) and round to
+      // 2dp to match the engine's rounding of fractional totals.
+      const raw = Object.values(b).reduce((acc, v) => acc + v, 0);
+      const sum = Math.round(raw * 100) / 100;
       expect(sum).toBe(r.points);
     }
   });
@@ -141,7 +146,8 @@ describe("Phase 2 recompute (integration)", () => {
       .where(eq(scoreEntry.rulesetVersion, DEFAULT_RULESET.version));
     expect(defaultRows).toHaveLength(6);
 
-    // Tweaked Messi: 1 + 1 + 2*5 = 12 (was 10 under default).
+    // Tweaked Messi: FWD goal value 4 -> 5 adds 2*(5-4)=2 to his default
+    // 16.7, so 18.7.
     const playerRows = await ctx.db.select().from(player);
     const messi = playerRows.find((p) => p.sourcePlayerId === "1003");
     if (!messi) throw new Error("messi not seeded");
@@ -154,6 +160,6 @@ describe("Phase 2 recompute (integration)", () => {
           eq(scoreEntry.playerId, messi.id),
         ),
       );
-    expect(tweakedRows[0]?.points).toBe(12);
+    expect(tweakedRows[0]?.points).toBe(18.7);
   });
 });

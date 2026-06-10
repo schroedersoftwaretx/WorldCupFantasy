@@ -11,6 +11,7 @@ import { handle, HttpError, parseId } from "@/web/api";
 import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { findDraftRoom } from "@/web/draft-view";
+import { getNotifier } from "@/web/notifier";
 import { getMembershipRole } from "@/web/queries";
 
 export const runtime = "nodejs";
@@ -33,7 +34,11 @@ export function POST(
     if (!room) {
       throw new HttpError("no draft room for this league", "DRAFT_NOT_FOUND", 404);
     }
-    const result = await processExpiredPicks(db, { draftRoomId: room.id });
+    const notifier = getNotifier();
+    const result = await processExpiredPicks(db, {
+      draftRoomId: room.id,
+      ...(notifier ? { notifier } : {}),
+    });
     return result;
   });
 }

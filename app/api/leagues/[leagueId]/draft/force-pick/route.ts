@@ -10,6 +10,7 @@ import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { getMembershipRole } from "@/web/queries";
 import { getDraftRoomRow } from "@/web/draft-view";
+import { getNotifier } from "@/web/notifier";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,7 +45,7 @@ export function POST(
       throw new HttpError("draft is not in progress", "DRAFT_NOT_IN_PROGRESS", 400);
     }
 
-    const result = await forceCurrentAutopick(db, room.id);
+    const result = await forceCurrentAutopick(db, room.id, new Date(), getNotifier());
     return { pick: result.pick };
   });
 }

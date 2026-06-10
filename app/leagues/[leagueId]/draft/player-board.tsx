@@ -9,7 +9,9 @@
 
 import { useMemo, useState } from "react";
 
-import type { DraftBoardPlayer } from "@/web/api-types";
+import type { DraftBoardPlayer, StageKey } from "@/web/api-types";
+import { STAGE_LABELS, STAGE_ORDER } from "@/web/api-types";
+import { flagImg } from "@/web/flags";
 
 interface PlayerBoardProps {
   players: DraftBoardPlayer[];
@@ -20,13 +22,7 @@ interface PlayerBoardProps {
 
 const POSITIONS = ["GK", "DEF", "MID", "FWD"];
 const MAX_ROWS = 200;
-type SortKey = "rank" | "proj" | "name" | "pos";
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "rank", label: "Rank" },
-  { value: "proj", label: "Proj. Pts" },
-  { value: "name", label: "Name" },
-  { value: "pos",  label: "Position" },
-];
+type SortKey = "rank" | "proj" | "stage" | "name" | "pos";
 
 export default function PlayerBoard({
   players,
@@ -37,12 +33,38 @@ export default function PlayerBoard({
   const [search, setSearch] = useState("");
   const [position, setPosition] = useState("ALL");
   const [team, setTeam] = useState("ALL");
-  const [sort, setSort] = useState<SortKey>("rank");
+  // Default sort: descending projected points (the projection system's pick).
+  const [sort, setSort] = useState<SortKey>("proj");
+
+  // Click a column header to sort by it. Clicking the active column does
+  // nothing extra — each key has a single, sensible direction (proj desc,
+  // everything else ascending), so there is no confusing toggle to track.
+  function sortBy(key: SortKey) {
+    setSort(key);
+  }
+  const sortArrow = (key: SortKey) => (sort === key ? " ↓" : "");
 
   const teams = useMemo(
     () => Array.from(new Set(players.map((p) => p.nationalTeam))).sort(),
     [players],
   );
+
+  // Which reach-stages have data for at least one player (earliest -> latest).
+  const availableStages = useMemo<StageKey[]>(
+    () =>
+      STAGE_ORDER.filter((s) =>
+        players.some((p) => p.stageProbabilities?.[s] != null),
+      ),
+    [players],
+  );
+
+  // The stage shown in the odds column. Default to the deepest stage that has
+  // data (most differentiating for a draft), falling back to the first.
+  const [stage, setStage] = useState<StageKey | null>(null);
+  const selectedStage: StageKey | null =
+    stage && availableStages.includes(stage)
+      ? stage
+      : (availableStages[availableStages.length - 1] ?? null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -55,6 +77,11 @@ export default function PlayerBoard({
     const POS_ORDER: Record<string, number> = { GK: 0, DEF: 1, MID: 2, FWD: 3 };
     list.sort((a, b) => {
       if (sort === "proj") return (b.projectedTotalPoints ?? -1) - (a.projectedTotalPoints ?? -1);
+      if (sort === "stage" && selectedStage) {
+        const av = a.stageProbabilities?.[selectedStage] ?? -1;
+        const bv = b.stageProbabilities?.[selectedStage] ?? -1;
+        return bv - av;
+      }
       if (sort === "name") return a.fullName.localeCompare(b.fullName);
       if (sort === "pos")  return (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9);
       const ra = (a.draftRank != null && a.draftRank > 0) ? a.draftRank : 9999;
@@ -62,7 +89,7 @@ export default function PlayerBoard({
       return ra - rb;
     });
     return list;
-  }, [players, search, position, team, sort]);
+  }, [players, search, position, team, sort, selectedStage]);
 
   const shown = filtered.slice(0, MAX_ROWS);
 
@@ -100,17 +127,23 @@ export default function PlayerBoard({
             </option>
           ))}
         </select>
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
-          aria-label="Sort by"
-        >
-          {SORT_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              Sort: {o.label}
-            </option>
-          ))}
-        </select>
+        {availableStages.length > 0 && selectedStage ? (
+          <select
+            value={selectedStage}
+            onChange={(e) => {
+              setStage(e.target.value as StageKey);
+              setSort("stage");
+            }}
+            aria-label="Tournament-stage odds to display"
+            title="Show each team's chance of reaching this stage"
+          >
+            {availableStages.map((s) => (
+              <option key={s} value={s}>
+                Chance to reach: {STAGE_LABELS[s].full}
+              </option>
+            ))}
+          </select>
+        ) : null}
       </div>
       <p className="field-hint">
         {filtered.length} available
@@ -126,10 +159,59 @@ export default function PlayerBoard({
           <table>
             <thead>
               <tr>
-                <th className="num">Rank</th>
-                <th className="num">Proj. Pts</th>
-                <th>Player</th>
-                <th>Pos</th>
+                <th className="num">
+                  <button
+                    type="button"
+                    className="sort-th"
+                    aria-pressed={sort === "rank"}
+                    onClick={() => sortBy("rank")}
+                  >
+                    Rank{sortArrow("rank")}
+                  </button>
+                </th>
+                <th className="num">
+                  <button
+                    type="button"
+                    className="sort-th"
+                    aria-pressed={sort === "proj"}
+                    onClick={() => sortBy("proj")}
+                  >
+                    Proj. Pts{sortArrow("proj")}
+                  </button>
+                </th>
+                {selectedStage ? (
+                  <th className="num">
+                    <button
+                      type="button"
+                      className="sort-th"
+                      aria-pressed={sort === "stage"}
+                      onClick={() => sortBy("stage")}
+                      title={`Chance this player's national team reaches the ${STAGE_LABELS[selectedStage].full}`}
+                    >
+                      {STAGE_LABELS[selectedStage].short}%{sortArrow("stage")}
+                    </button>
+                  </th>
+                ) : null}
+                <th>
+                  <button
+                    type="button"
+                    className="sort-th"
+                    aria-pressed={sort === "name"}
+                    onClick={() => sortBy("name")}
+                  >
+                    Player{sortArrow("name")}
+                  </button>
+                </th>
+                <th>
+                  <button
+                    type="button"
+                    className="sort-th"
+                    aria-pressed={sort === "pos"}
+                    onClick={() => sortBy("pos")}
+                  >
+                    Pos{sortArrow("pos")}
+                  </button>
+                </th>
                 <th>Team</th>
                 <th />
               </tr>
@@ -143,11 +225,35 @@ export default function PlayerBoard({
                       ? p.projectedTotalPoints.toFixed(1)
                       : "-"}
                   </td>
+                  {selectedStage ? (
+                    <td className="num">
+                      {(() => {
+                        const v = p.stageProbabilities?.[selectedStage];
+                        return v != null ? `${Math.round(v * 100)}%` : "-";
+                      })()}
+                    </td>
+                  ) : null}
                   <td>{p.fullName}</td>
                   <td>
                     <span className="pos-badge">{p.position}</span>
                   </td>
-                  <td>{p.nationalTeam}</td>
+                  <td>
+                    {(() => {
+                      const f = flagImg(p.nationalTeam);
+                      return f ? (
+                        <img
+                          className="flag"
+                          src={f.src}
+                          srcSet={f.srcSet}
+                          width={20}
+                          height={15}
+                          alt=""
+                          loading="lazy"
+                        />
+                      ) : null;
+                    })()}
+                    {p.nationalTeam}
+                  </td>
                   <td>
                     <button
                       type="button"

@@ -73,6 +73,16 @@ export interface ProviderStatLine {
   penaltiesSaved: number;
   ownGoals: number;
   teamConcededInRegulationAndEt: number;
+  /** Goals the player's team SCORED in regulation + ET (excludes shootout). */
+  teamScoredInRegulationAndEt: number;
+  // --- Detailed-action counts (v2). 0 when the provider can't supply them. ---
+  shotsOnTarget: number;
+  shotsOffTarget: number;
+  tacklesSuccessful: number;
+  crosses: number;
+  passesCompleted: number;
+  /** Goals conceded attributable to this player as keeper. */
+  goalsConceded: number;
   /**
    * Provider's revision/version marker for this stat row. Free-form string;
    * the ingestion path uses lexicographic comparison and upserts only when

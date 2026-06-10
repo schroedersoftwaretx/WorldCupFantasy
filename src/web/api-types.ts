@@ -167,6 +167,12 @@ export interface DraftStateData {
   order: DraftOrderSlot[];
   picks: DraftPickLog[];
   viewer: DraftViewer;
+  /**
+   * Whether server-side email notifications are configured (RESEND_API_KEY
+   * present). Surfaced so the draft room can warn the owner when managers
+   * won't get "you're on the clock" emails.
+   */
+  emailNotifications: boolean;
 }
 
 /** One available player on the draft board. */
@@ -181,9 +187,33 @@ export interface DraftBoardPlayer {
    * Null when no odds data is available yet.
    */
   projectedTotalPoints: number | null;
+  /**
+   * Market-implied probability (0-1) that the player's national team REACHES
+   * each tournament stage (winning, for CHAMPION). Sourced from bookmaker
+   * futures markets. Null when no stage odds are available for that team; an
+   * individual stage may also be absent if that market isn't offered. The
+   * board lets the viewer pick which stage to display, and shows only the
+   * stages that have data.
+   */
+  stageProbabilities: Partial<Record<StageKey, number>> | null;
   /** Whether adding this player would be a legal roster move for the viewer. */
   legal: boolean;
 }
+
+/** Reach-stage keys, ordered latest (deepest) first for display. */
+export type StageKey = "CHAMPION" | "FINAL" | "SF" | "QF" | "R16";
+
+/** Display metadata for each reach-stage column. */
+export const STAGE_LABELS: Record<StageKey, { full: string; short: string }> = {
+  CHAMPION: { full: "Champion", short: "Win" },
+  FINAL: { full: "Final", short: "Final" },
+  SF: { full: "Semifinals", short: "SF" },
+  QF: { full: "Quarterfinals", short: "QF" },
+  R16: { full: "Round of 16", short: "R16" },
+};
+
+/** Stage order from earliest to latest, for the selector dropdown. */
+export const STAGE_ORDER: StageKey[] = ["R16", "QF", "SF", "FINAL", "CHAMPION"];
 
 /** GET /api/leagues/[leagueId]/draft/board - the available-player board. */
 export interface DraftBoardData {

@@ -4,11 +4,12 @@
  * Full automated data pipeline, called by Vercel Cron every 30 minutes.
  * Degrades gracefully based on which env vars are present:
  *
- *   With FOOTBALL_DATA_KEY or API_FOOTBALL_KEY set (production):
+ *   With a provider configured (STATS_PROVIDER or any provider key set):
  *     1. Refresh fixture schedule (SCHEDULED -> LIVE -> FINISHED statuses).
  *     2. Ingest per-player stats for every newly-FINISHED fixture.
  *     3. Recompute fantasy scores from the latest stat_lines.
- *     FOOTBALL_DATA_KEY is preferred if both are set (free tier, 2026 WC data).
+ *     The provider is chosen by src/data/provider/select.ts (Sportmonks is
+ *     preferred when SPORTMONKS_KEY is set — it covers every v2 stat).
  *
  *   Without any provider key (e.g. staging):
  *     3. Recompute fantasy scores only.
@@ -24,14 +25,15 @@
  * Auth: requires CRON_SECRET as a Bearer token when that env var is set.
  * The operation is fully idempotent -- stale or duplicate calls are safe.
  */
-import { apiFootballFromEnv } from "@/data/provider/api-football";
-import { footballDataFromEnv } from "@/data/provider/football-data";
+import { resolveProviderName, statsProviderFromEnv } from "@/data/provider/select";
+import type { StatsProvider } from "@/data/provider/types";
 import { ingestFixtureStats } from "@/data/ingest/fixture-stats";
 import { ingestSchedule } from "@/data/ingest/schedule";
 import { getUningestedFinishedFixtures } from "@/data/ingest/pending";
 import { recomputeAll } from "@/data/scoring/recompute";
 import { DEFAULT_RULESET } from "@/data/scoring/ruleset";
 import { oddsProviderFromEnv } from "@/data/odds/odds-provider";
+import { stageOddsProviderFromEnv } from "@/data/odds/stage-odds-provider";
 import { recomputeProjections } from "@/data/projection/recompute-projections";
 import { handle, HttpError } from "@/web/api";
 import { getDb } from "@/web/db";
@@ -53,18 +55,23 @@ export function GET(request: Request): Promise<Response> {
 
     const db = getDb();
     const env = process.env as NodeJS.ProcessEnv;
-    const hasProvider = env["FOOTBALL_DATA_KEY"] ?? env["API_FOOTBALL_KEY"];
+
+    // Build whichever provider is configured (STATS_PROVIDER or auto-detect).
+    // If no usable key is present the factory throws -> degrade to recompute-only.
+    let provider: StatsProvider | null = null;
+    let providerName: string | null = null;
+    try {
+      provider = statsProviderFromEnv(env);
+      providerName = resolveProviderName(env);
+    } catch {
+      provider = null;
+    }
 
     let scheduleSummary: object | null = null;
     const statsSummaries: Array<{ fixtureId: string; inserted: number; updated: number; skipped: number }> = [];
 
-    if (hasProvider) {
+    if (provider) {
       // Full pipeline: refresh schedule + ingest stats for new fixtures.
-      // Prefer football-data.org (free, 2026 WC data); fall back to API-Football.
-      const provider = env["FOOTBALL_DATA_KEY"]
-        ? footballDataFromEnv(env)
-        : apiFootballFromEnv(env);
-
       // Step 1: refresh fixture statuses.
       scheduleSummary = await ingestSchedule(db, provider);
 
@@ -82,6 +89,7 @@ export function GET(request: Request): Promise<Response> {
     // Steps 4-5: odds + projections (only when ODDS_API_KEY is set).
     let oddsSummary: object | null = null;
     let projectionSummary: object | null = null;
+    let stageOddsSummary: object | null = null;
     if (env["ODDS_API_KEY"]) {
       try {
         const oddsProvider = oddsProviderFromEnv(env);
@@ -92,16 +100,25 @@ export function GET(request: Request): Promise<Response> {
         // and scores are not blocked by an odds API outage.
         oddsSummary = { error: err instanceof Error ? err.message : String(err) };
       }
+      // Reach-stage futures (chance to make R16/QF/SF/Final/Champion). Cached
+      // 12h internally, so this is cheap to call on every 30-min cron tick.
+      try {
+        stageOddsSummary = await stageOddsProviderFromEnv(env).ingestStageOdds(db);
+      } catch (err) {
+        stageOddsSummary = { error: err instanceof Error ? err.message : String(err) };
+      }
     }
 
     return {
-      mode: hasProvider ? "full" : "recompute-only",
+      mode: provider ? "full" : "recompute-only",
+      provider: providerName,
       schedule: scheduleSummary,
       fixturesIngested: statsSummaries.length,
       stats: statsSummaries,
       scores: scoreSummary,
       odds: oddsSummary,
       projections: projectionSummary,
+      stageOdds: stageOddsSummary,
     };
   });
 }

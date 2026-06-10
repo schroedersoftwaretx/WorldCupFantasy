@@ -10,6 +10,7 @@ import { handle, HttpError, parseId } from "@/web/api";
 import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { findDraftRoom } from "@/web/draft-view";
+import { getNotifier } from "@/web/notifier";
 import { getMembershipRole } from "@/web/queries";
 
 export const runtime = "nodejs";
@@ -43,7 +44,11 @@ export function POST(
         404,
       );
     }
-    await startDraft(db, { draftRoomId: room.id });
+    const notifier = getNotifier();
+    await startDraft(db, {
+      draftRoomId: room.id,
+      ...(notifier ? { notifier } : {}),
+    });
     return { started: true };
   });
 }

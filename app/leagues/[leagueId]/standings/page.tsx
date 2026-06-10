@@ -23,6 +23,7 @@ import { getDb } from "@/web/db";
 import { getLeagueDetail, getMembershipRole } from "@/web/queries";
 
 import RecomputeButton from "./recompute-button";
+import StandingsPeriodTable from "./standings-period-table";
 
 export const dynamic = "force-dynamic";
 
@@ -166,6 +167,7 @@ export default async function StandingsPage({
         <>
           {/* ---- Overall rankings table ---- */}
           <h2>Overall standings</h2>
+          <div className="table-scroll">
           <table>
             <thead>
               <tr>
@@ -204,87 +206,26 @@ export default async function StandingsPage({
               ))}
             </tbody>
           </table>
+          </div>
 
-          {/* ---- Per-period breakdown with expandable XI ---- */}
+          {/* ---- Per-period breakdown with XI overlay (client component) ---- */}
           <h2>Best-ball points by scoring period</h2>
           <p className="subtitle">
             Click a cell to reveal that team&rsquo;s best-ball XI for that
             period.
           </p>
-          <table className="period-table">
-            <thead>
-              <tr>
-                <th>Team</th>
-                {allPeriods.map((p) => (
-                  <th key={p.stage} className="num">
-                    {STAGE_LABEL[p.stage] ?? p.stage}
-                  </th>
-                ))}
-                <th className="num">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {standings.map((entry) => (
-                <tr key={entry.fantasyTeamId}>
-                  <td>
-                    <Link
-                      href={`/leagues/${id}/roster/${entry.fantasyTeamId}`}
-                      className="team-link"
-                    >
-                      {entry.teamName}
-                    </Link>
-                  </td>
-                  {entry.periods.map((p) => (
-                    <td key={p.stage} className="num period-cell">
-                      {p.xi.length > 0 ? (
-                        <details className="xi-details">
-                          <summary className="xi-summary">
-                            {p.points}
-                            <span className="xi-badge">
-                              {p.formation}
-                            </span>
-                          </summary>
-                          <div className="xi-popup">
-                            <div className="xi-popup-header">
-                              {STAGE_FULL[p.stage] ?? p.stage} &mdash;{" "}
-                              {entry.teamName} &mdash; {p.formation}
-                            </div>
-                            <table className="xi-table">
-                              <thead>
-                                <tr>
-                                  <th>Player</th>
-                                  <th>Pos</th>
-                                  <th className="num">Pts</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {[...p.xi]
-                                  .sort(
-                                    (a, b) =>
-                                      b.points - a.points ||
-                                      a.fullName.localeCompare(b.fullName),
-                                  )
-                                  .map((slot) => (
-                                    <tr key={slot.playerId}>
-                                      <td>{slot.fullName}</td>
-                                      <td className="pos-badge">{slot.position}</td>
-                                      <td className="num">{slot.points}</td>
-                                    </tr>
-                                  ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </details>
-                      ) : (
-                        <span className="muted-pts">{p.points}</span>
-                      )}
-                    </td>
-                  ))}
-                  <td className="num">{entry.total}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <StandingsPeriodTable
+            leagueId={id}
+            stages={allPeriods.map((p) => p.stage)}
+            stageLabel={STAGE_LABEL}
+            stageFull={STAGE_FULL}
+            rows={standings.map((e) => ({
+              fantasyTeamId: e.fantasyTeamId,
+              teamName: e.teamName,
+              periods: e.periods,
+              total: e.total,
+            }))}
+          />
         </>
       )}
     </>

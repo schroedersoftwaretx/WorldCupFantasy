@@ -36,7 +36,7 @@
       "name": "Hero GK: clean sheet + penalty saved + 6 saves",
       "position": "GK",
       "stat": { "minutesPlayed": 90, "saves": 6, "penaltiesSaved": 1, "teamConcededInRegulationAndEt": 0 },
-      "expected": { "points": 18 }
+      "expected": { "points": 15 }
     },
     {
       "name": "DEF brace + clean sheet + yellow card",
@@ -60,13 +60,13 @@
       "name": "MID red card before 60': no 60+ bonus, no clean sheet",
       "position": "MID",
       "stat": { "minutesPlayed": 50, "redCards": 1, "teamConcededInRegulationAndEt": 0 },
-      "expected": { "points": -2 }
+      "expected": { "points": -4 }
     },
     {
       "name": "MID second-yellow dismissal: per-type cards (not escalating)",
       "position": "MID",
       "stat": { "minutesPlayed": 67, "yellowCards": 2, "redCards": 1, "teamConcededInRegulationAndEt": 1 },
-      "expected": { "points": -3 }
+      "expected": { "points": -5 }
     },
     {
       "name": "FWD scored AND missed a (different) penalty",
@@ -85,6 +85,48 @@
       "position": "MID",
       "stat": { "minutesPlayed": 90, "assists": 1, "teamConcededInRegulationAndEt": 1 },
       "expected": { "points": 6 }
+    },
+    {
+      "name": "v2: FWD 3 shots on + 2 off target",
+      "position": "FWD",
+      "stat": { "minutesPlayed": 90, "shotsOnTarget": 3, "shotsOffTarget": 2, "teamConcededInRegulationAndEt": 1 },
+      "expected": { "points": 6 }
+    },
+    {
+      "name": "v2: MID 4 crosses + 20 completed passes",
+      "position": "MID",
+      "stat": { "minutesPlayed": 90, "crosses": 4, "passesCompleted": 20, "teamConcededInRegulationAndEt": 1 },
+      "expected": { "points": 5 }
+    },
+    {
+      "name": "v2: DEF 6 successful tackles",
+      "position": "DEF",
+      "stat": { "minutesPlayed": 90, "tacklesSuccessful": 6, "teamConcededInRegulationAndEt": 1 },
+      "expected": { "points": 5 }
+    },
+    {
+      "name": "v2: GK clean sheet + win bonus + 2 saves",
+      "position": "GK",
+      "stat": { "minutesPlayed": 90, "saves": 2, "teamConcededInRegulationAndEt": 0, "teamScoredInRegulationAndEt": 2, "goalsConceded": 0 },
+      "expected": { "points": 14 }
+    },
+    {
+      "name": "v2: GK concedes 2 in a loss (no win bonus)",
+      "position": "GK",
+      "stat": { "minutesPlayed": 90, "saves": 5, "teamConcededInRegulationAndEt": 2, "teamScoredInRegulationAndEt": 1, "goalsConceded": 2 },
+      "expected": { "points": 5 }
+    },
+    {
+      "name": "v2: outfielder gets NO keeper bonuses despite team win",
+      "position": "FWD",
+      "stat": { "minutesPlayed": 90, "teamConcededInRegulationAndEt": 0, "teamScoredInRegulationAndEt": 3, "goalsConceded": 2 },
+      "expected": { "points": 2 }
+    },
+    {
+      "name": "v2: fractional total from 13 completed passes",
+      "position": "MID",
+      "stat": { "minutesPlayed": 70, "passesCompleted": 13, "teamConcededInRegulationAndEt": 1 },
+      "expected": { "points": 2.65 }
     }
   ]
 }

@@ -243,8 +243,15 @@ export interface AcceptInviteResult {
 /**
  * Redeem an invite token. Validates that the invite is PENDING, not
  * expired, and (if it targets a specific email) intended for this manager;
- * enforces the league's max_managers; then adds membership + fantasy_team
- * and marks the invite ACCEPTED - all transactionally.
+ * enforces the league's max_managers; then adds membership + fantasy_team -
+ * all transactionally.
+ *
+ * Invite links are MULTI-USE: a plain shareable link (no target email) can be
+ * redeemed by many managers and stays PENDING so the same link keeps working
+ * for everyone you send it to, until it expires, the league fills, or it is
+ * revoked. The same manager can't redeem twice (the already-a-member guard
+ * blocks it). A targeted (email) invite is single-use: it flips to ACCEPTED
+ * once its intended recipient joins.
  */
 export async function acceptInvite(
   db: Db,
@@ -346,14 +353,19 @@ export async function acceptInvite(
       .returning();
     if (!team) throw new LeagueError("team insert failed", "TEAM_INSERT_FAILED");
 
-    await tx
-      .update(leagueInvite)
-      .set({
-        status: "ACCEPTED",
-        acceptedByManagerId: joiningManager.id,
-        acceptedAt: new Date(),
-      })
-      .where(eq(leagueInvite.id, invite.id));
+    // A targeted (email) invite is for one person, so consume it. A plain
+    // shareable link stays PENDING so others can still use it (the per-manager
+    // already-a-member guard above stops anyone joining twice).
+    if (invite.email) {
+      await tx
+        .update(leagueInvite)
+        .set({
+          status: "ACCEPTED",
+          acceptedByManagerId: joiningManager.id,
+          acceptedAt: new Date(),
+        })
+        .where(eq(leagueInvite.id, invite.id));
+    }
 
     return { league: lg, membership, team };
   });

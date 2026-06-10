@@ -204,6 +204,30 @@ export const statLine = pgTable(
     teamConcededInRegulationAndEt: integer("team_conceded_in_regulation_and_et")
       .notNull()
       .default(0),
+    /** Goals the player's team SCORED in regulation + ET. Powers the keeper
+     * "game won" bonus (scored > conceded). Excludes shootout goals. */
+    teamScoredInRegulationAndEt: integer("team_scored_in_regulation_and_et")
+      .notNull()
+      .default(0),
+
+    // --- Detailed-action counts (v2) ----------------------------------------
+    // Populated by richer providers (Sportmonks / Opta) or by hand. Default 0
+    // so a provider that can't supply them simply contributes nothing.
+    shotsOnTarget: integer("shots_on_target").notNull().default(0),
+    shotsOffTarget: integer("shots_off_target").notNull().default(0),
+    tacklesSuccessful: integer("tackles_successful").notNull().default(0),
+    crosses: integer("crosses").notNull().default(0),
+    passesCompleted: integer("passes_completed").notNull().default(0),
+    /** Goals conceded charged to this player as keeper (= team conceded for a
+     * GK who played the full match; provider per-player value otherwise). */
+    goalsConceded: integer("goals_conceded").notNull().default(0),
+
+    // --- Manual edit lock ---------------------------------------------------
+    // When true, the provider ingest path will NOT overwrite this row, so
+    // hand-entered corrections (e.g. saves split across a keeper substitution)
+    // survive the next ingest. Set by the admin stat editor.
+    manuallyEdited: boolean("manually_edited").notNull().default(false),
+    manualNote: text("manual_note"),
 
     ingestedAt: timestamp("ingested_at", { withTimezone: true })
       .notNull()
@@ -231,7 +255,9 @@ export const scoreEntry = pgTable(
       .notNull()
       .references(() => fixture.id, { onDelete: "restrict" }),
     rulesetVersion: text("ruleset_version").notNull(),
-    points: integer("points").notNull(),
+    /** Real (not integer): the v2 rules introduce fractional values (0.5,
+     * 0.05). Always rounded to 2dp by the scoring engine. */
+    points: real("points").notNull(),
     breakdown: jsonb("breakdown").notNull(),
     computedAt: timestamp("computed_at", { withTimezone: true })
       .notNull()
@@ -632,9 +658,48 @@ export const projectedScoreEntry = pgTable(
   }),
 );
 
+// --- stage_odds -------------------------------------------------------------
+
+/**
+ * Market-implied probability that a national team REACHES a given tournament
+ * stage (or wins it outright for CHAMPION). Sourced from The Odds API
+ * "to-reach-stage" / outright winner markets, de-vigged so the field sums to
+ * the number of slots at that stage. One row per (team, stage).
+ *
+ * `stage` is one of: "R16" | "QF" | "SF" | "FINAL" | "CHAMPION". It is stored
+ * as free text (not the fixture `stage` enum) because these are aggregate
+ * "reach" outcomes, not individual fixtures, and CHAMPION has no fixture stage.
+ */
+export const stageOdds = pgTable(
+  "stage_odds",
+  {
+    nationalTeamId: integer("national_team_id")
+      .notNull()
+      .references(() => nationalTeam.id, { onDelete: "restrict" }),
+    /** "R16" | "QF" | "SF" | "FINAL" | "CHAMPION". */
+    stage: text("stage").notNull(),
+    /** Implied probability (0-1) of reaching this stage (winning, for CHAMPION). */
+    reachP: real("reach_p").notNull(),
+    /** When these odds were last fetched from the provider. */
+    fetchedAt: timestamp("fetched_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.nationalTeamId, t.stage] }),
+    teamIdx: index("stage_odds_national_team_id_idx").on(t.nationalTeamId),
+  }),
+);
+
+/** The reach-stage keys we track, latest-first for display ordering. */
+export const STAGE_ODDS_STAGES = ["CHAMPION", "FINAL", "SF", "QF", "R16"] as const;
+export type StageOddsStage = (typeof STAGE_ODDS_STAGES)[number];
+
 // --- Type helpers (continued) ------------------------------------------------
 
 export type MatchOddsRow = typeof matchOdds.$inferSelect;
 export type MatchOddsInsert = typeof matchOdds.$inferInsert;
 export type ProjectedScoreEntryRow = typeof projectedScoreEntry.$inferSelect;
 export type ProjectedScoreEntryInsert = typeof projectedScoreEntry.$inferInsert;
+export type StageOddsRow = typeof stageOdds.$inferSelect;
+export type StageOddsInsert = typeof stageOdds.$inferInsert;

@@ -53,6 +53,13 @@ function defaults(): ScorableStatLine {
     penaltiesSaved: 0,
     ownGoals: 0,
     teamConcededInRegulationAndEt: 0,
+    teamScoredInRegulationAndEt: 0,
+    shotsOnTarget: 0,
+    shotsOffTarget: 0,
+    tacklesSuccessful: 0,
+    crosses: 0,
+    passesCompleted: 0,
+    goalsConceded: 0,
   };
 }
 

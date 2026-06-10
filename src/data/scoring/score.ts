@@ -44,6 +44,16 @@ export interface ScoreBreakdown {
   ownGoals: number;
   yellowCards: number;
   redCards: number;
+  // Detailed-action rules (v2). Default 0 when the provider lacks the data.
+  shotsOnTarget: number;
+  shotsOffTarget: number;
+  tacklesSuccessful: number;
+  crosses: number;
+  passesCompleted: number;
+  /** GK-only: goals conceded penalty. */
+  goalsConcededByKeeper: number;
+  /** GK-only: flat win bonus. */
+  gameWon: number;
 }
 
 export interface ScoredResult {
@@ -70,7 +80,23 @@ export type ScorableStatLine = Pick<
   | "penaltiesSaved"
   | "ownGoals"
   | "teamConcededInRegulationAndEt"
+  | "shotsOnTarget"
+  | "shotsOffTarget"
+  | "tacklesSuccessful"
+  | "crosses"
+  | "passesCompleted"
+  | "goalsConceded"
+  | "teamScoredInRegulationAndEt"
 >;
+
+/**
+ * Round to 2 decimal places to keep fractional rules (0.5, 0.05) free of
+ * binary-float drift, e.g. 0.05 * 41 = 2.0500000000000003 -> 2.05. Every
+ * rule value is a multiple of 0.05, so 2dp is exact for any legal total.
+ */
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
 
 export function scoreStatLine(
   stat: ScorableStatLine,
@@ -89,6 +115,13 @@ export function scoreStatLine(
     ownGoals: 0,
     yellowCards: 0,
     redCards: 0,
+    shotsOnTarget: 0,
+    shotsOffTarget: 0,
+    tacklesSuccessful: 0,
+    crosses: 0,
+    passesCompleted: 0,
+    goalsConcededByKeeper: 0,
+    gameWon: 0,
   };
 
   // A player who never came on the pitch scores 0 across the board. This
@@ -131,18 +164,44 @@ export function scoreStatLine(
   breakdown.yellowCards = stat.yellowCards * ruleset.yellowCard;
   breakdown.redCards = stat.redCards * ruleset.redCard;
 
-  const points =
+  // Detailed on-ball actions (any position). Fractional values; these are 0
+  // until a provider supplies the counts or they are entered manually.
+  breakdown.shotsOnTarget = round2(stat.shotsOnTarget * ruleset.shotOnTarget);
+  breakdown.shotsOffTarget = round2(stat.shotsOffTarget * ruleset.shotOffTarget);
+  breakdown.tacklesSuccessful = round2(stat.tacklesSuccessful * ruleset.tackleSuccessful);
+  breakdown.crosses = round2(stat.crosses * ruleset.cross);
+  breakdown.passesCompleted = round2(stat.passesCompleted * ruleset.passCompleted);
+
+  // Goalkeeper-only rules.
+  if (position === "GK") {
+    breakdown.goalsConcededByKeeper = stat.goalsConceded * ruleset.goalConcededByKeeper;
+    // Game won = scored strictly more than conceded in regulation + ET. A
+    // shootout-only win is a draw here and earns nothing automatically.
+    if (stat.teamScoredInRegulationAndEt > stat.teamConcededInRegulationAndEt) {
+      breakdown.gameWon = ruleset.gameWonKeeper;
+    }
+  }
+
+  const points = round2(
     breakdown.appearance +
-    breakdown.played60Plus +
-    breakdown.goals +
-    breakdown.assists +
-    breakdown.saves +
-    breakdown.cleanSheet +
-    breakdown.penaltiesSaved +
-    breakdown.penaltiesMissed +
-    breakdown.ownGoals +
-    breakdown.yellowCards +
-    breakdown.redCards;
+      breakdown.played60Plus +
+      breakdown.goals +
+      breakdown.assists +
+      breakdown.saves +
+      breakdown.cleanSheet +
+      breakdown.penaltiesSaved +
+      breakdown.penaltiesMissed +
+      breakdown.ownGoals +
+      breakdown.yellowCards +
+      breakdown.redCards +
+      breakdown.shotsOnTarget +
+      breakdown.shotsOffTarget +
+      breakdown.tacklesSuccessful +
+      breakdown.crosses +
+      breakdown.passesCompleted +
+      breakdown.goalsConcededByKeeper +
+      breakdown.gameWon,
+  );
 
   return { points, breakdown };
 }

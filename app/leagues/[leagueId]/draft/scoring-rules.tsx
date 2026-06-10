@@ -36,11 +36,19 @@ export function ScoringRules() {
             <tr><td>Clean sheet — GK or DEF (60+ min, 0 conceded)</td><td className="num pts-pos">+5</td></tr>
             <tr><td>Save (each, GK)</td><td className="num pts-pos">+1</td></tr>
             <tr><td>Penalty saved (GK)</td><td className="num pts-pos">+2</td></tr>
+            <tr><td>Game won (GK only)</td><td className="num pts-pos">+5</td></tr>
+            <tr className="rule-divider"><td colSpan={2} className="rule-group">Detailed actions (each)</td></tr>
+            <tr><td>Shot on target</td><td className="num pts-pos">+1</td></tr>
+            <tr><td>Shot off target</td><td className="num pts-pos">+0.5</td></tr>
+            <tr><td>Successful tackle</td><td className="num pts-pos">+0.5</td></tr>
+            <tr><td>Cross</td><td className="num pts-pos">+0.5</td></tr>
+            <tr><td>Completed pass</td><td className="num pts-pos">+0.05</td></tr>
             <tr className="rule-divider"><td colSpan={2} className="rule-group">Deductions</td></tr>
             <tr><td>Yellow card</td><td className="num pts-neg">−1</td></tr>
             <tr><td>Red card</td><td className="num pts-neg">−5</td></tr>
             <tr><td>Penalty missed</td><td className="num pts-neg">−2</td></tr>
             <tr><td>Own goal</td><td className="num pts-neg">−2</td></tr>
+            <tr><td>Goal conceded (GK only, each)</td><td className="num pts-neg">−1</td></tr>
           </tbody>
         </table>
         <p className="scoring-note">

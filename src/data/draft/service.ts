@@ -688,12 +688,30 @@ export async function deliverPending(
   for (const n of pending) {
     const [mgr] = await db.select().from(manager).where(eq(manager.id, n.managerId));
     if (!mgr) continue;
+
+    // Enrich with the league id and team name so a rich notifier can build a
+    // direct draft-room link. Cheap lookups; the set of pending rows is small.
+    const [room] = await db
+      .select({ leagueId: draftRoom.leagueId })
+      .from(draftRoom)
+      .where(eq(draftRoom.id, n.draftRoomId));
+    let teamName: string | null = null;
+    if (n.fantasyTeamId !== null) {
+      const [t] = await db
+        .select({ name: fantasyTeam.name })
+        .from(fantasyTeam)
+        .where(eq(fantasyTeam.id, n.fantasyTeamId));
+      teamName = t?.name ?? null;
+    }
+
     const result = await notifier.send({
       to: mgr.email,
       toName: mgr.displayName,
       type: n.type,
       subject: n.subject,
       body: n.body,
+      ...(room ? { leagueId: room.leagueId } : {}),
+      teamName,
     });
     if (result.delivered) {
       await db

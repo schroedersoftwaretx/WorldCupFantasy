@@ -122,7 +122,7 @@ describe("Phase 3 leagues + rosters (integration)", () => {
     expect(result.team.managerId).toBe(joiner.id);
   });
 
-  it("a token cannot be redeemed twice", async () => {
+  it("a shareable (non-email) token is multi-use across managers", async () => {
     const owner = await createManager(ctx.db, {
       firebaseUid: "owner4",
       displayName: "Owner4",
@@ -143,9 +143,42 @@ describe("Phase 3 leagues + rosters (integration)", () => {
       email: "j2@example.com",
     });
     const invite = await inviteManager(ctx.db, { leagueId: league.id });
+    // The same link works for several people.
     await acceptInvite(ctx.db, { token: invite.token, managerId: j1.id });
+    const second = await acceptInvite(ctx.db, {
+      token: invite.token,
+      managerId: j2.id,
+    });
+    expect(second.membership.managerId).toBe(j2.id);
+    // But the same manager can't redeem it twice.
     await expect(
-      acceptInvite(ctx.db, { token: invite.token, managerId: j2.id }),
+      acceptInvite(ctx.db, { token: invite.token, managerId: j1.id }),
+    ).rejects.toBeInstanceOf(LeagueError);
+  });
+
+  it("a targeted (email) invite is single-use", async () => {
+    const owner = await createManager(ctx.db, {
+      firebaseUid: "owner4b",
+      displayName: "Owner4b",
+      email: "o4b@example.com",
+    });
+    const { league } = await createLeague(ctx.db, {
+      ownerManagerId: owner.id,
+      name: "OnceTargeted",
+    });
+    const j1 = await createManager(ctx.db, {
+      firebaseUid: "j1b",
+      displayName: "J1b",
+      email: "j1b@example.com",
+    });
+    const invite = await inviteManager(ctx.db, {
+      leagueId: league.id,
+      email: "j1b@example.com",
+    });
+    await acceptInvite(ctx.db, { token: invite.token, managerId: j1.id });
+    // Consumed: even the same recipient can't reuse it (now ACCEPTED).
+    await expect(
+      acceptInvite(ctx.db, { token: invite.token, managerId: j1.id }),
     ).rejects.toBeInstanceOf(LeagueError);
   });
 

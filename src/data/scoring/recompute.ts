@@ -67,6 +67,13 @@ export async function recomputeAll(
       penaltiesSaved: statLine.penaltiesSaved,
       ownGoals: statLine.ownGoals,
       teamConcededInRegulationAndEt: statLine.teamConcededInRegulationAndEt,
+      shotsOnTarget: statLine.shotsOnTarget,
+      shotsOffTarget: statLine.shotsOffTarget,
+      tacklesSuccessful: statLine.tacklesSuccessful,
+      crosses: statLine.crosses,
+      passesCompleted: statLine.passesCompleted,
+      goalsConceded: statLine.goalsConceded,
+      teamScoredInRegulationAndEt: statLine.teamScoredInRegulationAndEt,
       position: player.position,
     })
     .from(statLine)
@@ -159,6 +166,13 @@ export async function recomputeForFixture(
       penaltiesSaved: statLine.penaltiesSaved,
       ownGoals: statLine.ownGoals,
       teamConcededInRegulationAndEt: statLine.teamConcededInRegulationAndEt,
+      shotsOnTarget: statLine.shotsOnTarget,
+      shotsOffTarget: statLine.shotsOffTarget,
+      tacklesSuccessful: statLine.tacklesSuccessful,
+      crosses: statLine.crosses,
+      passesCompleted: statLine.passesCompleted,
+      goalsConceded: statLine.goalsConceded,
+      teamScoredInRegulationAndEt: statLine.teamScoredInRegulationAndEt,
       position: player.position,
     })
     .from(statLine)
@@ -236,6 +250,13 @@ function breakdownEquals(a: ScoreBreakdown, b: ScoreBreakdown): boolean {
     a.penaltiesMissed === b.penaltiesMissed &&
     a.ownGoals === b.ownGoals &&
     a.yellowCards === b.yellowCards &&
-    a.redCards === b.redCards
+    a.redCards === b.redCards &&
+    a.shotsOnTarget === b.shotsOnTarget &&
+    a.shotsOffTarget === b.shotsOffTarget &&
+    a.tacklesSuccessful === b.tacklesSuccessful &&
+    a.crosses === b.crosses &&
+    a.passesCompleted === b.passesCompleted &&
+    a.goalsConcededByKeeper === b.goalsConcededByKeeper &&
+    a.gameWon === b.gameWon
   );
 }

@@ -182,12 +182,15 @@ export interface RawFixturePlayersResponse {
     player: { id: number | string; name: string };
     statistics: Array<{
       games?: { minutes?: number | null };
+      shots?: { total?: number | null; on?: number | null };
       goals?: {
         total?: number | null;
         conceded?: number | null;
         assists?: number | null;
         saves?: number | null;
       };
+      passes?: { total?: number | null; accuracy?: number | string | null };
+      tackles?: { total?: number | null };
       cards?: { yellow?: number | null; red?: number | null };
       penalty?: {
         scored?: number | null;
@@ -307,13 +310,28 @@ export function mapFixtureStats(
       );
     }
     const teamConceded = isHome ? awayGoals : homeGoals;
+    const teamScored = isHome ? homeGoals : awayGoals;
 
     for (const p of teamBlock.players) {
       const stats = p.statistics[0] ?? {};
       const games = stats.games ?? {};
+      const shots = stats.shots ?? {};
       const goals = stats.goals ?? {};
+      const passes = stats.passes ?? {};
+      const tackles = stats.tackles ?? {};
       const cards = stats.cards ?? {};
       const penalty = stats.penalty ?? {};
+
+      // shots.on is on-target; the rest of shots.total are off-target.
+      const shotsOnTarget = nz(shots.on);
+      const shotsOffTarget = Math.max(0, nz(shots.total) - shotsOnTarget);
+      // api-sports exposes pass ACCURACY (count or "82%" string), not a
+      // completed-pass count. Derive completed = round(total * accuracy%).
+      const passesCompleted = derivePassesCompleted(nz(passes.total), passes.accuracy);
+      // api-sports gives only total tackles, not a won/lost split, so we use
+      // total as the best available proxy for "successful tackles". A feed
+      // with a real won-count (Sportmonks/Opta) maps it directly instead.
+      const tacklesSuccessful = nz(tackles.total);
 
       // api-sports does not consistently expose own goals on /fixtures/players.
       // Look in a couple of common locations defensively; default to 0.
@@ -336,6 +354,15 @@ export function mapFixtureStats(
         penaltiesSaved: nz(penalty.saved),
         ownGoals: nz(ownGoalsCandidate),
         teamConcededInRegulationAndEt: teamConceded,
+        teamScoredInRegulationAndEt: teamScored,
+        shotsOnTarget,
+        shotsOffTarget,
+        tacklesSuccessful,
+        // api-sports.io has no per-player crosses field; left 0 (enter
+        // manually or switch to a provider that supplies crosses).
+        crosses: 0,
+        passesCompleted,
+        goalsConceded: nz(goals.conceded),
         sourceRevision,
       });
     }
@@ -346,4 +373,20 @@ export function mapFixtureStats(
 /** Null/undefined → 0 coercion for stat counters. */
 function nz(v: number | null | undefined): number {
   return typeof v === "number" && Number.isFinite(v) ? v : 0;
+}
+
+/**
+ * Derive completed passes from total passes and api-sports.io's pass-accuracy
+ * value. Accuracy is a percentage, reported either as a string ("82%") or a
+ * bare number (82); we treat it as a percentage in both cases and round to a
+ * whole pass count. Returns 0 when either input is missing.
+ */
+function derivePassesCompleted(total: number, accuracy: number | string | null | undefined): number {
+  if (total <= 0 || accuracy == null) return 0;
+  const pct =
+    typeof accuracy === "string"
+      ? Number(accuracy.replace("%", "").trim())
+      : accuracy;
+  if (!Number.isFinite(pct) || pct <= 0) return 0;
+  return Math.round((total * pct) / 100);
 }

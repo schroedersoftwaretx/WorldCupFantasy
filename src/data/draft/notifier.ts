@@ -34,6 +34,14 @@ export interface OutboundNotification {
   type: DraftNotificationType;
   subject: string;
   body: string;
+  /**
+   * The league this notification concerns, when known. Lets a rich notifier
+   * (e.g. email) build a direct link to the draft room. Optional so the
+   * in-memory and console notifiers are unaffected.
+   */
+  leagueId?: number;
+  /** The recipient's fantasy team name in that league, when known. */
+  teamName?: string | null;
 }
 
 export interface NotifierResult {

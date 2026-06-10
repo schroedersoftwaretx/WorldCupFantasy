@@ -16,6 +16,7 @@ import { getCurrentUser } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { getMembershipRole } from "@/web/queries";
 import { getRosterScores } from "@/web/standings-view";
+import { flagImg } from "@/web/flags";
 
 export const dynamic = "force-dynamic";
 
@@ -148,6 +149,7 @@ export default async function RosterViewPage({
             return (
               <section key={pos}>
                 <h2>{pos}</h2>
+                <div className="table-scroll">
                 <table>
                   <thead>
                     <tr>
@@ -172,7 +174,23 @@ export default async function RosterViewPage({
                         }
                       >
                         <td>{player.fullName}</td>
-                        <td className="muted-cell">{player.nationalTeam}</td>
+                        <td className="muted-cell">
+                          {(() => {
+                            const f = flagImg(player.nationalTeam);
+                            return f ? (
+                              <img
+                                className="flag"
+                                src={f.src}
+                                srcSet={f.srcSet}
+                                width={20}
+                                height={15}
+                                alt=""
+                                loading="lazy"
+                              />
+                            ) : null;
+                          })()}
+                          {player.nationalTeam}
+                        </td>
                         {player.periods.map((p) => (
                           <td
                             key={p.stage}
@@ -190,6 +208,7 @@ export default async function RosterViewPage({
                     ))}
                   </tbody>
                 </table>
+                </div>
               </section>
             );
           })}
