@@ -69,13 +69,16 @@ describe("Phase 1 ingestion (integration)", () => {
     expect(playersAfter2.map((r) => r.id)).toEqual(playersAfter1.map((r) => r.id));
   });
 
-  it("ingest:schedule is idempotent and requires squads first", async () => {
+  it("ingest:schedule skips fixtures with unresolved teams, then is idempotent", async () => {
     const provider = new FixtureMockProvider({ root: FIXTURES });
 
-    // Without squads the schedule ingest must fail loudly.
-    await expect(ingestSchedule(ctx.db, provider)).rejects.toThrow(
-      /Run ingest:squads first/,
-    );
+    // Without squads every fixture has unresolved teams: skip them all (don't
+    // abort) so a single TBD knockout slot can't block the whole ingest.
+    const beforeSquads = await ingestSchedule(ctx.db, provider);
+    expect(beforeSquads.inserted).toBe(0);
+    expect(beforeSquads.updated).toBe(0);
+    expect(beforeSquads.skipped).toBe(6);
+    expect(await ctx.db.select().from(fixture)).toHaveLength(0);
 
     await ingestSquads(ctx.db, provider);
     const first = await ingestSchedule(ctx.db, provider);

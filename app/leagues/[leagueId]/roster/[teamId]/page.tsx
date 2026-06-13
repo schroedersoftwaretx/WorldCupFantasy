@@ -124,10 +124,19 @@ export default async function RosterViewPage({
       <h1>
         {data.teamName}
         <span className="tag">{data.total} pts</span>
+        {data.players.some((p) => p.eliminated) ? (
+          <span className="tag tag-alive">
+            {data.players.filter((p) => !p.eliminated).length}/
+            {data.players.length} still in
+          </span>
+        ) : null}
       </h1>
       <p className="subtitle">
         Managed by {data.managerName} &mdash; best-ball total across all scoring
         periods. Highlighted rows are in the best-ball XI for that period.
+        {data.players.some((p) => p.eliminated)
+          ? " Struck-through players' national teams are out of the tournament."
+          : ""}
       </p>
 
       {data.players.length === 0 ? (
@@ -168,12 +177,17 @@ export default async function RosterViewPage({
                       <tr
                         key={player.playerId}
                         className={
-                          player.periods.some((p) => p.inXi)
-                            ? "row-has-xi"
-                            : undefined
+                          [
+                            player.periods.some((p) => p.inXi)
+                              ? "row-has-xi"
+                              : "",
+                            player.eliminated ? "row-eliminated" : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ") || undefined
                         }
                       >
-                        <td>{player.fullName}</td>
+                        <td className="player-name-cell">{player.fullName}</td>
                         <td className="muted-cell">
                           {(() => {
                             const f = flagImg(player.nationalTeam);

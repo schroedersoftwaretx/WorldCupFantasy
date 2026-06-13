@@ -17,10 +17,22 @@ import { redirect } from "next/navigation";
 
 import { computeStandings } from "@/data/standings/standings";
 import type { StandingsEntry } from "@/data/standings/standings";
+import {
+  cumulativeRanksThroughStage,
+  getSnapshotRanks,
+  managerOfStage,
+  scoredStages,
+  type ManagerOfStage,
+} from "@/data/standings/snapshot";
+import { getAliveCounts, type TeamAliveCount } from "@/web/alive";
 import type { LeagueDetail } from "@/web/api-types";
 import { getCurrentUser } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { getLeagueDetail, getMembershipRole } from "@/web/queries";
+import {
+  getProjectedStandings,
+  type ProjectedStandingsEntry,
+} from "@/web/standings-view";
 
 import RecomputeButton from "./recompute-button";
 import StandingsPeriodTable from "./standings-period-table";
@@ -82,6 +94,12 @@ export default async function StandingsPage({
   let role: string | null = null;
   let detail: LeagueDetail | null = null;
   let standings: StandingsEntry[] = [];
+  let projected: ProjectedStandingsEntry[] = [];
+  let aliveStarted = false;
+  let aliveByTeam = new Map<number, TeamAliveCount>();
+  let prevRanks = new Map<number, number>();
+  let hasMovement = false;
+  let stageStar: ManagerOfStage | null = null;
   let error: string | null = null;
   try {
     const db = getDb();
@@ -90,6 +108,33 @@ export default async function StandingsPage({
       detail = await getLeagueDetail(db, id);
       if (detail) {
         standings = await computeStandings(db, id);
+
+        // B1: players-still-alive counts (hidden pre-tournament).
+        const alive = await getAliveCounts(db, id);
+        aliveStarted = alive.started;
+        aliveByTeam = alive.byFantasyTeam;
+
+        // B2: rank movement vs the end of the previous scored stage, from
+        // the persisted snapshot (falling back to a live derivation when no
+        // snapshot exists yet), plus Manager of the Stage.
+        const stages = scoredStages(standings);
+        if (stages.length >= 2) {
+          const prev = stages[stages.length - 2];
+          if (prev) {
+            prevRanks = await getSnapshotRanks(db, id, prev);
+            if (prevRanks.size === 0) {
+              prevRanks = cumulativeRanksThroughStage(standings, prev);
+            }
+            hasMovement = prevRanks.size > 0;
+          }
+        }
+        stageStar = managerOfStage(standings);
+
+        // A3: projected leaderboard for the pre-tournament dead air.
+        const allZero = standings.every((e) => e.total === 0);
+        if (allZero && standings.length > 0) {
+          projected = await getProjectedStandings(db, id);
+        }
       }
     }
   } catch (e) {
@@ -158,6 +203,76 @@ export default async function StandingsPage({
         </div>
       )}
 
+      {/* ---- B2: Manager of the Stage ---- */}
+      {stageStar ? (
+        <div className="stage-star">
+          <span className="stage-star-badge">&#9733;</span> Manager of the
+          Stage ({STAGE_FULL[stageStar.stage] ?? stageStar.stage}):{" "}
+          <strong>
+            {stageStar.fantasyTeamIds
+              .map(
+                (tid) =>
+                  standings.find((e) => e.fantasyTeamId === tid)?.teamName ??
+                  `team #${tid}`,
+              )
+              .join(", ")}
+          </strong>{" "}
+          with {stageStar.points} pts
+        </div>
+      ) : null}
+
+      {/* ---- A3: projected leaderboard before any real points ---- */}
+      {projected.length > 0 ? (
+        <>
+          <h2>
+            Projected standings
+            <span className="tag tag-projected">Projected</span>
+          </h2>
+          <p className="subtitle">
+            No matches scored yet &mdash; this ranks each team&rsquo;s
+            best-ball XI by PROJECTED points (and shows the expected number
+            of its players on the title-winning squad). Real standings take
+            over after the first match.
+          </p>
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th className="num">#</th>
+                  <th>Team</th>
+                  <th>Manager</th>
+                  <th className="num">Proj. XI pts</th>
+                  <th className="num">Champ exposure</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projected.map((e) => (
+                  <tr key={e.fantasyTeamId}>
+                    <td className="num">{e.rank}</td>
+                    <td>
+                      <Link
+                        href={`/leagues/${id}/roster/${e.fantasyTeamId}`}
+                        className="team-link"
+                      >
+                        {e.teamName}
+                      </Link>
+                    </td>
+                    <td>
+                      {nameByManager.get(e.managerId) ??
+                        `manager #${e.managerId}`}
+                    </td>
+                    <td className="num">{e.projectedTotal}</td>
+                    <td className="num">
+                      {e.champExposure !== null ? e.champExposure : "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : null}
+
       {standings.length === 0 ? (
         <p className="notice">
           No teams in this league yet. Standings appear once managers join and
@@ -172,18 +287,45 @@ export default async function StandingsPage({
             <thead>
               <tr>
                 <th className="num">#</th>
+                {hasMovement ? <th className="num mv-col"></th> : null}
                 <th>Team</th>
                 <th>Manager</th>
                 <th className="num">Total</th>
+                {aliveStarted ? <th className="num">Alive</th> : null}
                 <th className="num">Final pts</th>
                 <th className="num">Goals</th>
                 <th className="num">Assists</th>
               </tr>
             </thead>
             <tbody>
-              {standings.map((entry) => (
+              {standings.map((entry) => {
+                const prev = prevRanks.get(entry.fantasyTeamId);
+                const delta = prev !== undefined ? prev - entry.rank : 0;
+                const alive = aliveByTeam.get(entry.fantasyTeamId);
+                const alivePct =
+                  alive && alive.total > 0
+                    ? Math.round((alive.alive / alive.total) * 100)
+                    : 0;
+                const aliveTone =
+                  alivePct >= 60 ? "ok" : alivePct >= 30 ? "warn" : "bad";
+                return (
                 <tr key={entry.fantasyTeamId}>
                   <td className="num">{entry.rank}</td>
+                  {hasMovement ? (
+                    <td className="num mv-col">
+                      {delta > 0 ? (
+                        <span className="mv-up" title={`Up ${delta} from last stage`}>
+                          &#9650;{delta}
+                        </span>
+                      ) : delta < 0 ? (
+                        <span className="mv-down" title={`Down ${-delta} from last stage`}>
+                          &#9660;{-delta}
+                        </span>
+                      ) : (
+                        <span className="mv-flat">&ndash;</span>
+                      )}
+                    </td>
+                  ) : null}
                   <td>
                     <Link
                       href={`/leagues/${id}/roster/${entry.fantasyTeamId}`}
@@ -191,19 +333,47 @@ export default async function StandingsPage({
                     >
                       {entry.teamName}
                     </Link>
+                    {stageStar &&
+                    stageStar.fantasyTeamIds.includes(entry.fantasyTeamId) ? (
+                      <span
+                        className="stage-star-badge"
+                        title="Manager of the Stage"
+                      >
+                        {" "}
+                        &#9733;
+                      </span>
+                    ) : null}
                   </td>
                   <td>
                     {nameByManager.get(entry.managerId) ??
                       `manager #${entry.managerId}`}
                   </td>
                   <td className="num">{entry.total}</td>
+                  {aliveStarted ? (
+                    <td className="num alive-cell">
+                      {alive ? (
+                        <>
+                          <span className={`alive-bar alive-${aliveTone}`}>
+                            <span
+                              className="alive-bar-fill"
+                              style={{ width: `${alivePct}%` }}
+                            />
+                          </span>
+                          {alive.alive}/{alive.total}
+                        </>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                  ) : null}
                   <td className="num">{entry.tieBreakers.finalMatchPoints}</td>
                   <td className="num">{entry.tieBreakers.tournamentGoals}</td>
                   <td className="num">
                     {entry.tieBreakers.tournamentAssists}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
           </div>

@@ -1001,3 +1001,227 @@ details[open] .scoring-rules-summary::before {
 .btn-link-warn:hover {
   color: #a01020;
 }
+
+/* ============================================================
+ * Post-draft & standings improvements (A1/A2/A3/B1/B2)
+ * ============================================================ */
+
+/* ---- Draft results board (A1) ---- */
+.draft-board {
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.draft-board th,
+.draft-board td {
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.draft-board thead th {
+  background: var(--card);
+  min-width: 9rem;
+}
+
+.board-team {
+  font-weight: 700;
+}
+
+.board-manager {
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.board-grade {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+
+.grade-badge {
+  display: inline-block;
+  min-width: 1.5rem;
+  padding: 0 0.3rem;
+  margin: 0 0.25rem;
+  border-radius: 4px;
+  background: var(--fg);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.round-cell {
+  background: var(--card);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.snake-dir {
+  margin-left: 0.3rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.pick-cell {
+  padding: 0.35rem 0.5rem;
+}
+
+.pick-cell.empty {
+  background: var(--bg);
+}
+
+.pick-meta {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.autopick-mark {
+  margin-left: 0.3rem;
+  padding: 0 0.25rem;
+  border: 1px solid var(--muted);
+  border-radius: 3px;
+  font-size: 0.65rem;
+}
+
+.pick-player {
+  font-weight: 600;
+}
+
+.pick-pos {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+/* Position color-coding (board cells + chips) */
+.pick-gk  { background: #fff8e1; }
+.pick-def { background: #e8f5e9; }
+.pick-mid { background: #e3f2fd; }
+.pick-fwd { background: #fce4ec; }
+
+.pos-chip {
+  display: inline-block;
+  padding: 0 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* ---- Values & reaches (A2) ---- */
+.value-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 720px) {
+  .value-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.value-panel table {
+  font-size: 0.82rem;
+}
+
+/* ---- Per-team roster recap (A1) ---- */
+.roster-recap {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  margin: 0.5rem 0;
+  padding: 0.4rem 0.75rem;
+}
+
+.roster-recap summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.roster-recap-body {
+  padding: 0.5rem 0 0.25rem;
+}
+
+.roster-recap-group {
+  margin-bottom: 0.5rem;
+}
+
+.roster-recap-group ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.5rem;
+}
+
+/* ---- Projected standings (A3) ---- */
+.tag-projected {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+/* ---- Survivorship (B1) ---- */
+.alive-cell {
+  white-space: nowrap;
+}
+
+.alive-bar {
+  display: inline-block;
+  width: 3rem;
+  height: 0.45rem;
+  margin-right: 0.4rem;
+  border-radius: 3px;
+  background: var(--border);
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.alive-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+}
+
+.alive-ok .alive-bar-fill   { background: #2e7d32; }
+.alive-warn .alive-bar-fill { background: #f9a825; }
+.alive-bad .alive-bar-fill  { background: #c62828; }
+
+.tag-alive {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #2e7d32;
+}
+
+.row-eliminated .player-name-cell,
+.row-eliminated .muted-cell {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.row-eliminated {
+  opacity: 0.75;
+}
+
+/* ---- Rank movement + Manager of the Stage (B2) ---- */
+.mv-col {
+  width: 2.5rem;
+}
+
+.mv-up   { color: #2e7d32; font-weight: 700; }
+.mv-down { color: #c62828; font-weight: 700; }
+.mv-flat { color: var(--muted); }
+
+.stage-star {
+  margin: 0.75rem 0;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid #f9a825;
+  border-radius: 6px;
+  background: #fffde7;
+  font-size: 0.9rem;
+}
+
+.stage-star-badge {
+  color: #f9a825;
+}

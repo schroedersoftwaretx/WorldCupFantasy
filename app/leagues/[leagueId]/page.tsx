@@ -12,6 +12,7 @@ import { redirect } from "next/navigation";
 import type { LeagueDetail } from "@/web/api-types";
 import { getCurrentUser } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
+import { getDraftRoomRow } from "@/web/draft-view";
 import { getLeagueDetail, getMembershipRole } from "@/web/queries";
 
 import InvitePanel from "./invite-panel";
@@ -47,12 +48,15 @@ export default async function LeagueOverviewPage({
 
   let role: string | null = null;
   let detail: LeagueDetail | null = null;
+  let draftComplete = false;
   let error: string | null = null;
   try {
     const db = getDb();
     role = await getMembershipRole(db, id, user.manager.id);
     if (role) {
       detail = await getLeagueDetail(db, id);
+      const room = await getDraftRoomRow(db, id);
+      draftComplete = room?.status === "COMPLETE";
     }
   } catch (e) {
     error = e instanceof Error ? e.message : "could not load the league";
@@ -125,6 +129,13 @@ export default async function LeagueOverviewPage({
           Go to the draft room &rarr;
         </Link>
       </p>
+      {draftComplete ? (
+        <p className="lead-link">
+          <Link href={`/leagues/${detail.id}/draft/results`}>
+            View draft results &rarr;
+          </Link>
+        </p>
+      ) : null}
       <p className="lead-link">
         <Link href={`/leagues/${detail.id}/standings`}>
           View standings &rarr;

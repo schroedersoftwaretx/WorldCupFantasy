@@ -695,6 +695,41 @@ export const stageOdds = pgTable(
 export const STAGE_ODDS_STAGES = ["CHAMPION", "FINAL", "SF", "QF", "R16"] as const;
 export type StageOddsStage = (typeof STAGE_ODDS_STAGES)[number];
 
+// --- standings_snapshot -------------------------------------------------------
+
+/**
+ * A persisted standings snapshot: one row per (league, stage, fantasy team)
+ * recording the team's CUMULATIVE rank and total through the end of that
+ * scoring period. Written by the score-recompute paths (cron + the owner's
+ * manual recompute) so the standings page can show rank movement between
+ * stages even if older score_entry rows are later corrected.
+ *
+ * Cheap by construction: at most leagues x 9 stages x 24 teams rows.
+ */
+export const standingsSnapshot = pgTable(
+  "standings_snapshot",
+  {
+    leagueId: integer("league_id")
+      .notNull()
+      .references(() => league.id, { onDelete: "restrict" }),
+    stage: stageEnum("stage").notNull(),
+    fantasyTeamId: integer("fantasy_team_id")
+      .notNull()
+      .references(() => fantasyTeam.id, { onDelete: "restrict" }),
+    /** 1-based rank by cumulative total through this stage (ties share). */
+    rank: integer("rank").notNull(),
+    /** Cumulative best-ball total through this stage. */
+    total: real("total").notNull(),
+    computedAt: timestamp("computed_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.leagueId, t.stage, t.fantasyTeamId] }),
+    leagueIdx: index("standings_snapshot_league_id_idx").on(t.leagueId),
+  }),
+);
+
 // --- Type helpers (continued) ------------------------------------------------
 
 export type MatchOddsRow = typeof matchOdds.$inferSelect;
@@ -703,3 +738,5 @@ export type ProjectedScoreEntryRow = typeof projectedScoreEntry.$inferSelect;
 export type ProjectedScoreEntryInsert = typeof projectedScoreEntry.$inferInsert;
 export type StageOddsRow = typeof stageOdds.$inferSelect;
 export type StageOddsInsert = typeof stageOdds.$inferInsert;
+export type StandingsSnapshotRow = typeof standingsSnapshot.$inferSelect;
+export type StandingsSnapshotInsert = typeof standingsSnapshot.$inferInsert;

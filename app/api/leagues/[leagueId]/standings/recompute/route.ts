@@ -12,6 +12,7 @@ import { eq } from "drizzle-orm";
 import { league } from "@/data/db/schema";
 import { recomputeAll } from "@/data/scoring/recompute";
 import type { ScoringRuleset } from "@/data/scoring/ruleset";
+import { captureStandingsSnapshots } from "@/data/standings/snapshot";
 import { handle, HttpError, parseId } from "@/web/api";
 import type { RecomputeResult } from "@/web/api-types";
 import { requireUserForRoute } from "@/web/auth/current-user";
@@ -50,6 +51,14 @@ export function POST(
 
     const ruleset = lg.scoringRuleset as ScoringRuleset;
     const summary = await recomputeAll(db, ruleset);
+
+    // Persist per-stage standings snapshots so rank-movement arrows update
+    // with the recompute. Non-fatal if the table is not migrated yet.
+    try {
+      await captureStandingsSnapshots(db, id);
+    } catch {
+      // ignore - snapshots are a derived nicety, never block the recompute
+    }
 
     const result: RecomputeResult = {
       inserted: summary.inserted,

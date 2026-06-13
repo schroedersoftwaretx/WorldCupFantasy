@@ -110,6 +110,31 @@ export class StageOddsProvider {
   }
 
   /**
+   * List the sports/markets the API currently exposes (GET /v4/sports). Useful
+   * for discovering which World Cup futures keys exist so STAGE_ODDS_MARKETS
+   * can be configured correctly. `all=true` includes out-of-season markets.
+   */
+  async listSports(): Promise<
+    Array<{ key: string; group: string; title: string; active: boolean; has_outrights: boolean }>
+  > {
+    const url = new URL("/v4/sports", this.cfg.baseUrl);
+    url.searchParams.set("apiKey", this.cfg.apiKey);
+    url.searchParams.set("all", "true");
+    const resp = await this.cfg.fetchImpl(url.toString());
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => "");
+      throw new Error(`Odds API HTTP ${resp.status} for /v4/sports: ${body.slice(0, 200)}`);
+    }
+    return (await resp.json()) as Array<{
+      key: string;
+      group: string;
+      title: string;
+      active: boolean;
+      has_outrights: boolean;
+    }>;
+  }
+
+  /**
    * Fetch the outrights market for a single sport key. Returns [] when the
    * market is not available (404) so one missing stage never aborts the rest.
    */

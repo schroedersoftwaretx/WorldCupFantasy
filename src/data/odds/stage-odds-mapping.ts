@@ -111,8 +111,44 @@ export function normalizeTeamName(name: string): string {
 }
 
 /**
- * Best fuzzy match of an Odds API team name to one of our national teams.
- * Returns the matched team id, or null when nothing scores above threshold.
+ * Known equivalence groups of names for the same national team. Bookmakers and
+ * The Odds API spell several countries differently from our DB (FIFA-style
+ * names), and the differences are too large for fuzzy matching to bridge
+ * safely. Any two names in the same group are treated as a definite match.
+ *
+ * To add a mapping: drop the provider's spelling into the same array as our
+ * stored name. The `unmatched teams:` line printed by `cli ingest:stage-odds`
+ * tells you exactly which provider names still need an entry here.
+ */
+export const TEAM_NAME_ALIASES: string[][] = [
+  ["United States", "USA", "United States of America", "US", "US Men"],
+  ["South Korea", "Korea Republic", "Korea, Republic of", "Republic of Korea"],
+  ["North Korea", "Korea DPR", "Korea, DPR", "DPR Korea"],
+  ["Turkey", "T\u00fcrkiye", "Turkiye"],
+  ["Ivory Coast", "C\u00f4te d'Ivoire", "Cote d'Ivoire"],
+  ["Czechia", "Czech Republic"],
+  ["Cape Verde", "Cabo Verde"],
+  ["DR Congo", "Democratic Republic of the Congo", "Congo DR", "DR Congo (Kinshasa)"],
+  ["Republic of Ireland", "Ireland"],
+  ["China", "China PR"],
+  ["Bosnia and Herzegovina", "Bosnia & Herzegovina", "Bosnia-Herzegovina"],
+  ["North Macedonia", "Macedonia", "FYR Macedonia"],
+];
+
+/** normalized name -> alias-group index (built once at module load). */
+const ALIAS_GROUP: Map<string, number> = (() => {
+  const m = new Map<string, number>();
+  TEAM_NAME_ALIASES.forEach((group, i) => {
+    for (const name of group) m.set(normalizeTeamName(name), i);
+  });
+  return m;
+})();
+
+/**
+ * Best match of an Odds API team name to one of our national teams. Tries, in
+ * order: exact normalized equality, a shared alias group (handles USA / Korea
+ * Republic / T\u00fcrkiye etc.), substring containment, then word overlap. Returns
+ * the matched team id, or null when nothing scores above threshold.
  */
 export function matchTeamName(
   apiName: string,
@@ -120,13 +156,16 @@ export function matchTeamName(
 ): number | null {
   const target = normalizeTeamName(apiName);
   if (!target) return null;
+  const targetGroup = ALIAS_GROUP.get(target);
 
   let bestId: number | null = null;
   let bestScore = 0;
   for (const t of teams) {
     const cand = normalizeTeamName(t.name);
+    const candGroup = ALIAS_GROUP.get(cand);
     let score = 0;
     if (cand === target) score = 1;
+    else if (targetGroup !== undefined && targetGroup === candGroup) score = 1;
     else if (cand.includes(target) || target.includes(cand)) score = 0.6;
     else {
       const candWords = new Set(cand.split(" ").filter((w) => w.length > 2));

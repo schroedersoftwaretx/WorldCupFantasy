@@ -7,7 +7,7 @@
  * that period. It reuses computeStandings internally so the XI selection is
  * computed by the same optimizer that drives the overall standings.
  */
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import type { Db } from "../data/db/client.js";
 import {
@@ -16,13 +16,17 @@ import {
   manager,
   nationalTeam,
   player,
+  projectedScoreEntry,
   rosterSlot,
   scoreEntry,
   stageEnum,
+  stageOdds,
   type Stage,
 } from "../data/db/schema.js";
 import type { ScoringRuleset } from "../data/scoring/ruleset.js";
+import { DEFAULT_RULESET } from "../data/scoring/ruleset.js";
 import { league } from "../data/db/schema.js";
+import { getTournamentAliveState } from "./alive.js";
 import {
   formationLabel,
   optimizeBestBall,
@@ -90,10 +94,14 @@ export async function getRosterScores(
       fullName: player.fullName,
       position: player.position,
       nationalTeam: nationalTeam.name,
+      nationalTeamId: player.nationalTeamId,
     })
     .from(player)
     .innerJoin(nationalTeam, eq(nationalTeam.id, player.nationalTeamId))
     .where(inArray(player.id, playerIds));
+
+  // Survivorship (B1): which national teams are still in the tournament.
+  const { aliveByTeamId } = await getTournamentAliveState(db);
 
   // --- score_entry for these players + this ruleset ---------------------
   const scores = await db
@@ -168,6 +176,7 @@ export async function getRosterScores(
       fullName: p.fullName,
       position: p.position,
       nationalTeam: p.nationalTeam,
+      eliminated: !(aliveByTeamId.get(p.nationalTeamId) ?? true),
       totalPoints,
       periods: periodScores,
     };
@@ -188,4 +197,168 @@ export async function getRosterScores(
     players: rosterPlayers,
     total: teamTotal,
   };
+}
+
+// --- A3: pre-tournament projected standings -----------------------------------
+
+export interface ProjectedStandingsEntry {
+  rank: number;
+  fantasyTeamId: number;
+  managerId: number;
+  teamName: string;
+  /** Best-ball XI total over each player's projected points. */
+  projectedTotal: number;
+  /**
+   * Expected number of the team's players on the tournament-winning squad:
+   * the sum over rostered players of P(their national team wins it all).
+   * Null when stage odds are not ingested.
+   */
+  champExposure: number | null;
+}
+
+function round1(n: number): number {
+  return Math.round(n * 10) / 10;
+}
+
+/**
+ * A projected leaderboard for the dead air between draft completion and the
+ * first scored match: each team ranked by the best-ball XI over its
+ * players' PROJECTED total points (so it previews the same mechanic the
+ * real standings use). Returns [] when no team has any projected points -
+ * the page then falls back to the plain zero table.
+ */
+export async function getProjectedStandings(
+  db: Db,
+  leagueId: number,
+): Promise<ProjectedStandingsEntry[]> {
+  const teams = await db
+    .select()
+    .from(fantasyTeam)
+    .where(eq(fantasyTeam.leagueId, leagueId));
+  if (teams.length === 0) return [];
+
+  const slots = await db
+    .select()
+    .from(rosterSlot)
+    .where(eq(rosterSlot.leagueId, leagueId));
+  if (slots.length === 0) return [];
+
+  const playerIds = Array.from(new Set(slots.map((s) => s.playerId)));
+  const players = await db
+    .select({
+      id: player.id,
+      position: player.position,
+      nationalTeamId: player.nationalTeamId,
+    })
+    .from(player)
+    .where(inArray(player.id, playerIds));
+  const playerById = new Map(players.map((p) => [p.id, p]));
+
+  // Projected totals over remaining SCHEDULED fixtures (same as the draft
+  // board). try-catch: unmigrated/unpopulated projections -> empty result.
+  const projByPlayer = new Map<number, number>();
+  try {
+    const projRows = await db
+      .select({
+        playerId: projectedScoreEntry.playerId,
+        total: sql<number>`sum(${projectedScoreEntry.projectedPoints})`,
+      })
+      .from(projectedScoreEntry)
+      .innerJoin(fixture, eq(projectedScoreEntry.fixtureId, fixture.id))
+      .where(
+        and(
+          eq(projectedScoreEntry.rulesetVersion, DEFAULT_RULESET.version),
+          eq(fixture.status, "SCHEDULED"),
+        ),
+      )
+      .groupBy(projectedScoreEntry.playerId);
+    for (const r of projRows) projByPlayer.set(r.playerId, r.total);
+  } catch {
+    return [];
+  }
+  if (projByPlayer.size === 0) return [];
+
+  // CHAMPION reach probability per national team (optional column).
+  const champByNt = new Map<number, number>();
+  try {
+    const rows = await db
+      .select({
+        teamId: stageOdds.nationalTeamId,
+        stage: stageOdds.stage,
+        reachP: stageOdds.reachP,
+      })
+      .from(stageOdds);
+    for (const r of rows) {
+      if (r.stage === "CHAMPION") champByNt.set(r.teamId, r.reachP);
+    }
+  } catch {
+    // stage_odds unmigrated - column renders as "-"
+  }
+
+  const slotsByTeam = new Map<number, number[]>();
+  for (const s of slots) {
+    const list = slotsByTeam.get(s.fantasyTeamId) ?? [];
+    list.push(s.playerId);
+    slotsByTeam.set(s.fantasyTeamId, list);
+  }
+
+  const unranked = teams.map((team) => {
+    const roster = slotsByTeam.get(team.id) ?? [];
+    const scored: ScoredPlayer[] = roster.map((pid) => {
+      const p = playerById.get(pid);
+      return {
+        playerId: pid,
+        position: p?.position ?? "MID",
+        points: projByPlayer.get(pid) ?? 0,
+      };
+    });
+    const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+    for (const sp of scored) counts[sp.position] += 1;
+    const canField =
+      counts.GK >= 1 &&
+      counts.DEF >= 4 &&
+      counts.MID >= 2 &&
+      counts.FWD >= 2 &&
+      counts.DEF + counts.MID + counts.FWD >= 10;
+    const projectedTotal = canField
+      ? round1(optimizeBestBall(scored).points)
+      : round1(scored.reduce((a, sp) => a + sp.points, 0));
+
+    let champExposure: number | null = null;
+    if (champByNt.size > 0) {
+      let sum = 0;
+      for (const pid of roster) {
+        const nt = playerById.get(pid)?.nationalTeamId;
+        if (nt !== undefined) sum += champByNt.get(nt) ?? 0;
+      }
+      champExposure = Math.round(sum * 100) / 100;
+    }
+
+    return {
+      fantasyTeamId: team.id,
+      managerId: team.managerId,
+      teamName: team.name,
+      projectedTotal,
+      champExposure,
+    };
+  });
+
+  if (unranked.every((e) => e.projectedTotal === 0)) return [];
+
+  const sorted = [...unranked].sort(
+    (a, b) =>
+      b.projectedTotal - a.projectedTotal ||
+      a.teamName.localeCompare(b.teamName),
+  );
+  return sorted.map((e, i) => {
+    const prev = sorted[i - 1];
+    const rank =
+      i > 0 && prev && prev.projectedTotal === e.projectedTotal
+        ? // share the rank on an exact tie (mirrors rankStandings style)
+          (sorted
+            .slice(0, i)
+            .findIndex((x) => x.projectedTotal === e.projectedTotal) ?? i) + 1
+        : i + 1;
+    return { ...e, rank };
+  });
 }

@@ -228,6 +228,8 @@ export interface RosterPlayerScore {
   fullName: string;
   position: string;
   nationalTeam: string;
+  /** True when the player's national team is out of the tournament (B1). */
+  eliminated: boolean;
   /** Cumulative best-ball points this player contributed across all periods. */
   totalPoints: number;
   /** Raw (non-best-ball) points this player scored in each period. */

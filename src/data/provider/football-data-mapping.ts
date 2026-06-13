@@ -104,21 +104,23 @@ export interface FdPenaltyKick {
 }
 
 export interface FdMatchDetail extends FdFixture {
+  // lineup/bench and the event arrays are absent on football-data.org's free
+  // tier, so they are optional and every reader must default them to [].
   homeTeam: FdFixture["homeTeam"] & {
     formation: string | null;
-    lineup: FdLineupPlayer[];
-    bench: FdLineupPlayer[];
+    lineup?: FdLineupPlayer[];
+    bench?: FdLineupPlayer[];
     statistics?: Record<string, number | null>;
   };
   awayTeam: FdFixture["awayTeam"] & {
     formation: string | null;
-    lineup: FdLineupPlayer[];
-    bench: FdLineupPlayer[];
+    lineup?: FdLineupPlayer[];
+    bench?: FdLineupPlayer[];
     statistics?: Record<string, number | null>;
   };
-  goals: FdGoal[];
-  bookings: FdBooking[];
-  substitutions: FdSubstitution[];
+  goals?: FdGoal[];
+  bookings?: FdBooking[];
+  substitutions?: FdSubstitution[];
   penalties?: FdPenaltyKick[];
 }
 
@@ -300,21 +302,29 @@ export function mapFdFixtureStats(
   const duration = matchDurationMinutes(match.score.duration);
   const isShootout = match.score.duration === "PENALTY_SHOOTOUT";
 
-  // Build a set of home player ids for teamConceded calculation.
-  const homePlayerIds = new Set<number>([
-    ...match.homeTeam.lineup.map((p) => p.id),
-    ...match.homeTeam.bench.map((p) => p.id),
-  ]);
+  // football-data.org's free tier omits lineup/bench (and can omit the event
+  // arrays) on match detail, so default everything to [] before mapping to
+  // avoid crashing on `.map`/`.filter` of undefined.
+  const homeLineup = match.homeTeam.lineup ?? [];
+  const homeBench = match.homeTeam.bench ?? [];
+  const awayLineup = match.awayTeam.lineup ?? [];
+  const awayBench = match.awayTeam.bench ?? [];
+  const matchGoals = match.goals ?? [];
+  const matchBookings = match.bookings ?? [];
 
   const homeGoals = match.score.fullTime.home ?? 0;
   const awayGoals = match.score.fullTime.away ?? 0;
 
-  // All players who appeared in lineup or bench for either team.
+  // All players who appeared in lineup or bench for either team. When the
+  // provider supplies no lineups (free tier), this is empty and the fixture
+  // yields no automated stat lines — because scoreStatLine() zeroes any player
+  // with minutesPlayed <= 0, and minutes can only be derived from the lineup.
+  // Such matches must be entered by hand in /admin/stats.
   const allPlayers: Array<{ player: FdLineupPlayer; isHome: boolean }> = [
-    ...match.homeTeam.lineup.map((p) => ({ player: p, isHome: true })),
-    ...match.homeTeam.bench.map((p) => ({ player: p, isHome: true })),
-    ...match.awayTeam.lineup.map((p) => ({ player: p, isHome: false })),
-    ...match.awayTeam.bench.map((p) => ({ player: p, isHome: false })),
+    ...homeLineup.map((p) => ({ player: p, isHome: true })),
+    ...homeBench.map((p) => ({ player: p, isHome: true })),
+    ...awayLineup.map((p) => ({ player: p, isHome: false })),
+    ...awayBench.map((p) => ({ player: p, isHome: false })),
   ];
 
   const lines: ProviderStatLine[] = [];
@@ -324,17 +334,17 @@ export function mapFdFixtureStats(
 
     const minutesPlayed = computeMinutesPlayed(pid, match, duration);
 
-    const goals = match.goals.filter(
+    const goals = matchGoals.filter(
       (g) => g.scorer?.id === pid && g.type !== "OWN",
     ).length;
 
-    const assists = match.goals.filter((g) => g.assist?.id === pid).length;
+    const assists = matchGoals.filter((g) => g.assist?.id === pid).length;
 
-    const ownGoals = match.goals.filter(
+    const ownGoals = matchGoals.filter(
       (g) => g.scorer?.id === pid && g.type === "OWN",
     ).length;
 
-    const penaltiesScored = match.goals.filter(
+    const penaltiesScored = matchGoals.filter(
       (g) => g.scorer?.id === pid && g.type === "PENALTY",
     ).length;
 
@@ -347,7 +357,7 @@ export function mapFdFixtureStats(
       return !isShootout; // fallback: exclude all if shootout and type unknown
     }).length;
 
-    const bookingsForPlayer = match.bookings.filter((b) => b.player.id === pid);
+    const bookingsForPlayer = matchBookings.filter((b) => b.player.id === pid);
     const yellowCards = bookingsForPlayer.filter((b) => b.card === "YELLOW").length;
     // YELLOW_RED = second yellow = effective red card.
     const redCards = bookingsForPlayer.filter(
@@ -404,16 +414,17 @@ function computeMinutesPlayed(
   match: FdMatchDetail,
   duration: number,
 ): number {
-  const inHomeLineup = match.homeTeam.lineup.some((p) => p.id === playerId);
-  const inAwayLineup = match.awayTeam.lineup.some((p) => p.id === playerId);
-  const inHomeBench = match.homeTeam.bench.some((p) => p.id === playerId);
-  const inAwayBench = match.awayTeam.bench.some((p) => p.id === playerId);
+  const subs = match.substitutions ?? [];
+  const inHomeLineup = (match.homeTeam.lineup ?? []).some((p) => p.id === playerId);
+  const inAwayLineup = (match.awayTeam.lineup ?? []).some((p) => p.id === playerId);
+  const inHomeBench = (match.homeTeam.bench ?? []).some((p) => p.id === playerId);
+  const inAwayBench = (match.awayTeam.bench ?? []).some((p) => p.id === playerId);
 
   const started = inHomeLineup || inAwayLineup;
   const onBench = inHomeBench || inAwayBench;
 
-  const subIn = match.substitutions.find((s) => s.playerIn.id === playerId);
-  const subOut = match.substitutions.find((s) => s.playerOut.id === playerId);
+  const subIn = subs.find((s) => s.playerIn.id === playerId);
+  const subOut = subs.find((s) => s.playerOut.id === playerId);
 
   if (started) {
     const endMinute = subOut ? subOut.minute : duration;
@@ -424,7 +435,7 @@ function computeMinutesPlayed(
     if (!subIn) return 0;
     const startMinute = subIn.minute;
     // Handle double substitution (rare but possible).
-    const laterSubOut = match.substitutions.find(
+    const laterSubOut = subs.find(
       (s) => s.playerOut.id === playerId && s.minute > startMinute,
     );
     const endMinute = laterSubOut ? laterSubOut.minute : duration;

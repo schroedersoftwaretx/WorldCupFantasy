@@ -469,6 +469,10 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
         <div className="draft-banner done">
           <strong>Draft complete</strong> &mdash; all {state.totalPicks} picks
           are in.{" "}
+          <a href={`/leagues/${leagueId}/draft/results`}>
+            View draft results &rarr;
+          </a>{" "}
+          &middot;{" "}
           <a href={`/leagues/${leagueId}/standings`}>View standings &rarr;</a>
         </div>
       )}

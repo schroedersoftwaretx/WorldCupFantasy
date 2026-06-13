@@ -87,6 +87,23 @@ describe("matchTeamName", () => {
   it("returns null for an unknown team", () => {
     expect(matchTeamName("Narnia", teams)).toBeNull();
   });
+
+  it("resolves known provider aliases that fuzzy matching would miss", () => {
+    const aliasTeams = [
+      { id: 1, name: "United States" },
+      { id: 2, name: "South Korea" },
+      { id: 3, name: "Turkey" },
+      { id: 4, name: "Ivory Coast" },
+      { id: 5, name: "Czechia" },
+      { id: 6, name: "North Macedonia" },
+    ];
+    expect(matchTeamName("USA", aliasTeams)).toBe(1);
+    expect(matchTeamName("Korea Republic", aliasTeams)).toBe(2);
+    expect(matchTeamName("Türkiye", aliasTeams)).toBe(3);
+    expect(matchTeamName("Côte d'Ivoire", aliasTeams)).toBe(4);
+    expect(matchTeamName("Czech Republic", aliasTeams)).toBe(5);
+    expect(matchTeamName("FYR Macedonia", aliasTeams)).toBe(6);
+  });
 });
 
 describe("normalizeTeamName", () => {

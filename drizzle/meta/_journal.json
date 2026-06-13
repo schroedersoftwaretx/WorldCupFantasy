@@ -57,6 +57,13 @@
       "when": 1749600000000,
       "tag": "0007_stage_odds",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1781222400000,
+      "tag": "0008_standings_snapshot",
+      "breakpoints": true
     }
   ]
 }

@@ -220,6 +220,40 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
       );
     }
   },
+  "odds:sports": async () => {
+    const env = process.env as NodeJS.ProcessEnv;
+    if (!env["ODDS_API_KEY"]) {
+      throw new Error("ODDS_API_KEY is not set. Add it to your .env file.");
+    }
+    const sports = await stageOddsProviderFromEnv(env).listSports();
+    const wc = sports.filter(
+      (s) => /world.?cup/i.test(s.key) || /world cup/i.test(s.title),
+    );
+    console.log(`World Cup markets (${wc.length}):`);
+    if (wc.length === 0) {
+      console.log("  (none found -- the WC may be out of season on your plan)");
+    }
+    for (const s of wc) {
+      const flags = [
+        s.has_outrights ? "outrights" : "",
+        s.active ? "active" : "inactive",
+      ]
+        .filter(Boolean)
+        .join(", ");
+      console.log(`  ${s.key}  [${flags}]  ${s.title}`);
+    }
+    const otherSoccer = sports.filter(
+      (s) => s.group === "Soccer" && !wc.includes(s),
+    );
+    console.log(`\nOther soccer markets (${otherSoccer.length}) -- run with --all to list:`);
+    if (process.argv.includes("--all")) {
+      for (const s of otherSoccer) console.log(`  ${s.key}  ${s.title}`);
+    }
+    console.log(
+      "\nUse the keys above with has_outrights=true to set STAGE_ODDS_MARKETS, e.g.\n" +
+        '  STAGE_ODDS_MARKETS=[{"stage":"CHAMPION","sportKey":"soccer_fifa_world_cup_winner","slots":1}]',
+    );
+  },
   "ingest:odds": async ({ db }) => {
     const env = process.env as NodeJS.ProcessEnv;
     if (!env["ODDS_API_KEY"]) {
@@ -714,6 +748,7 @@ function printUsage(): void {
       "  cli ingest:rankings <path/to/draft_import.csv>",
       "  cli ingest:odds",
       "  cli ingest:stage-odds  (per-team chance to reach R16/QF/SF/Final/Champion)",
+      "  cli odds:sports [--all]  (list available Odds API markets / WC futures keys)",
       "  cli fixtures:list",
       "  cli score:recompute [sourceFixtureId]",
       "  cli manager:create <firebaseUid> <displayName> <email>",

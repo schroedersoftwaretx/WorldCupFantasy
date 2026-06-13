@@ -4,16 +4,17 @@
  * Upserts the `fixture` table from a StatsProvider.fetchSchedule() result.
  * Idempotent — re-runs produce identical state and report skipped rows.
  *
- * If a fixture references a national team that hasn't been ingested yet,
- * we fail loudly. This prevents silently creating a fixture without home
- * or away references; callers should run `ingest:squads` first.
+ * If a fixture references a national team that isn't in the DB — either a
+ * TBD knockout slot (the provider sends an unresolved team id before the
+ * bracket fills in) or a genuinely un-ingested squad — we skip that fixture
+ * and report it, rather than aborting the whole run. The fixture is upserted
+ * automatically on a later run once both teams resolve.
  */
 
 import { eq } from "drizzle-orm";
 
 import type { Db } from "../db/client.js";
 import { fixture, nationalTeam, type FixtureRow } from "../db/schema.js";
-import { ProviderMappingError } from "../provider/types.js";
 import type { ProviderFixture, StatsProvider } from "../provider/types.js";
 import { emptySummary, type IngestSummary } from "./summary.js";
 
@@ -36,14 +37,21 @@ async function upsertFixtures(
   const existing = await db.select().from(fixture);
   const byId = new Map<string, FixtureRow>(existing.map((r) => [r.sourceFixtureId, r]));
 
+  const unresolved: string[] = [];
+
   for (const f of fixtures) {
     const homeId = teamIdBySource.get(f.sourceHomeTeamId);
     const awayId = teamIdBySource.get(f.sourceAwayTeamId);
     if (homeId == null || awayId == null) {
-      throw new ProviderMappingError(
-        `cannot ingest fixture ${f.sourceFixtureId}: missing team(s) ` +
-          `home=${f.sourceHomeTeamId} away=${f.sourceAwayTeamId}. Run ingest:squads first.`,
+      // TBD knockout slot (provider sends an unresolved/"null" team id before
+      // the bracket fills in) or a genuinely un-ingested squad. Skip it for now
+      // rather than aborting the whole ingest; it upserts on a later run once
+      // both teams resolve.
+      unresolved.push(
+        `${f.sourceFixtureId} (home=${f.sourceHomeTeamId} away=${f.sourceAwayTeamId})`,
       );
+      summary.skipped += 1;
+      continue;
     }
 
     const row = byId.get(f.sourceFixtureId);
@@ -88,6 +96,13 @@ async function upsertFixtures(
       })
       .where(eq(fixture.id, row.id));
     summary.updated += 1;
+  }
+
+  if (unresolved.length > 0) {
+    console.warn(
+      `schedule: skipped ${unresolved.length} fixture(s) with unresolved teams ` +
+        `(TBD knockout slots or un-ingested squads): ${unresolved.join(", ")}`,
+    );
   }
 
   return summary;
