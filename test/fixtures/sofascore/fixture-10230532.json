@@ -1,0 +1,94 @@
+{
+  "event": {
+    "id": 10230532,
+    "slug": "england-wales",
+    "startTimestamp": 1669748400,
+    "status": { "code": 100, "type": "finished", "description": "Ended" },
+    "homeTeam": { "id": 4713, "name": "England", "slug": "england" },
+    "awayTeam": { "id": 4702, "name": "Wales", "slug": "wales" },
+    "homeScore": { "current": 3, "display": 3, "period1": 1, "period2": 2, "normaltime": 3 },
+    "awayScore": { "current": 0, "display": 0, "period1": 0, "period2": 0, "normaltime": 0 },
+    "roundInfo": { "round": 3 },
+    "tournament": { "name": "FIFA World Cup, Group B", "groupName": "Group B" },
+    "changes": { "changeTimestamp": 1669755259 }
+  },
+  "lineups": {
+    "confirmed": true,
+    "home": {
+      "formation": "4-3-3",
+      "players": [
+        {
+          "player": { "id": 138530, "name": "Jordan Pickford", "position": "G" },
+          "teamId": 4713,
+          "position": "G",
+          "substitute": false,
+          "statistics": { "minutesPlayed": 90, "saves": 2, "accuratePass": 20, "totalPass": 24 }
+        },
+        {
+          "player": { "id": 152077, "name": "John Stones", "position": "D" },
+          "teamId": 4713,
+          "position": "D",
+          "substitute": false,
+          "statistics": { "minutesPlayed": 90, "totalTackle": 3, "accurateCross": 2, "totalCross": 4, "accuratePass": 30, "totalPass": 35 }
+        },
+        {
+          "player": { "id": 814590, "name": "Marcus Rashford", "position": "F" },
+          "teamId": 4713,
+          "position": "F",
+          "substitute": false,
+          "statistics": { "minutesPlayed": 90, "goals": 2, "onTargetScoringAttempt": 3, "shotOffTarget": 1, "blockedScoringAttempt": 1, "accuratePass": 15, "totalPass": 22 }
+        },
+        {
+          "player": { "id": 859765, "name": "Phil Foden", "position": "M" },
+          "teamId": 4713,
+          "position": "M",
+          "substitute": false,
+          "statistics": { "minutesPlayed": 80, "onTargetScoringAttempt": 1, "accuratePass": 25, "totalPass": 28 }
+        },
+        {
+          "player": { "id": 786028, "name": "Kalvin Phillips", "position": "M" },
+          "teamId": 4713,
+          "position": "M",
+          "substitute": false,
+          "statistics": { "minutesPlayed": 70, "goalAssist": 1, "accuratePass": 30, "totalPass": 33 }
+        }
+      ]
+    },
+    "away": {
+      "formation": "3-4-3",
+      "players": [
+        {
+          "player": { "id": 197428, "name": "Danny Ward", "position": "G" },
+          "teamId": 4702,
+          "position": "G",
+          "substitute": false,
+          "statistics": { "minutesPlayed": 90, "saves": 4, "penaltySave": 1, "accuratePass": 10, "totalPass": 14 }
+        },
+        {
+          "player": { "id": 94758, "name": "Ben Davies", "position": "D" },
+          "teamId": 4702,
+          "position": "D",
+          "substitute": false,
+          "statistics": { "minutesPlayed": 90, "totalTackle": 2, "accuratePass": 20, "totalPass": 26 }
+        },
+        {
+          "player": { "id": 20602, "name": "Joe Allen", "position": "M" },
+          "teamId": 4702,
+          "position": "M",
+          "substitute": false,
+          "statistics": { "minutesPlayed": 30, "accuratePass": 5, "totalPass": 8 }
+        }
+      ]
+    }
+  },
+  "incidents": [
+    { "incidentType": "period", "text": "FT", "homeScore": 3, "awayScore": 0, "time": 90 },
+    { "incidentType": "goal", "goalType": "regular", "isHome": true, "time": 23, "player": { "id": 814590, "name": "Marcus Rashford" } },
+    { "incidentType": "goal", "goalType": "regular", "isHome": true, "time": 50, "player": { "id": 814590, "name": "Marcus Rashford" } },
+    { "incidentType": "goal", "goalType": "ownGoal", "isHome": false, "time": 68, "player": { "id": 94758, "name": "Ben Davies" } },
+    { "incidentType": "missedPenalty", "isHome": true, "time": 72, "player": { "id": 859765, "name": "Phil Foden" } },
+    { "incidentType": "card", "incidentClass": "yellow", "rescinded": false, "isHome": false, "time": 61, "player": { "id": 94758, "name": "Ben Davies" } },
+    { "incidentType": "card", "incidentClass": "red", "rescinded": false, "isHome": false, "time": 35, "player": { "id": 20602, "name": "Joe Allen" } },
+    { "incidentType": "card", "incidentClass": "yellow", "rescinded": true, "isHome": false, "time": 12, "player": { "id": 197428, "name": "Danny Ward" } }
+  ]
+}

@@ -7,3 +7,7 @@ dist/
 .DS_Store
 coverage/
 *.tsbuildinfo
+
+# Local Chromium profile for the SofaScore browser-fetch (Cloudflare clearance,
+# cache, cookies). Machine-specific, large (~1700 files) — never commit.
+.sofa-profile/

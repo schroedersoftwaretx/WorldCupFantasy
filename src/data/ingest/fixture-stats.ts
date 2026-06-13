@@ -33,10 +33,21 @@ import {
 } from "../provider/types.js";
 import { emptySummary, type IngestSummary } from "./summary.js";
 
+export interface IngestFixtureStatsOptions {
+  /**
+   * When true, stat lines for players not present in the DB are skipped (and
+   * counted in `summary.skipped`) instead of throwing. Use this when the DB
+   * holds only a subset of a provider's squad — e.g. a draft pool that omits
+   * undrafted players — so one unknown player doesn't abort the whole fixture.
+   */
+  skipUnknownPlayers?: boolean;
+}
+
 export async function ingestFixtureStats(
   db: Db,
   provider: StatsProvider,
   sourceFixtureId: string,
+  opts: IngestFixtureStatsOptions = {},
 ): Promise<IngestSummary> {
   const lines = await provider.fetchFixtureStats(sourceFixtureId);
 
@@ -51,13 +62,14 @@ export async function ingestFixtureStats(
     );
   }
 
-  return upsertStatLines(db, fxRow.id, lines);
+  return upsertStatLines(db, fxRow.id, lines, opts);
 }
 
 async function upsertStatLines(
   db: Db,
   fixtureId: number,
   lines: ProviderStatLine[],
+  opts: IngestFixtureStatsOptions = {},
 ): Promise<IngestSummary> {
   const summary = emptySummary();
 
@@ -78,6 +90,12 @@ async function upsertStatLines(
   for (const line of lines) {
     const playerId = playerIdBySource.get(line.sourcePlayerId);
     if (playerId == null) {
+      if (opts.skipUnknownPlayers) {
+        // Player not in our pool (e.g. undrafted) — their stats don't affect
+        // any fantasy score, so skip rather than abort the whole fixture.
+        summary.skipped += 1;
+        continue;
+      }
       throw new ProviderMappingError(
         `stat line references unknown player ${line.sourcePlayerId}. ` +
           `Run ingest:squads first.`,

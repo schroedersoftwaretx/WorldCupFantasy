@@ -4,17 +4,21 @@
  * One place decides which feed to use, so the CLI and the Vercel cron behave
  * identically. Selection order:
  *
- *   1. STATS_PROVIDER env, if set: "sportmonks" | "api-football" |
- *      "football-data" | "mock" (explicit wins).
+ *   1. STATS_PROVIDER env, if set: "sofascore" | "sportmonks" | "api-football"
+ *      | "football-data" | "mock" (explicit wins).
  *   2. MOCK_FIXTURES_DIR set        -> mock (offline/dev).
- *   3. API_FOOTBALL_KEY set         -> api-football (recommended for the WC).
+ *   3. API_FOOTBALL_KEY set         -> api-football.
  *   4. FOOTBALL_DATA_KEY set        -> football-data.
- *   5. otherwise                    -> api-football.
+ *   5. otherwise                    -> sofascore (free, no key required).
  *
- * API-Football is the working source for the 2026 World Cup: it covers the WC
- * (free tier, rate-limited) and supplies shots, tackles, passes, saves, and
- * goals conceded per player. Its one gap is crosses, which are entered by hand
- * via the admin stat editor.
+ * SofaScore is the default because it is the only NO-COST source that covers
+ * the 2026 World Cup with the full per-player stat set the v2 ruleset needs
+ * (shots, tackles, crosses, completed passes, saves) and needs no API key. The
+ * paid feeds gate the WC behind a plan; API-Football's free tier historically
+ * excluded current seasons, so a free key cannot read WC 2026 data.
+ *
+ * API-Football / football-data.org remain available when their keys are set
+ * (or via explicit STATS_PROVIDER) for anyone on a paid plan who prefers them.
  *
  * Sportmonks is NOT in the auto-detect chain — it has no affordable World Cup
  * coverage (free plans are limited to a few domestic leagues), so it is only
@@ -29,12 +33,14 @@
 import { apiFootballFromEnv } from "./api-football.js";
 import { footballDataFromEnv } from "./football-data.js";
 import { FixtureMockProvider } from "./mock.js";
+import { sofascoreFromEnv } from "./sofascore.js";
 import { sportmonksFromEnv } from "./sportmonks.js";
 import type { StatsProvider } from "./types.js";
 
-export type ProviderName = "sportmonks" | "api-football" | "football-data" | "mock";
+export type ProviderName = "sofascore" | "sportmonks" | "api-football" | "football-data" | "mock";
 
 const VALID: ReadonlySet<string> = new Set([
+  "sofascore",
   "sportmonks",
   "api-football",
   "football-data",
@@ -57,7 +63,8 @@ export function resolveProviderName(env: NodeJS.ProcessEnv = process.env): Provi
   // it is only used when STATS_PROVIDER=sportmonks is set explicitly above.
   if (env["API_FOOTBALL_KEY"]) return "api-football";
   if (env["FOOTBALL_DATA_KEY"]) return "football-data";
-  return "api-football";
+  // Default: SofaScore needs no key and is the only free WC-complete feed.
+  return "sofascore";
 }
 
 /** Construct the selected StatsProvider from the environment. */
@@ -65,6 +72,8 @@ export function statsProviderFromEnv(env: NodeJS.ProcessEnv = process.env): Stat
   switch (resolveProviderName(env)) {
     case "mock":
       return new FixtureMockProvider({ root: env["MOCK_FIXTURES_DIR"] as string });
+    case "sofascore":
+      return sofascoreFromEnv(env);
     case "sportmonks":
       return sportmonksFromEnv(env);
     case "football-data":
