@@ -706,7 +706,7 @@ th.num {
   border-radius: 10px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
   width: 100%;
-  max-width: 360px;
+  max-width: 420px;
   max-height: 85vh;
   overflow-y: auto;
 }
@@ -762,6 +762,141 @@ th.num {
   font-weight: 700;
   color: var(--muted);
   width: 2.5rem;
+}
+
+/* ---- Player score breakdown (inside the XI overlay) ---- */
+.xi-hint {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin: 0;
+  padding: 0.45rem 0.8rem 0;
+}
+
+.xi-player-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--fg);
+  padding: 0;
+  text-align: left;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.15rem;
+}
+
+.xi-player-btn:hover {
+  color: var(--accent, #2563eb);
+}
+
+.xi-caret {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.xi-player-row.open > td {
+  border-bottom: none;
+}
+
+.xi-breakdown-row > td {
+  padding: 0 0.6rem 0.5rem !important;
+  background: var(--bg, rgba(0, 0, 0, 0.02));
+}
+
+.xi-bd-status {
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin: 0.4rem 0;
+}
+
+.xi-bd-status.error {
+  color: #dc2626;
+}
+
+.xi-bd-fixture {
+  margin: 0.3rem 0 0.1rem;
+}
+
+.xi-bd-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 0.25rem 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.xi-bd-rules {
+  list-style: none;
+  margin: 0.2rem 0 0;
+  padding: 0;
+}
+
+.xi-bd-rules li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  padding: 0.12rem 0;
+}
+
+.xi-bd-count {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.xi-bd-pts {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.xi-bd-pts.neg {
+  color: #dc2626;
+}
+
+/* Scrollable body for the standalone player-stats modal (roster page). */
+.xi-bd-body {
+  padding: 0.3rem 0.8rem 0.7rem;
+}
+
+/* Player name rendered as a clickable stats trigger (roster tables). */
+.player-stat-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--fg);
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 2px;
+}
+
+.player-stat-link:hover {
+  color: var(--accent, #2563eb);
+  text-decoration-color: currentColor;
+}
+
+.roster-legend-hint {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+/* Clickable pitch circles (roster page). */
+.pitch-player.clickable {
+  outline: none;
+}
+
+.pitch-player.clickable circle {
+  transition: stroke 0.12s ease, stroke-width 0.12s ease;
+}
+
+.pitch-player.clickable:hover circle,
+.pitch-player.clickable:focus-visible circle {
+  stroke: #ffd24a;
+  stroke-width: 3;
 }
 
 /* Roster view page */

@@ -7,15 +7,25 @@
  *   FLEX_MF:    +1 MID or +1 FWD
  *   Display default (empty team): 4-3-3
  *
- * Empty positions are shown as dashed placeholder circles.
+ * Each row is centred to its actual player count, so e.g. a 5-3-2 shows two
+ * central strikers rather than two forwards spread across a 3-wide row.
+ * A row with no players falls back to the 4/3/3 placeholder shape (dashed
+ * circles) so an empty/partial team still reads as a team.
+ *
+ * When rendered inside a <PlayerStatsProvider> (the roster page), clicking a
+ * filled circle opens that player's score breakdown. Outside a provider
+ * (the draft room) the circles are non-interactive.
  */
 "use client";
+
+import { usePlayerStats } from "../player-stats-modal";
 
 const PITCH_W = 300;
 const PITCH_H = 440;
 const PLAYER_R = 22;
 
 interface Player {
+  playerId?: number;
   fullName: string;
   position: string;
   /** Lower is better; null or 0 = unranked. */
@@ -24,6 +34,7 @@ interface Player {
 
 interface Slot {
   name: string | null; // null = empty placeholder
+  playerId?: number | undefined;
 }
 
 interface Lineup {
@@ -40,9 +51,15 @@ function abbrev(full: string): string {
   return last.length > 11 ? last.slice(0, 10) + "." : last;
 }
 
-function toSlots(names: string[], total: number): Slot[] {
-  const filled: Slot[] = names.map((n) => ({ name: n }));
-  const empty: Slot[] = Array.from({ length: Math.max(0, total - names.length) }, () => ({ name: null }));
+function toSlots(players: Player[], total: number): Slot[] {
+  const filled: Slot[] = players.map((p) => ({
+    name: p.fullName,
+    playerId: p.playerId,
+  }));
+  const empty: Slot[] = Array.from(
+    { length: Math.max(0, total - players.length) },
+    () => ({ name: null }),
+  );
   return [...filled, ...empty];
 }
 
@@ -97,38 +114,73 @@ function computeLineup(roster: Player[]): { lineup: Lineup; formation: string } 
     fwdPlayers = [...fwdPlayers, xFwd];
   }
 
-  const toNames = (ps: Player[]) => ps.map((p) => p.fullName);
-
-  // Displayed slot counts: at least the minimum, default to 4-3-3 shape
-  const defShow = Math.max(defPlayers.length, 4);
-  const midShow = Math.max(midPlayers.length, 3);
-  const fwdShow = Math.max(fwdPlayers.length, 3);
+  // Displayed slot counts: centre each row on its real count; only fall back
+  // to the 4/3/3 placeholder shape when a row is entirely empty.
+  const defShow = defPlayers.length || 4;
+  const midShow = midPlayers.length || 3;
+  const fwdShow = fwdPlayers.length || 3;
 
   const formation = `${defPlayers.length || 4}-${midPlayers.length || 3}-${fwdPlayers.length || 3}`;
 
   return {
     lineup: {
-      gk:  toSlots(toNames(gkPlayers),  1),
-      def: toSlots(toNames(defPlayers), defShow),
-      mid: toSlots(toNames(midPlayers), midShow),
-      fwd: toSlots(toNames(fwdPlayers), fwdShow),
+      gk:  toSlots(gkPlayers,  1),
+      def: toSlots(defPlayers, defShow),
+      mid: toSlots(midPlayers, midShow),
+      fwd: toSlots(fwdPlayers, fwdShow),
     },
     formation,
   };
 }
 
-/** Evenly space `count` items across the pitch width. */
+/**
+ * X-positions for `count` players in a row, centred on the pitch with a
+ * consistent gap. A full 5-wide row spans the whole width; rows with fewer
+ * players (e.g. two strikers) are a centred cluster rather than being pushed
+ * out to the touchlines.
+ */
 function rowX(count: number): number[] {
   const margin = 30;
   const usable = PITCH_W - margin * 2;
-  if (count === 1) return [PITCH_W / 2];
-  return Array.from({ length: count }, (_, i) => margin + (i * usable) / (count - 1));
+  if (count <= 1) return [PITCH_W / 2];
+  // Cap the gap at the 5-across spacing so smaller rows stay central.
+  const gap = Math.min(usable / (count - 1), usable / 4);
+  const start = (PITCH_W - gap * (count - 1)) / 2;
+  return Array.from({ length: count }, (_, i) => start + i * gap);
 }
 
-function PlayerCircle({ x, y, name }: { x: number; y: number; name: string | null }) {
+function PlayerCircle({
+  x,
+  y,
+  name,
+  onClick,
+}: {
+  x: number;
+  y: number;
+  name: string | null;
+  onClick?: (() => void) | undefined;
+}) {
   const empty = name === null;
+  const clickable = !empty && onClick !== undefined;
   return (
-    <g>
+    <g
+      onClick={clickable ? onClick : undefined}
+      style={clickable ? { cursor: "pointer" } : undefined}
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onKeyDown={
+        clickable
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick?.();
+              }
+            }
+          : undefined
+      }
+      className={clickable ? "pitch-player clickable" : "pitch-player"}
+    >
+      {clickable ? <title>{name} — view stats</title> : null}
       <circle
         cx={x} cy={y} r={PLAYER_R}
         fill={empty ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.88)"}
@@ -151,6 +203,7 @@ function PlayerCircle({ x, y, name }: { x: number; y: number; name: string | nul
 }
 
 export function BestLineupViz({ roster }: { roster: Player[] }) {
+  const { openStats } = usePlayerStats();
   const { lineup, formation } = computeLineup(roster);
 
   const rows: { slots: Slot[]; y: number }[] = [
@@ -195,9 +248,23 @@ export function BestLineupViz({ roster }: { roster: Player[] }) {
 
         {/* Players */}
         {rows.flatMap(({ slots, y }) =>
-          rowX(slots.length).map((x, i) => (
-            <PlayerCircle key={`${y}-${i}`} x={x} y={y} name={slots[i]?.name ?? null} />
-          ))
+          rowX(slots.length).map((x, i) => {
+            const slot = slots[i];
+            const pid = slot?.playerId;
+            const handler =
+              pid !== undefined && openStats !== null && slot?.name
+                ? () => openStats(pid, slot.name as string)
+                : undefined;
+            return (
+              <PlayerCircle
+                key={`${y}-${i}`}
+                x={x}
+                y={y}
+                name={slot?.name ?? null}
+                onClick={handler}
+              />
+            );
+          }),
         )}
       </svg>
     </div>

@@ -5,10 +5,17 @@
  * detail and best-ball XI indicators. The team must belong to the league;
  * the viewer must be a league member.
  *
+ * The pitch graphic and every roster row are clickable: they open a modal
+ * with that player's per-fixture score breakdown (PlayerStatsProvider).
+ *
  * URL: /leagues/[leagueId]/roster/[teamId]
  */
 import Link from "next/link";
 import { BestLineupViz } from "../../draft/best-lineup";
+import {
+  PlayerStatsProvider,
+  PlayerStatButton,
+} from "../../player-stats-modal";
 import { redirect } from "next/navigation";
 
 import type { RosterViewData } from "@/web/api-types";
@@ -31,13 +38,6 @@ const STAGE_LABEL: Record<string, string> = {
   SF: "SF",
   THIRD_PLACE: "3rd",
   FINAL: "Final",
-};
-
-const POSITION_ORDER: Record<string, number> = {
-  GK: 0,
-  DEF: 1,
-  MID: 2,
-  FWD: 3,
 };
 
 export default async function RosterViewPage({
@@ -144,13 +144,16 @@ export default async function RosterViewPage({
           No players on this roster yet. Complete the draft first.
         </p>
       ) : (
-        <>
+        <PlayerStatsProvider leagueId={lgId}>
           <div className="lineup-roster-wrap">
             <BestLineupViz roster={data.players} />
           </div>
           <div className="roster-legend">
             <span className="xi-dot in-xi-dot" /> In best-ball XI
             <span className="xi-dot bench-dot" /> Bench
+            <span className="roster-legend-hint">
+              &mdash; click a player for their score breakdown
+            </span>
           </div>
 
           {positions.map((pos) => {
@@ -187,7 +190,13 @@ export default async function RosterViewPage({
                             .join(" ") || undefined
                         }
                       >
-                        <td className="player-name-cell">{player.fullName}</td>
+                        <td className="player-name-cell">
+                          <PlayerStatButton
+                            playerId={player.playerId}
+                            fullName={player.fullName}
+                            className="player-stat-link"
+                          />
+                        </td>
                         <td className="muted-cell">
                           {(() => {
                             const f = flagImg(player.nationalTeam);
@@ -226,7 +235,7 @@ export default async function RosterViewPage({
               </section>
             );
           })}
-        </>
+        </PlayerStatsProvider>
       )}
     </>
   );

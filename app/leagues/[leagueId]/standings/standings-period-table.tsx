@@ -7,14 +7,27 @@
  * detail renders in a `position: fixed` overlay that sits above the whole
  * page, so it can never be clipped by the table. The overlay closes on an
  * outside click or the Escape key, and is full-width on small screens.
+ *
+ * Each player in the XI is itself clickable: it expands an inline per-rule
+ * score breakdown (appearance, goals, assists, ...) fetched lazily from
+ * /api/leagues/[id]/players/[playerId]/breakdown and cached per player.
  */
 "use client";
 
-import { useEffect } from "react";
-import { useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 
 import type { PeriodResult } from "@/data/standings/standings";
+import type { PlayerBreakdown } from "@/data/standings/player-breakdown";
+
+/** Format a points value: trim float noise and prefix a sign. */
+function signed(n: number): string {
+  const rounded = Math.round(n * 100) / 100;
+  const body = Number.isInteger(rounded)
+    ? String(rounded)
+    : String(rounded).replace(/0+$/, "");
+  return rounded > 0 ? `+${body}` : body;
+}
 
 export interface PeriodTableRow {
   fantasyTeamId: number;
@@ -47,6 +60,12 @@ export default function StandingsPeriodTable({
   rows,
 }: Props) {
   const [active, setActive] = useState<Active | null>(null);
+  // Player-score breakdown: which player row is expanded, plus a per-player
+  // fetch cache so reopening is instant and we never refetch.
+  const [openPlayer, setOpenPlayer] = useState<number | null>(null);
+  const [cache, setCache] = useState<Record<number, PlayerBreakdown>>({});
+  const [loadingPlayer, setLoadingPlayer] = useState<number | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Escape closes the overlay.
   useEffect(() => {
@@ -57,6 +76,39 @@ export default function StandingsPeriodTable({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [active]);
+
+  // Reset the expanded player whenever the overlay target changes.
+  useEffect(() => {
+    setOpenPlayer(null);
+    setFetchError(null);
+  }, [active]);
+
+  async function togglePlayer(playerId: number): Promise<void> {
+    if (openPlayer === playerId) {
+      setOpenPlayer(null);
+      return;
+    }
+    setOpenPlayer(playerId);
+    setFetchError(null);
+    if (cache[playerId]) return;
+    setLoadingPlayer(playerId);
+    try {
+      const res = await fetch(
+        `/api/leagues/${leagueId}/players/${playerId}/breakdown`,
+      );
+      const json = await res.json();
+      if (!json.ok) {
+        throw new Error(json.error?.message ?? "could not load breakdown");
+      }
+      setCache((c) => ({ ...c, [playerId]: json.data as PlayerBreakdown }));
+    } catch (e) {
+      setFetchError(
+        e instanceof Error ? e.message : "could not load breakdown",
+      );
+    } finally {
+      setLoadingPlayer(null);
+    }
+  }
 
   const isActive = (teamId: number, stage: string): boolean =>
     active !== null && active.teamId === teamId && active.stage === stage;
@@ -73,6 +125,9 @@ export default function StandingsPeriodTable({
     activeRow && active
       ? activeRow.periods.find((p) => p.stage === active.stage) ?? null
       : null;
+  // Captured outside the JSX so it can be read inside the player .map callback
+  // without re-narrowing the nullable `active` state there.
+  const activeStageKey = active?.stage ?? null;
 
   return (
     <>
@@ -153,6 +208,9 @@ export default function StandingsPeriodTable({
                 &times;
               </button>
             </div>
+            <p className="xi-hint">
+              Click a player to see their score breakdown.
+            </p>
             <table className="xi-table">
               <thead>
                 <tr>
@@ -168,13 +226,93 @@ export default function StandingsPeriodTable({
                       b.points - a.points ||
                       a.fullName.localeCompare(b.fullName),
                   )
-                  .map((slot) => (
-                    <tr key={slot.playerId}>
-                      <td>{slot.fullName}</td>
-                      <td className="pos-badge">{slot.position}</td>
-                      <td className="num">{slot.points}</td>
-                    </tr>
-                  ))}
+                  .map((slot) => {
+                    const open = openPlayer === slot.playerId;
+                    const data = cache[slot.playerId];
+                    const stageFixtures =
+                      data?.fixtures.filter((f) => f.stage === activeStageKey) ??
+                      [];
+                    return (
+                      <Fragment key={slot.playerId}>
+                        <tr
+                          className={
+                            open ? "xi-player-row open" : "xi-player-row"
+                          }
+                        >
+                          <td>
+                            <button
+                              type="button"
+                              className="xi-player-btn"
+                              onClick={() => togglePlayer(slot.playerId)}
+                              aria-expanded={open}
+                            >
+                              <span className="xi-caret">
+                                {open ? "▾" : "▸"}
+                              </span>{" "}
+                              {slot.fullName}
+                            </button>
+                          </td>
+                          <td className="pos-badge">{slot.position}</td>
+                          <td className="num">{slot.points}</td>
+                        </tr>
+                        {open ? (
+                          <tr className="xi-breakdown-row">
+                            <td colSpan={3}>
+                              {loadingPlayer === slot.playerId ? (
+                                <p className="xi-bd-status">Loading&hellip;</p>
+                              ) : fetchError ? (
+                                <p className="xi-bd-status error">
+                                  {fetchError}
+                                </p>
+                              ) : stageFixtures.length === 0 ? (
+                                <p className="xi-bd-status">
+                                  No scored fixture for this period.
+                                </p>
+                              ) : (
+                                stageFixtures.map((fx) => (
+                                  <div
+                                    key={fx.fixtureId}
+                                    className="xi-bd-fixture"
+                                  >
+                                    <div className="xi-bd-head">
+                                      <span>{fx.opponent}</span>
+                                      <span className="num">
+                                        {signed(fx.total)}
+                                      </span>
+                                    </div>
+                                    <ul className="xi-bd-rules">
+                                      {fx.rules.map((r) => (
+                                        <li key={r.key}>
+                                          <span className="xi-bd-label">
+                                            {r.label}
+                                            {r.count !== null ? (
+                                              <span className="xi-bd-count">
+                                                {" "}
+                                                &times;{r.count}
+                                              </span>
+                                            ) : null}
+                                          </span>
+                                          <span
+                                            className={
+                                              r.points < 0
+                                                ? "xi-bd-pts neg"
+                                                : "xi-bd-pts"
+                                            }
+                                          >
+                                            {signed(r.points)}
+                                          </span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                ))
+                              )}
+                            </td>
+                          </tr>
+                        ) : null}
+                      </Fragment>
+                    );
+                  })}
               </tbody>
             </table>
           </div>
