@@ -19,6 +19,7 @@ import Link from "next/link";
 
 import type { PeriodResult } from "@/data/standings/standings";
 import type { PlayerBreakdown } from "@/data/standings/player-breakdown";
+import { formatPoints } from "@/web/format";
 
 /** Format a points value: trim float noise and prefix a sign. */
 function signed(n: number): string {
@@ -167,15 +168,15 @@ export default function StandingsPeriodTable({
                         }
                         onClick={() => toggle(entry.fantasyTeamId, p.stage)}
                       >
-                        {p.points}
+                        {formatPoints(p.points)}
                         <span className="xi-badge">{p.formation}</span>
                       </button>
                     ) : (
-                      <span className="muted-pts">{p.points}</span>
+                      <span className="muted-pts">{formatPoints(p.points)}</span>
                     )}
                   </td>
                 ))}
-                <td className="num">{entry.total}</td>
+                <td className="num">{formatPoints(entry.total)}</td>
               </tr>
             ))}
           </tbody>
@@ -253,7 +254,7 @@ export default function StandingsPeriodTable({
                             </button>
                           </td>
                           <td className="pos-badge">{slot.position}</td>
-                          <td className="num">{slot.points}</td>
+                          <td className="num">{formatPoints(slot.points)}</td>
                         </tr>
                         {open ? (
                           <tr className="xi-breakdown-row">

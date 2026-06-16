@@ -28,6 +28,7 @@ import { and, eq } from "drizzle-orm";
 import type { Db } from "../db/client.js";
 import {
   fixture,
+  league,
   player,
   scoreEntry,
   statLine,
@@ -36,7 +37,7 @@ import {
 import { emptySummary, type IngestSummary } from "../ingest/summary.js";
 import type { ScoreBreakdown } from "./score.js";
 import { scoreStatLine } from "./score.js";
-import type { ScoringRuleset } from "./ruleset.js";
+import { DEFAULT_RULESET, type ScoringRuleset } from "./ruleset.js";
 
 export type RecomputeSummary = IngestSummary;
 
@@ -131,6 +132,39 @@ export async function recomputeAll(
     summary.updated += 1;
   }
   return summary;
+}
+
+/**
+ * Recompute scores for EVERY scoring ruleset currently in use.
+ *
+ * `score_entry` rows are keyed by `ruleset_version`, and standings read each
+ * league's own `scoring_ruleset`. So a single `recomputeAll(db, DEFAULT_RULESET)`
+ * only produces rows for the default version — any league with a customised
+ * ruleset would then have no score rows and show zeros. This gathers the
+ * distinct rulesets across all leagues (always including the default as a
+ * baseline) and recomputes each, so every league's standings stay populated.
+ *
+ * Call this from the ingest pipeline / cron instead of `recomputeAll`.
+ */
+export async function recomputeAllRulesets(
+  db: Db,
+): Promise<{ rulesets: number; total: RecomputeSummary }> {
+  const rows = await db.select({ scoringRuleset: league.scoringRuleset }).from(league);
+  const byVersion = new Map<string, ScoringRuleset>();
+  byVersion.set(DEFAULT_RULESET.version, DEFAULT_RULESET);
+  for (const r of rows) {
+    const rs = r.scoringRuleset as ScoringRuleset | null;
+    if (rs?.version) byVersion.set(rs.version, rs);
+  }
+
+  const total = emptySummary();
+  for (const rs of byVersion.values()) {
+    const s = await recomputeAll(db, rs);
+    total.inserted += s.inserted;
+    total.updated += s.updated;
+    total.skipped += s.skipped;
+  }
+  return { rulesets: byVersion.size, total };
 }
 
 /**

@@ -25,6 +25,7 @@ import {
   type ManagerOfStage,
 } from "@/data/standings/snapshot";
 import { getAliveCounts, type TeamAliveCount } from "@/web/alive";
+import { formatPoints } from "@/web/format";
 import type { LeagueDetail } from "@/web/api-types";
 import { getCurrentUser } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
@@ -217,7 +218,7 @@ export default async function StandingsPage({
               )
               .join(", ")}
           </strong>{" "}
-          with {stageStar.points} pts
+          with {formatPoints(stageStar.points)} pts
         </div>
       ) : null}
 
@@ -348,7 +349,7 @@ export default async function StandingsPage({
                     {nameByManager.get(entry.managerId) ??
                       `manager #${entry.managerId}`}
                   </td>
-                  <td className="num">{entry.total}</td>
+                  <td className="num">{formatPoints(entry.total)}</td>
                   {aliveStarted ? (
                     <td className="num alive-cell">
                       {alive ? (

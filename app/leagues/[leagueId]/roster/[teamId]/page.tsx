@@ -19,6 +19,7 @@ import {
 import { redirect } from "next/navigation";
 
 import type { RosterViewData } from "@/web/api-types";
+import { formatPoints } from "@/web/format";
 import { getCurrentUser } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { getMembershipRole } from "@/web/queries";
@@ -123,7 +124,7 @@ export default async function RosterViewPage({
       {back}
       <h1>
         {data.teamName}
-        <span className="tag">{data.total} pts</span>
+        <span className="tag">{formatPoints(data.total)} pts</span>
         {data.players.some((p) => p.eliminated) ? (
           <span className="tag tag-alive">
             {data.players.filter((p) => !p.eliminated).length}/
@@ -223,7 +224,7 @@ export default async function RosterViewPage({
                             ].join(" ")}
                             title={p.inXi ? "In best-ball XI" : "Bench"}
                           >
-                            {p.points > 0 || p.inXi ? p.points : "-"}
+                            {p.points > 0 || p.inXi ? formatPoints(p.points) : "-"}
                           </td>
                         ))}
                         <td className="num player-total">{player.totalPoints}</td>

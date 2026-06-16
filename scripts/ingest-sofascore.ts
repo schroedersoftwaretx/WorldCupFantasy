@@ -17,8 +17,7 @@ import { createDb, closeDb } from "../src/data/db/client.js";
 import { ingestFixtureStats } from "../src/data/ingest/fixture-stats.js";
 import { getUningestedFinishedFixtures } from "../src/data/ingest/pending.js";
 import { ingestSchedule } from "../src/data/ingest/schedule.js";
-import { recomputeAll } from "../src/data/scoring/recompute.js";
-import { DEFAULT_RULESET } from "../src/data/scoring/ruleset.js";
+import { recomputeAllRulesets } from "../src/data/scoring/recompute.js";
 import { captureAllStandingsSnapshots } from "../src/data/standings/snapshot.js";
 import { createBrowserFetch, makeSofaProvider } from "./sofascore-browser-fetch.js";
 
@@ -54,8 +53,8 @@ async function main() {
       }
     }
 
-    const score = await recomputeAll(db, DEFAULT_RULESET);
-    console.log(`scores: inserted=${score.inserted} updated=${score.updated} skipped=${score.skipped}`);
+    const score = await recomputeAllRulesets(db);
+    console.log(`scores: ${score.rulesets} ruleset(s) — inserted=${score.total.inserted} updated=${score.total.updated} skipped=${score.total.skipped}`);
 
     const snaps = await captureAllStandingsSnapshots(db);
     console.log(`snapshots: ${JSON.stringify(snaps)}`);
