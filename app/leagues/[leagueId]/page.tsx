@@ -16,6 +16,7 @@ import { getDraftRoomRow } from "@/web/draft-view";
 import { getLeagueDetail, getMembershipRole } from "@/web/queries";
 
 import InvitePanel from "./invite-panel";
+import LeagueTabs from "./league-tabs";
 import RenameTeamForm from "./rename-team-form";
 
 export const dynamic = "force-dynamic";
@@ -94,6 +95,8 @@ export default async function LeagueOverviewPage({
         {detail.rosterSize}-player rosters &middot; you are{" "}
         {isOwner ? "the owner" : "a member"}.
       </p>
+
+      <LeagueTabs leagueId={detail.id} isOwner={isOwner} />
 
       <h2>Managers</h2>
       <table>

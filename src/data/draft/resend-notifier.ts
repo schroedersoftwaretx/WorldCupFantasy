@@ -1,36 +1,21 @@
 /**
- * Resend-backed Notifier.
+ * Resend-backed Notifier for the draft's transactional emails.
  *
- * Sends the draft's transactional emails (most importantly the load-bearing
- * "you're on the clock" message) through Resend (https://resend.com). It
- * implements the same {@link Notifier} interface as the in-memory and console
- * notifiers, so it drops into the draft service without any other changes.
+ * Renders the draft email (subject/body + the load-bearing "open the draft
+ * room" button) and delegates the actual send to the shared
+ * {@link ResendTransport} in `src/data/notify/transport.ts`, so the draft and
+ * the app-wide notification hub talk to Resend through one code path.
  *
- * The `resend` package is imported dynamically the first time an email is
- * sent. That keeps it an optional dependency: the project compiles and runs
- * (falling back to the no-op path) even when the package is not installed and
- * no API key is configured. Once `npm install resend` has run and
- * RESEND_API_KEY is set, real delivery begins automatically.
+ * It implements the same {@link Notifier} interface as the in-memory and
+ * console notifiers, so it drops into the draft service without other changes.
  */
 
+import { ResendTransport } from "../notify/transport.js";
 import type {
   Notifier,
   NotifierResult,
   OutboundNotification,
 } from "./notifier.js";
-
-/** The slice of the Resend client surface we depend on. */
-interface ResendLike {
-  emails: {
-    send(payload: {
-      from: string;
-      to: string | string[];
-      subject: string;
-      html: string;
-      text: string;
-    }): Promise<{ error: { message: string } | null }>;
-  };
-}
 
 export interface ResendNotifierOptions {
   apiKey: string;
@@ -45,45 +30,27 @@ export interface ResendNotifierOptions {
 }
 
 export class ResendNotifier implements Notifier {
-  private client: ResendLike | null = null;
-  private readonly from: string;
+  private readonly transport: ResendTransport;
   private readonly baseUrl: string | undefined;
-  private readonly apiKey: string;
 
   constructor(opts: ResendNotifierOptions) {
-    this.apiKey = opts.apiKey;
-    this.from = opts.from;
+    this.transport = new ResendTransport({
+      apiKey: opts.apiKey,
+      from: opts.from,
+    });
     this.baseUrl = opts.baseUrl?.replace(/\/+$/, "");
   }
 
-  private async getClient(): Promise<ResendLike> {
-    if (this.client) return this.client;
-    // Dynamic import so `resend` stays an optional dependency.
-    const mod = (await import("resend")) as unknown as {
-      Resend: new (key: string) => ResendLike;
-    };
-    this.client = new mod.Resend(this.apiKey);
-    return this.client;
-  }
-
   async send(notification: OutboundNotification): Promise<NotifierResult> {
-    try {
-      const client = await this.getClient();
-      const { error } = await client.emails.send({
-        from: this.from,
-        to: notification.to,
-        subject: notification.subject,
-        html: this.renderHtml(notification),
-        text: this.renderText(notification),
-      });
-      if (error) return { delivered: false, error: error.message };
-      return { delivered: true };
-    } catch (e) {
-      return {
-        delivered: false,
-        error: e instanceof Error ? e.message : "resend send failed",
-      };
-    }
+    const result = await this.transport.send({
+      to: notification.to,
+      subject: notification.subject,
+      html: this.renderHtml(notification),
+      text: this.renderText(notification),
+    });
+    const out: NotifierResult = { delivered: result.delivered };
+    if (result.error !== undefined) out.error = result.error;
+    return out;
   }
 
   /** The deep link to the relevant draft room, when we can build one. */
