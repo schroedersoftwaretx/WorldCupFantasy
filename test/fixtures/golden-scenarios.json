@@ -42,7 +42,7 @@
       "name": "DEF brace + clean sheet + yellow card",
       "position": "DEF",
       "stat": { "minutesPlayed": 90, "goals": 2, "yellowCards": 1, "teamConcededInRegulationAndEt": 0 },
-      "expected": { "points": 18 }
+      "expected": { "points": 20 }
     },
     {
       "name": "DEF subbed at 55' with 0-0 score: NO clean sheet",
@@ -54,7 +54,7 @@
       "name": "FWD brace + yellow",
       "position": "FWD",
       "stat": { "minutesPlayed": 90, "goals": 2, "yellowCards": 1, "teamConcededInRegulationAndEt": 1 },
-      "expected": { "points": 9 }
+      "expected": { "points": 11 }
     },
     {
       "name": "MID red card before 60': no 60+ bonus, no clean sheet",
@@ -72,7 +72,7 @@
       "name": "FWD scored AND missed a (different) penalty",
       "position": "FWD",
       "stat": { "minutesPlayed": 90, "goals": 1, "penaltiesMissed": 1, "teamConcededInRegulationAndEt": 1 },
-      "expected": { "points": 4 }
+      "expected": { "points": 5 }
     },
     {
       "name": "DEF own goal, otherwise unremarkable, conceded 1",

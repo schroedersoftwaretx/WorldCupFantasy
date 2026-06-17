@@ -96,11 +96,33 @@ export interface ScoringRuleset {
 }
 
 /**
- * Build a stable content-hash version id for a ruleset. The hash inputs are
- * sorted by key so JSON insertion order does not affect the result.
+ * Recursively sort object keys so JSON insertion order does not affect the
+ * result. NOTE: we must NOT use JSON.stringify's array-replacer form for this
+ * (`JSON.stringify(v, Object.keys(v).sort())`) - that array is a key
+ * allowlist applied at every nesting level, so nested maps like
+ * goalByPosition / cleanSheetByPosition (whose keys GK/DEF/MID/FWD are not in
+ * the top-level key list) serialize as empty objects and drop out of the hash.
+ */
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value !== null && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    return Object.keys(obj)
+      .sort()
+      .reduce<Record<string, unknown>>((acc, key) => {
+        acc[key] = canonicalize(obj[key]);
+        return acc;
+      }, {});
+  }
+  return value;
+}
+
+/**
+ * Build a stable content-hash version id for a ruleset. Every value,
+ * including nested per-position maps, contributes to the hash.
  */
 function hashRuleset(values: Omit<ScoringRuleset, "version">): string {
-  const canonical = JSON.stringify(values, Object.keys(values).sort());
+  const canonical = JSON.stringify(canonicalize(values));
   const digest = createHash("sha256").update(canonical).digest("hex").slice(0, 8);
   return `wcf-v1-${digest}`;
 }
@@ -108,10 +130,15 @@ function hashRuleset(values: Omit<ScoringRuleset, "version">): string {
 /**
  * Build a ruleset from raw values, computing the version automatically.
  * Always go through this when constructing or overriding rulesets so the
- * version stays in sync with content.
+ * version stays in sync with content. Any incoming `version` is ignored and
+ * recomputed, so spreading an existing ruleset (`{ ...DEFAULT_RULESET, ... }`)
+ * does not smuggle a stale id into the hash input.
  */
-export function buildRuleset(values: Omit<ScoringRuleset, "version">): ScoringRuleset {
-  return Object.freeze({ ...values, version: hashRuleset(values) });
+export function buildRuleset(
+  values: Omit<ScoringRuleset, "version"> & { version?: string },
+): ScoringRuleset {
+  const { version: _ignored, ...rest } = values as ScoringRuleset;
+  return Object.freeze({ ...rest, version: hashRuleset(rest) });
 }
 
 /**

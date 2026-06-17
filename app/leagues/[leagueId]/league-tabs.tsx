@@ -5,7 +5,8 @@
  * helper (never a raw column) and renders the tab strip. The always-on tabs
  * (Overview, Standings, Draft) link to their real routes; tabs for features
  * that later phases fill in appear only when their flag is enabled, shown as
- * "(soon)" chips until that phase ships their route. This is the gated surface
+ * "(soon)" chips until that phase ships their route; the stats_hub flag links
+ * out to the live public /stats hub (Phase 1). This is the gated surface
  * a commissioner's toggle reacts on. Settings shows for the owner only.
  */
 import Link from "next/link";
@@ -49,6 +50,11 @@ export default async function LeagueTabs({
       <Link href={`/leagues/${leagueId}/draft`} className="league-tab">
         Draft
       </Link>
+      {flags && flags.stats_hub ? (
+        <Link href="/stats" className="league-tab">
+          Stats Hub
+        </Link>
+      ) : null}
       {flags
         ? FUTURE_TABS.filter((t) => flags[t.flag]).map((t) => (
             <span

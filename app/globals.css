@@ -1360,3 +1360,38 @@ details[open] .scoring-rules-summary::before {
 .stage-star-badge {
   color: #f9a825;
 }
+
+/* ===== Stats Hub (Phase 1) ================================================ */
+
+.hub-links { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1rem 0 1.5rem; }
+.hub-link {
+  display: inline-block; padding: 0.55rem 1rem; border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.14);
+  font-weight: 600; text-decoration: none;
+}
+.hub-link:hover { background: rgba(255, 255, 255, 0.12); }
+
+.stage-nav { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.75rem 0 1.25rem; }
+.stage-chip {
+  display: inline-block; padding: 0.3rem 0.7rem; border-radius: 999px;
+  font-size: 0.85rem; font-weight: 600; text-decoration: none;
+  background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.stage-chip:hover { background: rgba(255, 255, 255, 0.12); }
+.stage-chip-active { background: #2d7a3a; border-color: #2d7a3a; color: #fff; }
+.stage-chip-disabled { opacity: 0.4; cursor: default; }
+
+.tos-layout { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; }
+.tos-detail { flex: 1 1 320px; min-width: 280px; }
+.tos-total { font-size: 1.05rem; margin: 0.25rem 0 1rem; }
+.tos-list { list-style: none; padding: 0; margin: 0 0 1rem; }
+.tos-list li {
+  display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.tos-pos { display: inline-block; min-width: 2.4rem; font-size: 0.7rem; font-weight: 700; color: #9ad7a9; }
+.tos-pts { margin-left: auto; font-weight: 700; }
+.muted { opacity: 0.7; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem 1.5rem; }
+.record-line { font-size: 1.05rem; margin: 0.25rem 0 1rem; }

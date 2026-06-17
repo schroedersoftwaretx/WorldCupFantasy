@@ -1,54 +1,105 @@
 /**
- * Stats landing (nav shell, Phase 0).
+ * Stats Hub landing (Phase 1) — PUBLIC, tournament-wide.
  *
- * The top-level entry point for the tournament Stats Hub that Phase 1 fills in
- * (Team of the Matchday/Stage, leaderboards, records). For now it confirms the
- * destination exists and routes a signed-in manager to their leagues, whose
- * standings already expose per-stage data via the aggregate layer.
+ * Not league-specific and not login-gated: any visitor sees the headline Team
+ * of the Stage for the latest scored period plus entry points into the
+ * leaderboards and records. The `stats_hub` feature flag only governs whether a
+ * league's own nav links here; it does NOT gate this page.
  */
 import Link from "next/link";
 
-import { getCurrentUser } from "@/web/auth/current-user";
+import { latestStageWithScores, stagesWithScores } from "@/data/stats/aggregate";
+import { teamOfTheStage } from "@/data/stats/team-of-the-stage";
+import type { TeamOfStage } from "@/data/stats/team-of-the-stage";
+import type { Stage } from "@/data/db/schema";
 import { getDb } from "@/web/db";
-import { listLeaguesForManager } from "@/web/queries";
-import type { LeagueSummary } from "@/web/api-types";
+import { HUB_RULESET_VERSION } from "@/web/stats-params";
+
+import { STAGE_FULL } from "./stage-labels";
+import { StageNav } from "./stage-nav";
+import { StagePitch } from "./stage-pitch";
 
 export const dynamic = "force-dynamic";
 
 export default async function StatsPage() {
-  const user = await getCurrentUser();
-
-  let leagues: LeagueSummary[] = [];
-  if (user) {
-    try {
-      leagues = await listLeaguesForManager(getDb(), user.manager.id);
-    } catch {
-      leagues = [];
+  let latest: Stage | null = null;
+  let scored: Stage[] = [];
+  let team: TeamOfStage | null = null;
+  let error: string | null = null;
+  try {
+    const db = getDb();
+    scored = await stagesWithScores(db, HUB_RULESET_VERSION);
+    latest = await latestStageWithScores(db, HUB_RULESET_VERSION);
+    if (latest) {
+      team = await teamOfTheStage(db, {
+        rulesetVersion: HUB_RULESET_VERSION,
+        stage: latest,
+      });
     }
+  } catch (e) {
+    error = e instanceof Error ? e.message : "could not load stats";
   }
 
   return (
     <>
-      <h1>Tournament Stats</h1>
+      <h1>Tournament Stats Hub</h1>
       <p className="subtitle">
-        Leaderboards, Team of the Stage, and records arrive with the Stats Hub.
-        For now, jump into a league to see its standings and per-stage points.
+        Cross-tournament stats for everyone &mdash; no league required. The Team
+        of the Stage is the best legal XI from every player in the tournament.
       </p>
-      {!user ? (
+
+      <nav className="hub-links">
+        <Link href="/stats/leaderboards" className="hub-link">
+          Leaderboards
+        </Link>
+        <Link href="/stats/records" className="hub-link">
+          Records &amp; fun stats
+        </Link>
+        {latest ? (
+          <Link
+            href={`/stats/team-of-the-stage/${latest}`}
+            className="hub-link"
+          >
+            Team of the Stage
+          </Link>
+        ) : null}
+      </nav>
+
+      {error ? (
+        <p className="error">Could not load stats: {error}</p>
+      ) : !latest || !team || team.xi.length === 0 ? (
         <p className="notice">
-          <Link href="/login">Sign in</Link> to see your leagues.
+          No matches have been scored yet. The Stats Hub fills in once results
+          start arriving.
         </p>
-      ) : leagues.length === 0 ? (
-        <p className="notice">You are not in any leagues yet.</p>
       ) : (
-        <ul className="league-list">
-          {leagues.map((l) => (
-            <li key={l.id}>
-              <Link href={`/leagues/${l.id}/standings`}>{l.name}</Link>{" "}
-              <span className="tag">{l.status}</span>
-            </li>
-          ))}
-        </ul>
+        <>
+          <h2>Team of the Stage &mdash; {STAGE_FULL[latest]}</h2>
+          <StageNav current={latest} scored={scored} />
+          <div className="tos-layout">
+            <StagePitch xi={team.xi} formation={team.formation} />
+            <div className="tos-detail">
+              <p className="tos-total">
+                Formation <strong>{team.formation}</strong> &middot;{" "}
+                <strong>{team.points}</strong> pts
+              </p>
+              <ul className="tos-list">
+                {team.xi.map((p) => (
+                  <li key={p.playerId}>
+                    <span className="tos-pos">{p.position}</span> {p.fullName}{" "}
+                    <span className="muted">({p.nationalTeamName})</span>
+                    <span className="num tos-pts">{p.points}</span>
+                  </li>
+                ))}
+              </ul>
+              <p>
+                <Link href={`/stats/team-of-the-stage/${latest}`}>
+                  Full pitch view &rarr;
+                </Link>
+              </p>
+            </div>
+          </div>
+        </>
       )}
     </>
   );
