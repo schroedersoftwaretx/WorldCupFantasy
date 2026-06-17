@@ -18,6 +18,13 @@
  */
 "use client";
 
+import {
+  optimizeBestBall,
+  formationLabel,
+  type ScoredPlayer,
+} from "@/data/standings/lineup";
+import type { Position } from "@/data/db/schema";
+
 import { usePlayerStats } from "../player-stats-modal";
 
 const PITCH_W = 300;
@@ -30,6 +37,14 @@ interface Player {
   position: string;
   /** Lower is better; null or 0 = unranked. */
   draftRank?: number | null;
+  /**
+   * Total points the player scored (summed across scoring periods). Present on
+   * the roster page once matches are scored. When any roster player carries
+   * points, the pitch shows the genuine best-ball OPTIMUM by points (the same
+   * optimizer the standings use) instead of the draft-rank projection, so the
+   * displayed formation matches what actually scored.
+   */
+  points?: number;
 }
 
 interface Slot {
@@ -63,7 +78,75 @@ function toSlots(players: Player[], total: number): Slot[] {
   return [...filled, ...empty];
 }
 
-function computeLineup(roster: Player[]): { lineup: Lineup; formation: string } {
+const PITCH_POSITIONS: readonly Position[] = ["GK", "DEF", "MID", "FWD"];
+
+/**
+ * Points-aware lineup: run the canonical best-ball optimizer over the roster's
+ * actual points and render exactly the XI it selects. Returns null when the
+ * roster cannot field a legal XI (e.g. an incomplete team), so the caller can
+ * fall back to the draft-rank projection.
+ */
+function pointsLineup(
+  roster: Player[],
+): { lineup: Lineup; formation: string } | null {
+  const eligible = roster.filter(
+    (p) =>
+      p.playerId !== undefined &&
+      (PITCH_POSITIONS as readonly string[]).includes(p.position),
+  );
+  if (eligible.length === 0) return null;
+
+  const scored: ScoredPlayer[] = eligible.map((p) => ({
+    playerId: p.playerId as number,
+    position: p.position as Position,
+    points: p.points ?? 0,
+  }));
+
+  let best;
+  try {
+    best = optimizeBestBall(scored);
+  } catch {
+    return null; // roster too thin to field any legal XI
+  }
+
+  const playerById = new Map<number, Player>(
+    eligible.map((p) => [p.playerId as number, p]),
+  );
+  const pickFor = (pos: Position): Player[] => {
+    const out: Player[] = [];
+    for (const s of best.xi) {
+      if (s.position !== pos) continue;
+      const pl = playerById.get(s.playerId);
+      if (pl) out.push(pl);
+    }
+    return out;
+  };
+
+  const gkPlayers = pickFor("GK");
+  const defPlayers = pickFor("DEF");
+  const midPlayers = pickFor("MID");
+  const fwdPlayers = pickFor("FWD");
+
+  return {
+    lineup: {
+      gk: toSlots(gkPlayers, 1),
+      def: toSlots(defPlayers, defPlayers.length || 4),
+      mid: toSlots(midPlayers, midPlayers.length || 3),
+      fwd: toSlots(fwdPlayers, fwdPlayers.length || 3),
+    },
+    formation: formationLabel(best.formation),
+  };
+}
+
+export function computeLineup(roster: Player[]): { lineup: Lineup; formation: string } {
+  // Points-aware path: once matches are scored the roster carries real points,
+  // so show the genuine best-ball optimum (matches the standings) rather than
+  // the draft-rank projection used pre-tournament / in the draft room.
+  if (roster.some((p) => typeof p.points === "number")) {
+    const pts = pointsLineup(roster);
+    if (pts) return pts;
+  }
+
   const byPos: { GK: Player[]; DEF: Player[]; MID: Player[]; FWD: Player[] } = { GK: [], DEF: [], MID: [], FWD: [] };
   /** Effective sort rank: unranked (null/0) goes to the end. */
   const rankOf = (p: Player): number =>
