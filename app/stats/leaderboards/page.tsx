@@ -12,6 +12,8 @@ import type {
   PlayerStatTotal,
 } from "@/data/stats/aggregate";
 import { getLeaderboards } from "@/data/stats/hub";
+import { ownershipByPlayerId } from "@/data/stats/ownership";
+import { adpByPlayerId } from "@/data/stats/adp";
 import type { Leaderboards } from "@/data/stats/hub";
 import type { Position, Stage } from "@/data/db/schema";
 import { getDb } from "@/web/db";
@@ -35,8 +37,19 @@ const STAT_LABELS: { metric: keyof Leaderboards["statLeaders"]; label: string }[
   { metric: "minutesPlayed", label: "Minutes" },
 ];
 
-function ScorerTable({ rows }: { rows: PlayerPoints[] }) {
+function ScorerTable({
+  rows,
+  ownership,
+  adp,
+}: {
+  rows: PlayerPoints[];
+  /** playerId -> ownership fraction (0-1); omit to hide the column. */
+  ownership?: Map<number, number> | undefined;
+  /** playerId -> average draft position; omit to hide the column. */
+  adp?: Map<number, number> | undefined;
+}) {
   if (rows.length === 0) return <p className="notice">No data yet.</p>;
+  const showExtra = ownership !== undefined || adp !== undefined;
   return (
     <div className="table-scroll">
       <table>
@@ -47,18 +60,32 @@ function ScorerTable({ rows }: { rows: PlayerPoints[] }) {
             <th>Nation</th>
             <th className="num">Pts</th>
             <th className="num">Apps</th>
+            {showExtra ? <th className="num">Owned%</th> : null}
+            {showExtra ? <th className="num">ADP</th> : null}
           </tr>
         </thead>
         <tbody>
-          {rows.map((r, i) => (
-            <tr key={r.playerId}>
-              <td className="num">{i + 1}</td>
-              <td>{r.fullName}</td>
-              <td>{r.nationalTeamName}</td>
-              <td className="num">{r.points}</td>
-              <td className="num">{r.appearances}</td>
-            </tr>
-          ))}
+          {rows.map((r, i) => {
+            const own = ownership?.get(r.playerId);
+            const a = adp?.get(r.playerId);
+            return (
+              <tr key={r.playerId}>
+                <td className="num">{i + 1}</td>
+                <td>{r.fullName}</td>
+                <td>{r.nationalTeamName}</td>
+                <td className="num">{r.points}</td>
+                <td className="num">{r.appearances}</td>
+                {showExtra ? (
+                  <td className="num">
+                    {own !== undefined ? `${Math.round(own * 100)}%` : "-"}
+                  </td>
+                ) : null}
+                {showExtra ? (
+                  <td className="num">{a !== undefined ? a : "-"}</td>
+                ) : null}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -137,6 +164,8 @@ export default async function LeaderboardsPage({
   let data: Leaderboards | null = null;
   let scored: Stage[] = [];
   let error: string | null = null;
+  let ownershipMap: Map<number, number> | undefined;
+  let adpMap: Map<number, number> | undefined;
   try {
     const db = getDb();
     scored = await stagesWithScores(db, HUB_RULESET_VERSION);
@@ -144,6 +173,12 @@ export default async function LeaderboardsPage({
       rulesetVersion: HUB_RULESET_VERSION,
       ...(stage !== undefined ? { stage } : {}),
     });
+    const own = await ownershipByPlayerId(db);
+    ownershipMap = new Map(
+      Array.from(own.byPlayerId, ([id, v]) => [id, v.ownershipPct]),
+    );
+    const adpRes = await adpByPlayerId(db, {});
+    adpMap = new Map(Array.from(adpRes.byPlayerId, ([id, v]) => [id, v.adp]));
   } catch (e) {
     error = e instanceof Error ? e.message : "could not load leaderboards";
   }
@@ -187,21 +222,21 @@ export default async function LeaderboardsPage({
       ) : (
         <>
           <h2>Top fantasy scorers</h2>
-          <ScorerTable rows={data.topScorers} />
+          <ScorerTable rows={data.topScorers} ownership={ownershipMap} adp={adpMap} />
 
           <h2>By position</h2>
           <div className="stat-grid">
             {POSITIONS.map((p) => (
               <section key={p.key}>
                 <h3>{p.label}</h3>
-                <ScorerTable rows={data.byPosition[p.key]} />
+                <ScorerTable rows={data.byPosition[p.key]} ownership={ownershipMap} adp={adpMap} />
               </section>
             ))}
           </div>
 
           <h2>In form</h2>
           <p className="subtitle">Points over each player's last 3 matches.</p>
-          <ScorerTable rows={data.form} />
+          <ScorerTable rows={data.form} ownership={ownershipMap} adp={adpMap} />
 
           <h2>Real-stat leaders</h2>
           <div className="stat-grid">

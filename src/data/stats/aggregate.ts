@@ -61,8 +61,12 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-/** Load player refs (with national-team name) for a set of player ids. */
-async function loadRefs(
+/**
+ * Load player refs (with national-team name) for a set of player ids.
+ * Exported so the ownership/ADP services (Phase 2) reuse the exact same
+ * PlayerRef shape rather than re-deriving the player+nation join.
+ */
+export async function loadRefs(
   db: Db | DbTx,
   playerIds: number[],
 ): Promise<Map<number, PlayerRef>> {

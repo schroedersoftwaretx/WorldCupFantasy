@@ -55,6 +55,9 @@ export default async function StatsPage() {
         <Link href="/stats/records" className="hub-link">
           Records &amp; fun stats
         </Link>
+        <Link href="/stats/draft-trends" className="hub-link">
+          Draft Trends
+        </Link>
         {latest ? (
           <Link
             href={`/stats/team-of-the-stage/${latest}`}

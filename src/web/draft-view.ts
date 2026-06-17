@@ -31,6 +31,7 @@ import {
   type StageOddsStage,
 } from "../data/db/schema.js";
 import { DEFAULT_RULESET } from "../data/scoring/ruleset.js";
+import { adpByPlayerId } from "../data/stats/adp.js";
 import { roundForPick, slotForPick } from "../data/draft/snake.js";
 import { canAddPlayer, countsFromPositions } from "../data/roster/validator.js";
 import type {
@@ -355,6 +356,17 @@ export async function getDraftBoard(
     // Table not yet migrated — projected points will show as null.
   }
 
+  // Live ADP overlay (Phase 2): cross-league average draft position per
+  // player. Read-only context next to the board; never affects pick/autopick
+  // logic. Wrapped so the board still loads if no drafts exist yet.
+  let adpByPlayer = new Map<number, number>();
+  try {
+    const adpRes = await adpByPlayerId(db, {});
+    adpByPlayer = new Map(Array.from(adpRes.byPlayerId, ([id, v]) => [id, v.adp]));
+  } catch {
+    // No drafts yet — ADP shows as null.
+  }
+
   const players: DraftBoardPlayer[] = rows
     .filter((r) => !takenIds.has(r.id))
     .map((r) => ({
@@ -365,6 +377,7 @@ export async function getDraftBoard(
       draftRank: r.draftRank,
       projectedTotalPoints: projByPlayer.get(r.id) ?? null,
       stageProbabilities: stageByTeam.get(r.nationalTeamId) ?? null,
+      adp: adpByPlayer.get(r.id) ?? null,
       legal: canAddPlayer(counts, r.position).ok,
     }))
     .sort((a, b) => {

@@ -32,6 +32,11 @@ function signed(n: number): string {
   return rounded > 0 ? `+${body}` : body;
 }
 
+/** Format a 0-1 fraction as a whole-percent string. */
+function pctOf(n: number): string {
+  return `${Math.round(n * 100)}%`;
+}
+
 const STAGE_FULL: Record<string, string> = {
   GROUP_1: "Group Stage MD1",
   GROUP_2: "Group Stage MD2",
@@ -162,6 +167,19 @@ export function PlayerStatsProvider({
                 &times;
               </button>
             </div>
+            {data ? (
+              <div className="xi-bd-meta">
+                <span>
+                  Owned {pctOf(data.ownership.ownershipPct)}
+                  <span className="xi-bd-count">
+                    {" "}
+                    ({data.ownership.ownedCount}/
+                    {data.ownership.totalFantasyTeams})
+                  </span>
+                </span>
+                <span>ADP {data.adp !== null ? data.adp : "—"}</span>
+              </div>
+            ) : null}
             <div className="xi-bd-body">
               {loading ? (
                 <p className="xi-bd-status">Loading&hellip;</p>

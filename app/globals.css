@@ -1395,3 +1395,30 @@ details[open] .scoring-rules-summary::before {
 
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem 1.5rem; }
 .record-line { font-size: 1.05rem; margin: 0.25rem 0 1rem; }
+
+/* --- Phase 2: player insights (differentials panel + modal meta) --------- */
+.xi-bd-meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  font-size: 0.85rem;
+  color: var(--muted, #6b7280);
+}
+.diff-panel .subtitle { margin-top: 0.25rem; }
+.diff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem 1.5rem;
+}
+.diff-list { list-style: none; padding: 0; margin: 0.25rem 0 0; }
+.diff-list li {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--border, #eee);
+}
+.diff-metric { margin-left: auto; white-space: nowrap; }

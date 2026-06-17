@@ -28,6 +28,8 @@ import {
 } from "../db/schema.js";
 import type { ScoreBreakdown } from "../scoring/score.js";
 import type { ScoringRuleset } from "../scoring/ruleset.js";
+import { ownershipForPlayer } from "../stats/ownership.js";
+import { adpByPlayerId } from "../stats/adp.js";
 
 /** One scoring rule's contribution within a single fixture. */
 export interface PlayerBreakdownRule {
@@ -64,6 +66,14 @@ export interface PlayerBreakdown {
   fullName: string;
   position: Position;
   rulesetVersion: string;
+  /** Cross-league ownership context (Phase 2). Aggregate-only. */
+  ownership: {
+    ownedCount: number;
+    ownershipPct: number;
+    totalFantasyTeams: number;
+  };
+  /** Cross-league average draft position, or null if never drafted (Phase 2). */
+  adp: number | null;
   fixtures: PlayerBreakdownFixture[];
 }
 
@@ -181,6 +191,13 @@ export async function getPlayerBreakdown(
   const [p] = await db.select().from(player).where(eq(player.id, playerId));
   if (!p) return null;
 
+  // Cross-league context (Phase 2): aggregate ownership % and ADP for the
+  // player. Independent of the league's ruleset; safe to expose (no per-team
+  // detail). adpByPlayerId returns every drafted player keyed by id.
+  const ownership = await ownershipForPlayer(db, playerId);
+  const adpMap = await adpByPlayerId(db, {});
+  const adp = adpMap.byPlayerId.get(playerId)?.adp ?? null;
+
   // This player's score_entry rows for the active ruleset only.
   const scores = await db
     .select()
@@ -194,6 +211,8 @@ export async function getPlayerBreakdown(
       fullName: p.fullName,
       position: p.position,
       rulesetVersion,
+      ownership,
+      adp,
       fixtures: [],
     };
   }
@@ -248,6 +267,8 @@ export async function getPlayerBreakdown(
     fullName: p.fullName,
     position: p.position,
     rulesetVersion,
+    ownership,
+    adp,
     fixtures: result,
   };
 }

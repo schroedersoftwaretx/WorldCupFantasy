@@ -27,6 +27,8 @@ import {
   type StatMetric,
 } from "./aggregate.js";
 import { teamOfTheStage, type TeamOfStage } from "./team-of-the-stage.js";
+import { globalAdp, type PlayerAdp } from "./adp.js";
+import { ownershipByPlayerId } from "./ownership.js";
 
 /** The raw counting stats the hub surfaces leaders for. */
 export const HUB_METRICS: readonly StatMetric[] = [
@@ -151,5 +153,70 @@ export async function getRecords(
     biggestHaul,
     topNationsByGoals,
     positionScarcity: scarcity,
+  };
+}
+
+// --- Phase 2: Draft Trends (public) ------------------------------------------
+
+/** One row of the public Draft Trends table: ADP analytics + global ownership. */
+export interface DraftTrendRow extends PlayerAdp {
+  /** Distinct fantasy teams (across eligible leagues) rostering the player. */
+  ownedCount: number;
+  /** ownedCount / totalFantasyTeams, in [0,1]. */
+  ownershipPct: number;
+}
+
+export interface DraftTrends {
+  /** Ownership denominator (fantasy teams in eligible leagues). */
+  totalFantasyTeams: number;
+  /** Take-rate denominator (drafts that have begun). */
+  totalDrafts: number;
+  /** One row per player drafted at least once, sorted by ADP ascending. */
+  rows: DraftTrendRow[];
+}
+
+export interface DraftTrendsQuery {
+  /** Scope ownership to finished-draft leagues. Default true. */
+  finishedDraftsOnly?: boolean;
+  /** Only consider COMPLETE drafts for ADP. Default false. */
+  completedDraftsOnly?: boolean;
+  /** Cap the row list. Omit for all drafted players. */
+  limit?: number;
+}
+
+/**
+ * Compose the public Draft Trends payload: every drafted player with their ADP
+ * analytics (reach/steal vs draft_rank, take-rate) and global ownership %.
+ * Filtering/sorting is done client-side on the page.
+ */
+export async function getDraftTrends(
+  db: Db | DbTx,
+  query: DraftTrendsQuery = {},
+): Promise<DraftTrends> {
+  const adp = await globalAdp(db, {
+    ...(query.completedDraftsOnly !== undefined
+      ? { completedDraftsOnly: query.completedDraftsOnly }
+      : {}),
+  });
+  const ownership = await ownershipByPlayerId(db, {
+    ...(query.finishedDraftsOnly !== undefined
+      ? { finishedDraftsOnly: query.finishedDraftsOnly }
+      : {}),
+  });
+
+  let rows: DraftTrendRow[] = adp.players.map((p) => {
+    const own = ownership.byPlayerId.get(p.playerId);
+    return {
+      ...p,
+      ownedCount: own?.ownedCount ?? 0,
+      ownershipPct: own?.ownershipPct ?? 0,
+    };
+  });
+  if (query.limit !== undefined) rows = rows.slice(0, query.limit);
+
+  return {
+    totalFantasyTeams: ownership.totalFantasyTeams,
+    totalDrafts: adp.totalDrafts,
+    rows,
   };
 }
