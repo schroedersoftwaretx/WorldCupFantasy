@@ -90,23 +90,23 @@ describe("Phase 2 recompute (integration)", () => {
     //                        -1 conceded +5 win = 11.25
     //   1002 Romero  (DEF): app1 +60' 1 -1 yellow +1 shotOff*0.5(0.5)
     //                        +4 tackles*0.5(2) +50 passes*0.05(2.5) = 6
-    //   1003 Messi   (FWD): app1 +60' 1 +2 goals*4(8) +4 SoT(4)
+    //   1003 Messi   (FWD): app1 +60' 1 +2 goals*5(10) +4 SoT(4)
     //                        +1 shotOff*0.5(0.5) +1 tackle*0.5(0.5)
-    //                        +34 passes*0.05(1.7) = 16.7
+    //                        +34 passes*0.05(1.7) = 18.7
     expect(pointsByPlayer.get("1001")).toBe(11.25);
     expect(pointsByPlayer.get("1002")).toBe(6);
-    expect(pointsByPlayer.get("1003")).toBe(16.7);
+    expect(pointsByPlayer.get("1003")).toBe(18.7);
     // Brazil (away, LOST 1-2; teamScored 1, conceded 2; no win bonus):
     //   2001 Alisson (GK):  app1 +60' 1 +3 saves +20 passes*0.05(1.0)
     //                        -2 conceded = 4
-    //   2002 Casemiro(MID): app1 +60' 1 +1 goal*5(5) +2 SoT(2)
+    //   2002 Casemiro(MID): app1 +60' 1 +1 goal*6(6) +2 SoT(2)
     //                        +1 shotOff*0.5(0.5) +5 tackles*0.5(2.5)
-    //                        +40 passes*0.05(2.0) = 14
+    //                        +40 passes*0.05(2.0) = 15
     //   2003 Vini    (FWD): app1 +60' 1 +1 assist*4(4) +1 SoT(1)
     //                        +3 shotOff*0.5(1.5) +1 tackle*0.5(0.5)
     //                        +25 passes*0.05(1.25) = 10.25
     expect(pointsByPlayer.get("2001")).toBe(4);
-    expect(pointsByPlayer.get("2002")).toBe(14);
+    expect(pointsByPlayer.get("2002")).toBe(15);
     expect(pointsByPlayer.get("2003")).toBe(10.25);
   });
 
@@ -133,7 +133,7 @@ describe("Phase 2 recompute (integration)", () => {
   it("a tweaked ruleset coexists with the default (new ruleset_version)", async () => {
     const tweaked = buildRuleset({
       ...DEFAULT_RULESET,
-      goalByPosition: { ...DEFAULT_RULESET.goalByPosition, FWD: 5 },
+      goalByPosition: { ...DEFAULT_RULESET.goalByPosition, FWD: 6 },
     });
     expect(tweaked.version).not.toBe(DEFAULT_RULESET.version);
 
@@ -146,8 +146,8 @@ describe("Phase 2 recompute (integration)", () => {
       .where(eq(scoreEntry.rulesetVersion, DEFAULT_RULESET.version));
     expect(defaultRows).toHaveLength(6);
 
-    // Tweaked Messi: FWD goal value 4 -> 5 adds 2*(5-4)=2 to his default
-    // 16.7, so 18.7.
+    // Tweaked Messi: FWD goal value 5 -> 6 adds 2*(6-5)=2 to his default
+    // 18.7, so 20.7.
     const playerRows = await ctx.db.select().from(player);
     const messi = playerRows.find((p) => p.sourcePlayerId === "1003");
     if (!messi) throw new Error("messi not seeded");
@@ -160,6 +160,6 @@ describe("Phase 2 recompute (integration)", () => {
           eq(scoreEntry.playerId, messi.id),
         ),
       );
-    expect(tweakedRows[0]?.points).toBe(18.7);
+    expect(tweakedRows[0]?.points).toBe(20.7);
   });
 });

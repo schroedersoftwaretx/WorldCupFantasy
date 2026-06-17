@@ -90,6 +90,31 @@ export const notificationStatusEnum = pgEnum("notification_status", [
   "FAILED",
 ]);
 
+// --- App-wide notification hub (Phase 0) ------------------------------------
+
+/**
+ * Channel a {@link notification} is delivered through. IN_APP rows surface in
+ * the bell/inbox; EMAIL rows are delivered out-of-band via the notify
+ * transport (Resend).
+ */
+export const notificationChannelEnum = pgEnum("notification_channel", [
+  "IN_APP",
+  "EMAIL",
+]);
+
+/**
+ * Lifecycle of an app-wide {@link notification}. Distinct from the draft's
+ * `notification_status` enum because in-app notifications add a READ state.
+ *   - IN_APP: created SENT (delivered to the inbox); READ once opened.
+ *   - EMAIL:  created PENDING; SENT / FAILED after a delivery attempt.
+ */
+export const appNotificationStatusEnum = pgEnum("app_notification_status", [
+  "PENDING",
+  "SENT",
+  "FAILED",
+  "READ",
+]);
+
 // --- national_team ----------------------------------------------------------
 
 export const nationalTeam = pgTable(
@@ -730,7 +755,94 @@ export const standingsSnapshot = pgTable(
   }),
 );
 
+// --- notification (Phase 0 hub) ---------------------------------------------
+
+/**
+ * App-wide durable notification queue. Generalizes the draft-only
+ * `draft_notification` table into something any feature can write to, with the
+ * same write-row-then-deliver guarantee: the row is persisted (PENDING for
+ * EMAIL, SENT for IN_APP) before any out-of-band delivery, so a notification is
+ * never lost if delivery is deferred or fails.
+ *
+ * `type` is free text (not an enum) so each feature phase can introduce its own
+ * kinds without a migration. `dedupe_key` (when set) suppresses repeats: the
+ * unique index on (manager_id, channel, dedupe_key) means re-enqueuing the same
+ * logical event for the same manager+channel is a no-op.
+ */
+export const notification = pgTable(
+  "notification",
+  {
+    id: serial("id").primaryKey(),
+    managerId: integer("manager_id")
+      .notNull()
+      .references(() => manager.id, { onDelete: "restrict" }),
+    /** The league this concerns, when league-scoped; NULL for app-wide. */
+    leagueId: integer("league_id").references(() => league.id, {
+      onDelete: "restrict",
+    }),
+    /** Extensible per-phase kind, e.g. "DRAFT_STARTED", "CHAT_MENTION". */
+    type: text("type").notNull(),
+    channel: notificationChannelEnum("channel").notNull(),
+    status: appNotificationStatusEnum("status").notNull().default("PENDING"),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    /** In-app deep link, e.g. "/leagues/3/draft". NULL when not applicable. */
+    link: text("link"),
+    /** When set, suppresses repeats per (manager, channel). */
+    dedupeKey: text("dedupe_key"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    readAt: timestamp("read_at", { withTimezone: true }),
+  },
+  (t) => ({
+    managerIdx: index("notification_manager_id_idx").on(t.managerId),
+    statusIdx: index("notification_status_idx").on(t.status),
+    dedupeUq: uniqueIndex("notification_manager_channel_dedupe_uq").on(
+      t.managerId,
+      t.channel,
+      t.dedupeKey,
+    ),
+  }),
+);
+
+// --- league_feature_flag (Phase 0) ------------------------------------------
+
+/**
+ * Per-league feature toggle. A row exists only for a flag a commissioner has
+ * explicitly set; absent rows fall back to the typed defaults in
+ * `src/data/league/feature-flags.ts`. `config` carries optional per-feature
+ * settings (jsonb) for flags that need them.
+ */
+export const leagueFeatureFlag = pgTable(
+  "league_feature_flag",
+  {
+    leagueId: integer("league_id")
+      .notNull()
+      .references(() => league.id, { onDelete: "restrict" }),
+    flag: text("flag").notNull(),
+    enabled: boolean("enabled").notNull().default(false),
+    config: jsonb("config"),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.leagueId, t.flag] }),
+    leagueIdx: index("league_feature_flag_league_id_idx").on(t.leagueId),
+  }),
+);
+
 // --- Type helpers (continued) ------------------------------------------------
+
+export type NotificationRow = typeof notification.$inferSelect;
+export type NotificationInsert = typeof notification.$inferInsert;
+export type NotificationChannel = (typeof notificationChannelEnum.enumValues)[number];
+export type AppNotificationStatus =
+  (typeof appNotificationStatusEnum.enumValues)[number];
+export type LeagueFeatureFlagRow = typeof leagueFeatureFlag.$inferSelect;
+export type LeagueFeatureFlagInsert = typeof leagueFeatureFlag.$inferInsert;
 
 export type MatchOddsRow = typeof matchOdds.$inferSelect;
 export type MatchOddsInsert = typeof matchOdds.$inferInsert;

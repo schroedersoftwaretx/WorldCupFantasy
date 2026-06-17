@@ -30,7 +30,7 @@ import type { StatsProvider } from "@/data/provider/types";
 import { ingestFixtureStats } from "@/data/ingest/fixture-stats";
 import { ingestSchedule } from "@/data/ingest/schedule";
 import { getUningestedFinishedFixtures } from "@/data/ingest/pending";
-import { recomputeAll } from "@/data/scoring/recompute";
+import { recomputeAllRulesets } from "@/data/scoring/recompute";
 import { DEFAULT_RULESET } from "@/data/scoring/ruleset";
 import { captureAllStandingsSnapshots } from "@/data/standings/snapshot";
 import { oddsProviderFromEnv } from "@/data/odds/odds-provider";
@@ -85,7 +85,9 @@ export function GET(request: Request): Promise<Response> {
     }
 
     // Step 3: always recompute scores from the latest stat_lines.
-    const scoreSummary = await recomputeAll(db, DEFAULT_RULESET);
+    // Recompute every league's ruleset (not just the default), so leagues with
+    // customised scoring keep populated standings.
+    const scoreSummary = await recomputeAllRulesets(db);
 
     // Step 3b: persist per-stage standings snapshots (rank movement, B2).
     // Internally per-league fault-tolerant; never blocks the pipeline.

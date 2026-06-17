@@ -19,11 +19,16 @@ import {
 import { redirect } from "next/navigation";
 
 import type { RosterViewData } from "@/web/api-types";
+import { formatPoints } from "@/web/format";
 import { getCurrentUser } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { getMembershipRole } from "@/web/queries";
 import { getRosterScores } from "@/web/standings-view";
 import { flagImg } from "@/web/flags";
+import { HUB_RULESET_VERSION } from "@/web/stats-params";
+import { teamInsights, type TeamInsights } from "@/data/stats/differentials";
+
+import { DifferentialsPanel } from "./differentials-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +80,7 @@ export default async function RosterViewPage({
 
   let role: string | null = null;
   let data: RosterViewData | null = null;
+  let insights: TeamInsights | null = null;
   let error: string | null = null;
 
   try {
@@ -82,6 +88,14 @@ export default async function RosterViewPage({
     role = await getMembershipRole(db, lgId, user.manager.id);
     if (role) {
       data = await getRosterScores(db, lgId, tmId);
+      // Privacy: differentials are only ever shown for the viewer's OWN team.
+      if (data.managerId === user.manager.id) {
+        insights = await teamInsights(db, {
+          leagueId: lgId,
+          teamId: tmId,
+          rulesetVersion: HUB_RULESET_VERSION,
+        });
+      }
     }
   } catch (e) {
     error = e instanceof Error ? e.message : "could not load roster";
@@ -123,7 +137,7 @@ export default async function RosterViewPage({
       {back}
       <h1>
         {data.teamName}
-        <span className="tag">{data.total} pts</span>
+        <span className="tag">{formatPoints(data.total)} pts</span>
         {data.players.some((p) => p.eliminated) ? (
           <span className="tag tag-alive">
             {data.players.filter((p) => !p.eliminated).length}/
@@ -223,7 +237,7 @@ export default async function RosterViewPage({
                             ].join(" ")}
                             title={p.inXi ? "In best-ball XI" : "Bench"}
                           >
-                            {p.points > 0 || p.inXi ? p.points : "-"}
+                            {p.points > 0 || p.inXi ? formatPoints(p.points) : "-"}
                           </td>
                         ))}
                         <td className="num player-total">{player.totalPoints}</td>
@@ -235,6 +249,7 @@ export default async function RosterViewPage({
               </section>
             );
           })}
+          {insights ? <DifferentialsPanel insights={insights} /> : null}
         </PlayerStatsProvider>
       )}
     </>

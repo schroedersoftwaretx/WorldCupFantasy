@@ -55,7 +55,7 @@ import {
 import { resolveProviderName, statsProviderFromEnv } from "../data/provider/select.js";
 import type { StatsProvider } from "../data/provider/types.js";
 import { addPlayerToRoster, getRoster, getRosterCounts } from "../data/roster/service.js";
-import { recomputeAll, recomputeForFixture } from "../data/scoring/recompute.js";
+import { recomputeAll, recomputeAllRulesets, recomputeForFixture } from "../data/scoring/recompute.js";
 import { oddsProviderFromEnv } from "../data/odds/odds-provider.js";
 import { stageOddsProviderFromEnv } from "../data/odds/stage-odds-provider.js";
 import { recomputeProjections } from "../data/projection/recompute-projections.js";
@@ -156,9 +156,8 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
       ingested += 1;
     }
     console.log(`\ningested ${ingested} fixture(s) -- recomputing scores...`);
-    const ruleset = DEFAULT_RULESET;
-    const summary = await recomputeAll(db, ruleset);
-    console.log(`score all ruleset=${ruleset.version} ${formatSummary(summary)}`);
+    const r = await recomputeAllRulesets(db);
+    console.log(`score: ${r.rulesets} ruleset(s) ${formatSummary(r.total)}`);
   },
   "ingest:all": async ({ db, getProvider }) => {
     // One command, whichever source is configured (see STATS_PROVIDER).
@@ -178,8 +177,8 @@ const SUBCOMMANDS: Record<string, Subcommand> = {
       console.log(`  fx=${fx.sourceFixtureId} stage=${fx.stage} ${formatSummary(summary)}`);
     }
 
-    const score = await recomputeAll(db, DEFAULT_RULESET);
-    console.log(`score all ruleset=${DEFAULT_RULESET.version} ${formatSummary(score)}`);
+    const score = await recomputeAllRulesets(db);
+    console.log(`score: ${score.rulesets} ruleset(s) ${formatSummary(score.total)}`);
 
     if (env["ODDS_API_KEY"]) {
       try {

@@ -72,10 +72,10 @@ describe("scoreStatLine: appearance + minutes", () => {
 
 describe("scoreStatLine: goals scale by position", () => {
   const cases: Array<{ pos: Position; expected: number }> = [
-    { pos: "GK", expected: 10 },
-    { pos: "DEF", expected: 6 },
-    { pos: "MID", expected: 5 },
-    { pos: "FWD", expected: 4 },
+    { pos: "GK", expected: 12 },
+    { pos: "DEF", expected: 7 },
+    { pos: "MID", expected: 6 },
+    { pos: "FWD", expected: 5 },
   ];
   for (const { pos, expected } of cases) {
     it(`${pos} scores ${expected} per goal`, () => {
@@ -94,7 +94,7 @@ describe("scoreStatLine: goals scale by position", () => {
       "FWD",
       DEFAULT_RULESET,
     );
-    expect(res.breakdown.goals).toBe(8);
+    expect(res.breakdown.goals).toBe(10);
   });
 });
 
@@ -247,7 +247,7 @@ describe("scoreStatLine: deductions", () => {
 describe("scoreStatLine: full composition", () => {
   it("rewards a brace + clean sheet for a defender", () => {
     // 90 mins, 2 goals, 1 yellow, team conceded 0:
-    // 1 + 1 + (2*6) + (-1) + 5 = 18
+    // 1 + 1 + (2*7) + (-1) + 5 = 20
     const res = scoreStatLine(
       makeStat({
         minutesPlayed: 90,
@@ -258,7 +258,7 @@ describe("scoreStatLine: full composition", () => {
       "DEF",
       DEFAULT_RULESET,
     );
-    expect(res.points).toBe(18);
+    expect(res.points).toBe(20);
   });
 
   it("scores a heroic GK performance: 90', CS, penalty saved, 6 saves", () => {
@@ -286,11 +286,33 @@ describe("ruleset version stability", () => {
     expect(a.version).toBe(version);
   });
 
-  it("any change to a point value yields a new version", () => {
-    const tweaked = buildRuleset({
+  it("any change to a point value yields a new version (incl. nested maps)", () => {
+    // Regression guard: goalByPosition / cleanSheetByPosition are nested maps.
+    // An earlier hash bug fed Object.keys(values).sort() as JSON.stringify's
+    // allowlist arg, which dropped every nested key, so goal/clean-sheet
+    // changes silently kept the same version. Each tweak below must produce a
+    // distinct version, and all three must differ from each other.
+    const goalTweak = buildRuleset({
       ...DEFAULT_RULESET,
-      goalByPosition: { ...DEFAULT_RULESET.goalByPosition, FWD: 5 },
+      goalByPosition: { ...DEFAULT_RULESET.goalByPosition, FWD: 50 },
     });
-    expect(tweaked.version).not.toBe(DEFAULT_RULESET.version);
+    const cleanSheetTweak = buildRuleset({
+      ...DEFAULT_RULESET,
+      cleanSheetByPosition: { ...DEFAULT_RULESET.cleanSheetByPosition, DEF: 9 },
+    });
+    const scalarTweak = buildRuleset({ ...DEFAULT_RULESET, assist: 99 });
+    expect(goalTweak.version).not.toBe(DEFAULT_RULESET.version);
+    expect(cleanSheetTweak.version).not.toBe(DEFAULT_RULESET.version);
+    expect(scalarTweak.version).not.toBe(DEFAULT_RULESET.version);
+    expect(
+      new Set([goalTweak.version, cleanSheetTweak.version, scalarTweak.version]).size,
+    ).toBe(3);
+  });
+
+  it("ignores an incoming version field when hashing", () => {
+    // buildRuleset must recompute the version, not trust a spread-in one, so
+    // `{ ...DEFAULT_RULESET }` (which carries a version) round-trips cleanly.
+    const rebuilt = buildRuleset({ ...DEFAULT_RULESET });
+    expect(rebuilt.version).toBe(DEFAULT_RULESET.version);
   });
 });

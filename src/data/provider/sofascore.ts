@@ -149,9 +149,18 @@ export class SofascoreProvider implements StatsProvider {
     // Past ("last") and upcoming ("next") events are paginated separately.
     for (const direction of ["last", "next"] as const) {
       for (let page = 0; page < this.cfg.maxPages; page += 1) {
-        const resp = await this.get<{ events?: SsEvent[]; hasNextPage?: boolean }>(
-          `/unique-tournament/${ut}/season/${season}/events/${direction}/${page}`,
-        );
+        let resp: { events?: SsEvent[]; hasNextPage?: boolean };
+        try {
+          resp = await this.get<{ events?: SsEvent[]; hasNextPage?: boolean }>(
+            `/unique-tournament/${ut}/season/${season}/events/${direction}/${page}`,
+          );
+        } catch (err) {
+          // SofaScore returns 404 (not an empty 200) once you page past the
+          // last page of events. Treat it as "no more pages" for this
+          // direction rather than a fatal error.
+          if (err instanceof Error && err.message.includes("HTTP 404")) break;
+          throw err;
+        }
         const batch = resp.events ?? [];
         for (const ev of batch) {
           if (!seen.has(ev.id)) {

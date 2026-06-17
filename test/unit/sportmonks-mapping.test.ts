@@ -118,9 +118,9 @@ describe("mapSmFixtureStats", () => {
 
     expect(pointsOf("9001")).toBe(11.25); // GK: +saves +passes -1 conceded +5 win
     expect(pointsOf("9002")).toBe(7); // DEF: tackles + cross + passes - yellow
-    expect(pointsOf("9003")).toBe(18.2); // FWD: 2 goals + shots + cross + passes
+    expect(pointsOf("9003")).toBe(20.2); // FWD: 2 goals + shots + cross + passes
     expect(pointsOf("9004")).toBe(4); // GK: saves + passes - 2 conceded, no win
-    expect(pointsOf("9005")).toBe(14); // MID: goal + shots + tackles + passes
+    expect(pointsOf("9005")).toBe(15); // MID: goal + shots + tackles + passes
     expect(pointsOf("9006")).toBe(12.75); // FWD: assist + shots + cross + passes
   });
 });

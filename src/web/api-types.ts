@@ -196,6 +196,11 @@ export interface DraftBoardPlayer {
    * stages that have data.
    */
   stageProbabilities: Partial<Record<StageKey, number>> | null;
+  /**
+   * Cross-league average draft position (Phase 2 live overlay). Read-only
+   * context; null when the player has never been drafted in any league.
+   */
+  adp: number | null;
   /** Whether adding this player would be a legal roster move for the viewer. */
   legal: boolean;
 }

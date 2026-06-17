@@ -22,7 +22,7 @@ interface PlayerBoardProps {
 
 const POSITIONS = ["GK", "DEF", "MID", "FWD"];
 const MAX_ROWS = 200;
-type SortKey = "rank" | "proj" | "stage" | "name" | "pos";
+type SortKey = "rank" | "proj" | "adp" | "stage" | "name" | "pos";
 
 export default function PlayerBoard({
   players,
@@ -77,6 +77,12 @@ export default function PlayerBoard({
     const POS_ORDER: Record<string, number> = { GK: 0, DEF: 1, MID: 2, FWD: 3 };
     list.sort((a, b) => {
       if (sort === "proj") return (b.projectedTotalPoints ?? -1) - (a.projectedTotalPoints ?? -1);
+      if (sort === "adp") {
+        // Lowest ADP (earliest off the board) first; never-drafted last.
+        const aa = a.adp ?? Number.POSITIVE_INFINITY;
+        const bb = b.adp ?? Number.POSITIVE_INFINITY;
+        return aa - bb;
+      }
       if (sort === "stage" && selectedStage) {
         const av = a.stageProbabilities?.[selectedStage] ?? -1;
         const bv = b.stageProbabilities?.[selectedStage] ?? -1;
@@ -179,6 +185,17 @@ export default function PlayerBoard({
                     Proj. Pts{sortArrow("proj")}
                   </button>
                 </th>
+                <th className="num">
+                  <button
+                    type="button"
+                    className="sort-th"
+                    aria-pressed={sort === "adp"}
+                    onClick={() => sortBy("adp")}
+                    title="Average draft position across all leagues (live ADP)"
+                  >
+                    ADP{sortArrow("adp")}
+                  </button>
+                </th>
                 {selectedStage ? (
                   <th className="num">
                     <button
@@ -225,6 +242,7 @@ export default function PlayerBoard({
                       ? p.projectedTotalPoints.toFixed(1)
                       : "-"}
                   </td>
+                  <td className="num">{p.adp != null ? p.adp : "-"}</td>
                   {selectedStage ? (
                     <td className="num">
                       {(() => {

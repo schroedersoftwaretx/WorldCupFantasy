@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { getCurrentUser } from "@/web/auth/current-user";
 
+import NotificationBell from "./notification-bell";
 import SignOutButton from "./sign-out-button";
 import "./globals.css";
 
@@ -33,8 +34,14 @@ export default async function RootLayout({
           <Link href="/" className="site-title">
             World Cup Fantasy
           </Link>
+          <nav className="site-nav">
+            <Link href="/stats" className="site-nav-link">
+              Stats
+            </Link>
+          </nav>
           {displayName ? (
             <span className="user-chip">
+              <NotificationBell />
               {displayName}
               <SignOutButton />
             </span>
