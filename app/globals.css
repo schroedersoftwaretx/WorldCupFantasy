@@ -1422,3 +1422,8 @@ details[open] .scoring-rules-summary::before {
   border-bottom: 1px solid var(--border, #eee);
 }
 .diff-metric { margin-left: auto; white-space: nowrap; }
+
+/* --- Per-week roster pitch (formation + week selector) ------------------- */
+.roster-pitch { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.roster-pitch .stage-nav { flex-wrap: wrap; justify-content: center; }
+.pitch-week-caption { margin: 0; text-align: center; }

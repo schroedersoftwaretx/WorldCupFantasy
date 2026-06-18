@@ -128,6 +128,18 @@ export async function getRosterScores(
     return sum;
   }
 
+  // Whether the player has any score row in the stage, i.e. they featured in at
+  // least one of that period's fixtures. Powers the per-week pitch fill: a
+  // player only appears on the pitch once they have a result.
+  function playerAppearedInStage(playerId: number, stage: Stage): boolean {
+    for (const s of scores) {
+      if (s.playerId === playerId && stageByFixtureId.get(s.fixtureId) === stage) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // --- best-ball XI per period -----------------------------------------
   // Build the ScoredPlayer roster for each period so we can call the
   // same optimizer used by computeStandings.
@@ -169,7 +181,12 @@ export async function getRosterScores(
       const points = playerPointsInStage(pid, stage);
       const inXi = xiPlayerIds[idx]?.has(pid) ?? false;
       if (inXi) totalPoints += points;
-      return { stage, points, inXi };
+      return {
+        stage,
+        points,
+        inXi,
+        appeared: playerAppearedInStage(pid, stage),
+      };
     });
     return {
       playerId: pid,

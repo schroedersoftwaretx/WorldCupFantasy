@@ -243,6 +243,9 @@ export interface RosterPlayerScore {
     points: number;
     /** True when this player was selected in the best-ball XI for the period. */
     inXi: boolean;
+    /** True when the player featured (has a score row) in that period. Drives
+     * the per-week pitch's gradual fill. */
+    appeared: boolean;
   }>;
 }
 

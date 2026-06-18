@@ -1,0 +1,19 @@
+// vitest.config.ts
+import { defineConfig } from "file:///sessions/relaxed-awesome-brown/mnt/Fantasy%20World%20Cup/node_modules/vitest/dist/config.js";
+var vitest_config_default = defineConfig({
+  test: {
+    // Integration tests spin up a Testcontainers Postgres — generous timeout.
+    testTimeout: 12e4,
+    hookTimeout: 12e4,
+    // Run integration tests serially: one shared container per file.
+    pool: "forks",
+    poolOptions: {
+      forks: { singleFork: false }
+    },
+    include: ["test/**/*.test.ts"]
+  }
+});
+export {
+  vitest_config_default as default
+};
+//# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsidml0ZXN0LmNvbmZpZy50cyJdLAogICJzb3VyY2VzQ29udGVudCI6IFsiY29uc3QgX192aXRlX2luamVjdGVkX29yaWdpbmFsX2Rpcm5hbWUgPSBcIi9zZXNzaW9ucy9yZWxheGVkLWF3ZXNvbWUtYnJvd24vbW50L0ZhbnRhc3kgV29ybGQgQ3VwXCI7Y29uc3QgX192aXRlX2luamVjdGVkX29yaWdpbmFsX2ZpbGVuYW1lID0gXCIvc2Vzc2lvbnMvcmVsYXhlZC1hd2Vzb21lLWJyb3duL21udC9GYW50YXN5IFdvcmxkIEN1cC92aXRlc3QuY29uZmlnLnRzXCI7Y29uc3QgX192aXRlX2luamVjdGVkX29yaWdpbmFsX2ltcG9ydF9tZXRhX3VybCA9IFwiZmlsZTovLy9zZXNzaW9ucy9yZWxheGVkLWF3ZXNvbWUtYnJvd24vbW50L0ZhbnRhc3klMjBXb3JsZCUyMEN1cC92aXRlc3QuY29uZmlnLnRzXCI7aW1wb3J0IHsgZGVmaW5lQ29uZmlnIH0gZnJvbSBcInZpdGVzdC9jb25maWdcIjtcblxuZXhwb3J0IGRlZmF1bHQgZGVmaW5lQ29uZmlnKHtcbiAgdGVzdDoge1xuICAgIC8vIEludGVncmF0aW9uIHRlc3RzIHNwaW4gdXAgYSBUZXN0Y29udGFpbmVycyBQb3N0Z3JlcyBcdTIwMTQgZ2VuZXJvdXMgdGltZW91dC5cbiAgICB0ZXN0VGltZW91dDogMTIwXzAwMCxcbiAgICBob29rVGltZW91dDogMTIwXzAwMCxcbiAgICAvLyBSdW4gaW50ZWdyYXRpb24gdGVzdHMgc2VyaWFsbHk6IG9uZSBzaGFyZWQgY29udGFpbmVyIHBlciBmaWxlLlxuICAgIHBvb2w6IFwiZm9ya3NcIixcbiAgICBwb29sT3B0aW9uczoge1xuICAgICAgZm9ya3M6IHsgc2luZ2xlRm9yazogZmFsc2UgfSxcbiAgICB9LFxuICAgIGluY2x1ZGU6IFtcInRlc3QvKiovKi50ZXN0LnRzXCJdLFxuICB9LFxufSk7XG4iXSwKICAibWFwcGluZ3MiOiAiO0FBQXlWLFNBQVMsb0JBQW9CO0FBRXRYLElBQU8sd0JBQVEsYUFBYTtBQUFBLEVBQzFCLE1BQU07QUFBQTtBQUFBLElBRUosYUFBYTtBQUFBLElBQ2IsYUFBYTtBQUFBO0FBQUEsSUFFYixNQUFNO0FBQUEsSUFDTixhQUFhO0FBQUEsTUFDWCxPQUFPLEVBQUUsWUFBWSxNQUFNO0FBQUEsSUFDN0I7QUFBQSxJQUNBLFNBQVMsQ0FBQyxtQkFBbUI7QUFBQSxFQUMvQjtBQUNGLENBQUM7IiwKICAibmFtZXMiOiBbXQp9Cg==

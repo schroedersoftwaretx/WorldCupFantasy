@@ -11,7 +11,7 @@
  * URL: /leagues/[leagueId]/roster/[teamId]
  */
 import Link from "next/link";
-import { BestLineupViz } from "../../draft/best-lineup";
+import { RosterPitch } from "./roster-pitch";
 import {
   PlayerStatsProvider,
   PlayerStatButton,
@@ -160,7 +160,7 @@ export default async function RosterViewPage({
       ) : (
         <PlayerStatsProvider leagueId={lgId}>
           <div className="lineup-roster-wrap">
-            <BestLineupViz roster={data.players} />
+<RosterPitch players={data.players} />
           </div>
           <div className="roster-legend">
             <span className="xi-dot in-xi-dot" /> In best-ball XI
