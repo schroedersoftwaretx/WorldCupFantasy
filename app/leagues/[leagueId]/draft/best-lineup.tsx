@@ -1,16 +1,16 @@
 /**
- * BestLineupViz — SVG pitch graphic showing the viewer's current best lineup.
+ * Pitch graphic + lineup helpers.
  *
- * Formation rules (matching the best-ball ruleset):
- *   Base:       1 GK + 4 DEF + 2 MID + 2 FWD  (9 players)
- *   FLEX_DM:    +1 DEF (→5-back) or +1 MID
- *   FLEX_MF:    +1 MID or +1 FWD
- *   Display default (empty team): 4-3-3
+ * Two public views share one SVG pitch (PitchSvg):
+ *   - BestLineupViz: a single projected/best XI. Used in the draft room (by
+ *     draft rank, pre-tournament) and anywhere a one-shot "best XI" is wanted.
+ *   - The roster page's per-week pitch (see roster-pitch.tsx) renders PitchSvg
+ *     directly from computePeriodLineup for the selected scoring period.
  *
- * Each row is centred to its actual player count, so e.g. a 5-3-2 shows two
- * central strikers rather than two forwards spread across a 3-wide row.
- * A row with no players falls back to the 4/3/3 placeholder shape (dashed
- * circles) so an empty/partial team still reads as a team.
+ * Formation rules match the best-ball ruleset (1 GK + 10 outfield; DEF 4-5,
+ * MID 2-4, FWD 2-3 -> 4-3-3 / 4-4-2 / 5-2-3 / 5-3-2). Each row is centred on
+ * its real player count; empty slots render as dashed placeholders so a partial
+ * or not-yet-played team still reads as a team.
  *
  * When rendered inside a <PlayerStatsProvider> (the roster page), clicking a
  * filled circle opens that player's score breakdown. Outside a provider
@@ -31,20 +31,26 @@ const PITCH_W = 300;
 const PITCH_H = 440;
 const PLAYER_R = 22;
 
-interface Player {
+export interface Player {
   playerId?: number;
   fullName: string;
   position: string;
   /** Lower is better; null or 0 = unranked. */
   draftRank?: number | null;
   /**
-   * Total points the player scored (summed across scoring periods). Present on
-   * the roster page once matches are scored. When any roster player carries
-   * points, the pitch shows the genuine best-ball OPTIMUM by points (the same
-   * optimizer the standings use) instead of the draft-rank projection, so the
-   * displayed formation matches what actually scored.
+   * Total points the player scored (summed across scoring periods, or within
+   * one period for the per-week pitch). When any roster player carries points,
+   * the pitch shows the genuine best-ball OPTIMUM by points (the same optimizer
+   * the standings use) instead of the draft-rank projection.
    */
   points?: number;
+  /**
+   * Whether the player has actually featured (has a result) in the period being
+   * displayed. Drives the per-week pitch's "fills in gradually" behaviour: a
+   * player is only placed on the pitch once they have appeared; everyone else
+   * is an empty slot.
+   */
+  appeared?: boolean;
 }
 
 interface Slot {
@@ -52,7 +58,7 @@ interface Slot {
   playerId?: number | undefined;
 }
 
-interface Lineup {
+export interface Lineup {
   gk: Slot[];
   def: Slot[];
   mid: Slot[];
@@ -79,12 +85,14 @@ function toSlots(players: Player[], total: number): Slot[] {
 }
 
 const PITCH_POSITIONS: readonly Position[] = ["GK", "DEF", "MID", "FWD"];
+/** The skeleton shown before a legal XI can be fielded (4-3-3). */
+const DEFAULT_SHELL = { DEF: 4, MID: 3, FWD: 3 } as const;
 
 /**
- * Points-aware lineup: run the canonical best-ball optimizer over the roster's
- * actual points and render exactly the XI it selects. Returns null when the
- * roster cannot field a legal XI (e.g. an incomplete team), so the caller can
- * fall back to the draft-rank projection.
+ * Points-aware lineup: run the canonical best-ball optimizer over the given
+ * players' points and render exactly the XI it selects. Returns null when they
+ * cannot field a legal XI (e.g. an incomplete/partial roster), so the caller
+ * can fall back to a projection or a default skeleton.
  */
 function pointsLineup(
   roster: Player[],
@@ -106,7 +114,7 @@ function pointsLineup(
   try {
     best = optimizeBestBall(scored);
   } catch {
-    return null; // roster too thin to field any legal XI
+    return null; // too thin to field any legal XI
   }
 
   const playerById = new Map<number, Player>(
@@ -135,6 +143,49 @@ function pointsLineup(
       fwd: toSlots(fwdPlayers, fwdPlayers.length || 3),
     },
     formation: formationLabel(best.formation),
+  };
+}
+
+/**
+ * Per-period pitch: place only the players who have APPEARED (have a result)
+ * in the period, so the XI fills in gradually as the week's matches are played.
+ *
+ *  - Once the appeared players can field a legal XI, show the genuine best-ball
+ *    optimum (this re-optimises, and can change formation, as more scores land
+ *    or are recalculated).
+ *  - Before then, show a default 4-3-3 skeleton with the appeared players slotted
+ *    by position (best first) and the remaining slots empty.
+ */
+export function computePeriodLineup(
+  players: Player[],
+): { lineup: Lineup; formation: string } {
+  const appeared = players.filter(
+    (p) =>
+      p.appeared === true &&
+      p.playerId !== undefined &&
+      (PITCH_POSITIONS as readonly string[]).includes(p.position),
+  );
+
+  const optimum = pointsLineup(appeared);
+  if (optimum) return optimum;
+
+  const byPos: Record<Position, Player[]> = { GK: [], DEF: [], MID: [], FWD: [] };
+  for (const p of appeared) byPos[p.position as Position].push(p);
+  const pointsOf = (p: Player): number => p.points ?? 0;
+  for (const pos of PITCH_POSITIONS) {
+    byPos[pos].sort(
+      (a, b) => pointsOf(b) - pointsOf(a) || (a.playerId ?? 0) - (b.playerId ?? 0),
+    );
+  }
+
+  return {
+    lineup: {
+      gk: toSlots(byPos.GK.slice(0, 1), 1),
+      def: toSlots(byPos.DEF.slice(0, DEFAULT_SHELL.DEF), DEFAULT_SHELL.DEF),
+      mid: toSlots(byPos.MID.slice(0, DEFAULT_SHELL.MID), DEFAULT_SHELL.MID),
+      fwd: toSlots(byPos.FWD.slice(0, DEFAULT_SHELL.FWD), DEFAULT_SHELL.FWD),
+    },
+    formation: `${DEFAULT_SHELL.DEF}-${DEFAULT_SHELL.MID}-${DEFAULT_SHELL.FWD}`,
   };
 }
 
@@ -263,7 +314,7 @@ function PlayerCircle({
       }
       className={clickable ? "pitch-player clickable" : "pitch-player"}
     >
-      {clickable ? <title>{name} — view stats</title> : null}
+      {clickable ? <title>{name} &mdash; view stats</title> : null}
       <circle
         cx={x} cy={y} r={PLAYER_R}
         fill={empty ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.88)"}
@@ -285,9 +336,15 @@ function PlayerCircle({
   );
 }
 
-export function BestLineupViz({ roster }: { roster: Player[] }) {
+/** The shared SVG pitch. Renders a given lineup; rows top-to-bottom FWD->GK. */
+export function PitchSvg({
+  lineup,
+  formation,
+}: {
+  lineup: Lineup;
+  formation: string;
+}) {
   const { openStats } = usePlayerStats();
-  const { lineup, formation } = computeLineup(roster);
 
   const rows: { slots: Slot[]; y: number }[] = [
     { slots: lineup.fwd, y: 78 },
@@ -302,7 +359,7 @@ export function BestLineupViz({ roster }: { roster: Player[] }) {
       <svg
         viewBox={`0 0 ${PITCH_W} ${PITCH_H}`}
         className="pitch-svg"
-        aria-label={`Best lineup: ${formation} formation`}
+        aria-label={`Lineup: ${formation} formation`}
       >
         {/* Pitch surface */}
         <rect width={PITCH_W} height={PITCH_H} rx={6} fill="#2d7a3a" />
@@ -352,4 +409,9 @@ export function BestLineupViz({ roster }: { roster: Player[] }) {
       </svg>
     </div>
   );
+}
+
+export function BestLineupViz({ roster }: { roster: Player[] }) {
+  const { lineup, formation } = computeLineup(roster);
+  return <PitchSvg lineup={lineup} formation={formation} />;
 }
