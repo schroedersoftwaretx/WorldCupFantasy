@@ -1427,3 +1427,302 @@ details[open] .scoring-rules-summary::before {
 .roster-pitch { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
 .roster-pitch .stage-nav { flex-wrap: wrap; justify-content: center; }
 .pitch-week-caption { margin: 0; text-align: center; }
+
+/* === Phase 8: accessibility + notifications/draft polish ================== */
+
+/*
+ * App-wide keyboard focus ring. Only shows for keyboard users (:focus-visible),
+ * so mouse clicks stay clean. Covers every interactive control, including the
+ * sort-header buttons and the now-focusable scrollable table regions.
+ */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Scrollable table regions: a subtle affordance when focused for keyboard. */
+.table-scroll:focus-visible,
+.board-scroll:focus-visible,
+.prefs-scroll:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/*
+ * Touch tap targets. On coarse (touch) pointers, give small controls a >=44px
+ * hit area per WCAG 2.5.5, without enlarging them on the desktop.
+ */
+@media (pointer: coarse) {
+  .btn-sm,
+  .btn-icon,
+  .timer-preset,
+  .pref-toggle,
+  .notif-settings-link {
+    min-height: 44px;
+  }
+  .btn-icon {
+    min-width: 44px;
+  }
+}
+
+/* --- notification bell: settings link ------------------------------------- */
+.notif-dropdown-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.notif-dropdown-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.notif-settings-link {
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* --- notification preferences settings ------------------------------------ */
+.prefs-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.prefs-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.prefs-table th,
+.prefs-table td {
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.prefs-table thead th {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.prefs-row-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.prefs-label {
+  font-weight: 600;
+}
+.pref-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+.pref-toggle input {
+  width: 18px;
+  height: 18px;
+}
+.pref-toggle-text {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* --- draft pick queue ----------------------------------------------------- */
+.board-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.btn-queue,
+.btn-queued {
+  background: var(--card);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+.btn-queued {
+  background: var(--accent-bg);
+}
+.queue-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.queue-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+}
+.queue-item.taken {
+  opacity: 0.55;
+}
+.queue-rank {
+  font-weight: 700;
+  color: var(--muted);
+  min-width: 1.4rem;
+  text-align: right;
+}
+.queue-name {
+  flex: 1;
+  min-width: 0;
+}
+.queue-controls {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+.btn-icon {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--fg);
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0.3rem 0.5rem;
+}
+.btn-icon:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.btn-icon-warn {
+  color: var(--error);
+}
+
+/* --- draft timer / ticker / best-available hints -------------------------- */
+.draft-banner-clock {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.draft-timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+.draft-timer.urgent {
+  color: #ffffff;
+  background: var(--error);
+  border-color: var(--error);
+  animation: timer-flash 1s ease-in-out infinite;
+}
+.draft-timer.overdue {
+  color: #ffffff;
+  background: var(--error);
+  border-color: var(--error);
+}
+@keyframes timer-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .draft-timer.urgent { animation: none; }
+}
+.picks-ticker,
+.best-available {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  font-size: 0.88rem;
+}
+.picks-ticker-label,
+.best-available-label {
+  font-weight: 700;
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+.ticker-pick,
+.best-available-item {
+  flex: 0 0 auto;
+}
+.best-available-item + .best-available-item,
+.ticker-pick + .ticker-pick {
+  border-left: 1px solid var(--border);
+  padding-left: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  /* Keep the new queue/board action buttons from cramping on phones. */
+  .board-actions { flex-direction: column; }
+  .prefs-table th,
+  .prefs-table td { padding: 0.5rem 0.35rem; }
+}
+
+/* --- Player Explorer (Stats Hub) ---------------------------------------- */
+.explorer-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin: 1rem 0 0.5rem;
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+}
+.explorer-field { display: flex; flex-direction: column; gap: 0.3rem; }
+.explorer-field > span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.explorer-field select {
+  font: inherit;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  padding: 0.4rem 0.55rem;
+  min-width: 11rem;
+}
+.explorer-apply {
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+  background: #2d7a3a;
+  border: 1px solid #2d7a3a;
+  border-radius: 6px;
+  padding: 0.46rem 1.1rem;
+}
+.explorer-apply:hover { background: #25682f; }
+
+/* Sortable numeric column headers */
+.sort-th {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.05rem;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sort-th:hover { text-decoration: underline; }
+.sort-th-active { font-weight: 700; }
+.sort-arrow { color: #9ad7a9; font-weight: 700; }
+.explorer-table td.sort-col { background: rgba(154, 215, 169, 0.12); font-weight: 600; }

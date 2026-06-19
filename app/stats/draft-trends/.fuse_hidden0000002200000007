@@ -115,7 +115,7 @@ export function DraftTrendsTable({
       {filtered.length === 0 ? (
         <p className="notice">No players match those filters.</p>
       ) : (
-        <div className="table-scroll" tabIndex={0} role="region" aria-label="Scrollable table (use arrow keys)">
+        <div className="table-scroll">
           <table>
             <thead>
               <tr>

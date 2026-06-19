@@ -18,6 +18,10 @@ interface PlayerBoardProps {
   canDraft: boolean;
   busy: boolean;
   onDraft: (playerId: number) => void;
+  /** Player ids currently in the viewer's queue (for the toggle state). */
+  queuedIds?: ReadonlySet<number>;
+  /** Add/remove a player from the viewer's queue. */
+  onToggleQueue?: (playerId: number, queued: boolean) => void;
 }
 
 const POSITIONS = ["GK", "DEF", "MID", "FWD"];
@@ -29,6 +33,8 @@ export default function PlayerBoard({
   canDraft,
   busy,
   onDraft,
+  queuedIds,
+  onToggleQueue,
 }: PlayerBoardProps) {
   const [search, setSearch] = useState("");
   const [position, setPosition] = useState("ALL");
@@ -161,7 +167,12 @@ export default function PlayerBoard({
       {shown.length === 0 ? (
         <p className="notice">No players match those filters.</p>
       ) : (
-        <div className="board-scroll">
+        <div
+          className="board-scroll"
+          tabIndex={0}
+          role="region"
+          aria-label="Available players (scrollable, use arrow keys)"
+        >
           <table>
             <thead>
               <tr>
@@ -273,19 +284,43 @@ export default function PlayerBoard({
                     {p.nationalTeam}
                   </td>
                   <td>
-                    <button
-                      type="button"
-                      className="btn-sm"
-                      disabled={!canDraft || !p.legal || busy}
-                      title={
-                        p.legal
-                          ? "Draft this player"
-                          : "Adding this player would break your roster minimums or caps"
-                      }
-                      onClick={() => onDraft(p.id)}
-                    >
-                      Draft
-                    </button>
+                    <div className="board-actions">
+                      <button
+                        type="button"
+                        className="btn-sm"
+                        disabled={!canDraft || !p.legal || busy}
+                        title={
+                          p.legal
+                            ? "Draft this player"
+                            : "Adding this player would break your roster minimums or caps"
+                        }
+                        onClick={() => onDraft(p.id)}
+                      >
+                        Draft
+                      </button>
+                      {onToggleQueue ? (
+                        (() => {
+                          const queued = queuedIds?.has(p.id) ?? false;
+                          return (
+                            <button
+                              type="button"
+                              className={
+                                queued ? "btn-sm btn-queued" : "btn-sm btn-queue"
+                              }
+                              aria-pressed={queued}
+                              title={
+                                queued
+                                  ? "Remove from your pick queue"
+                                  : "Add to your pick queue"
+                              }
+                              onClick={() => onToggleQueue(p.id, !queued)}
+                            >
+                              {queued ? "Queued" : "+ Queue"}
+                            </button>
+                          );
+                        })()
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ))}

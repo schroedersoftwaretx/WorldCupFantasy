@@ -132,7 +132,7 @@ export default function StandingsPeriodTable({
 
   return (
     <>
-      <div className="table-scroll" tabIndex={0} role="region" aria-label="Scrollable table (use arrow keys)">
+      <div className="table-scroll">
         <table className="period-table">
           <thead>
             <tr>

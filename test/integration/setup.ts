@@ -83,7 +83,7 @@ export function setupContainer(): { ctx: IntegrationContext } {
       if (!db) return;
       // TRUNCATE in FK-safe order; preserve schema + enums.
       await db.execute(
-        sql`TRUNCATE TABLE notification, league_feature_flag, stat_line, fixture, player, national_team RESTART IDENTITY CASCADE`,
+        sql`TRUNCATE TABLE notification_preference, draft_queue, notification, league_feature_flag, stat_line, fixture, player, national_team RESTART IDENTITY CASCADE`,
       );
     },
   };

@@ -44,6 +44,36 @@ across separate agents/branches if desired.
 
 ---
 
+## Current plan status (updated 2026-06-18)
+
+The order above is the *ideal* dependency order. Actual execution has diverged by
+owner decision — recorded here so future agents don't assume the whole roadmap is
+in flight.
+
+- **Built & merged:** Phases **0, 1, 2** (foundations, Stats Hub, Player
+  Insights). A scoring-engine fix landed alongside Phase 1 — the ruleset version
+  hash now includes the nested per-position maps, so the default version is
+  `wcf-v1-5c4f7b33` (was `wcf-v1-07a20a31`); see `scripts/repoint-leagues.ts`.
+- **Deferred (owner decision):** Phase **3 (social/chat)**, Phase **5 (side
+  games/bracket/survivor)**, and Phase **6 (chips/strategy)** are on hold — not
+  wanted in the app yet. Phase **4 (head-to-head)** is not scheduled either. Their
+  phase docs (and `phase-03-prompt.md`) remain for if/when they resume.
+- **Next up, intentionally DE-SCOPED to avoid the deferred phases:**
+  - Phase **7** — **7.1 derived awards + Trophy Room/Hub UI only**. The 7.2
+    bonus/streak/milestone scoring extension and commissioner enable-UI were
+    dropped (no scoring-engine changes). Prompt: `phase-07-prompt.md`.
+  - Phase **8** — a **subset**: notification preferences + draft-room
+    pick-queue/autopick + draft-room UI polish + mobile/a11y. Goal/score alerts
+    and all deadline reminders (captain/chip/survivor/bracket) were dropped; the
+    a11y pass excludes chat. Prompt: `phase-08-prompt.md`.
+
+Because 7 and 8 were written to depend only on built phases (0/1/2 plus the
+existing draft room), they can ship before — or entirely without — phases 3/4/5/6.
+Ready-to-paste prompts live alongside this guide: `phase-02-prompt.md`,
+`phase-03-prompt.md`, `phase-07-prompt.md`, `phase-08-prompt.md`.
+
+---
+
 ## The loop, per phase
 
 1. Create a branch: `git checkout -b phase-0X-<slug>` from up-to-date `main`.

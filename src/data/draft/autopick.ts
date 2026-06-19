@@ -124,23 +124,56 @@ export function legalAutopickCandidates(
   return available.filter((c) => canAddPlayer(counts, c.position, reqs).ok);
 }
 
+/**
+ * The highest-priority QUEUED candidate that is also a legal pick. `queue` is
+ * the team's player IDs ordered best-first (highest priority first; i.e. the
+ * draft_queue rows sorted by ascending `rank`). Returns the first legal,
+ * still-available candidate found walking the queue in priority order, or null
+ * when the queue is empty or none of its entries are a legal pick right now.
+ *
+ * Availability is implicit: `legal` is built from the still-available pool, so
+ * an already-drafted queued player simply isn't in the map and is skipped.
+ */
+export function selectQueuedCandidate(
+  legal: readonly AutopickCandidate[],
+  queue: readonly number[],
+): AutopickCandidate | null {
+  if (queue.length === 0) return null;
+  const byId = new Map(legal.map((c) => [c.playerId, c]));
+  for (const playerId of queue) {
+    const c = byId.get(playerId);
+    if (c) return c;
+  }
+  return null;
+}
+
 export interface AutopickResult {
   /** The chosen player, or null if no legal pick exists. */
   pick: AutopickCandidate | null;
   /** How many of the available pool were legal picks. */
   legalCount: number;
+  /** True when the pick came from the team's queue rather than draft_rank. */
+  fromQueue: boolean;
 }
 
 /**
- * Choose the autopick: filter to legal candidates, then take the best by
- * rank (with position-need tiebreaker). A null `pick` means no legal pick
- * exists (roster full, or pool has no player of any still-needed position).
+ * Choose the autopick. The candidate selection order is:
+ *   1. The team's QUEUE — the highest-priority queued player that is still
+ *      available AND a legal roster addition (see `selectQueuedCandidate`).
+ *   2. FALLBACK to `draft_rank` value ordering (with the position-need
+ *      tiebreaker) when the queue is empty or yields no legal pick.
+ * A null `pick` means no legal pick exists (roster full, or the pool has no
+ * player of any still-needed position). Snake order and the timer are
+ * unaffected — this only changes *which* player is taken.
  */
 export function chooseAutopick(
   counts: PositionCounts,
   available: readonly AutopickCandidate[],
   reqs: RosterRequirements = ROSTER_REQUIREMENTS,
+  queue: readonly number[] = [],
 ): AutopickResult {
   const legal = legalAutopickCandidates(counts, available, reqs);
-  return { pick: selectBestCandidate(legal, counts, reqs), legalCount: legal.length };
+  const queued = selectQueuedCandidate(legal, queue);
+  const pick = queued ?? selectBestCandidate(legal, counts, reqs);
+  return { pick, legalCount: legal.length, fromQueue: queued !== null };
 }

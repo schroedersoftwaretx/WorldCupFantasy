@@ -46,9 +46,11 @@ import {
   type LeagueRow,
 } from "../db/schema.js";
 import { DraftError } from "../league/errors.js";
+import { allowedChannels } from "../notify/preferences.js";
 import { addPlayerToRosterTx } from "../roster/service.js";
-import { countsFromPositions } from "../roster/validator.js";
+import { countsFromPositions, ROSTER_REQUIREMENTS } from "../roster/validator.js";
 import { chooseAutopick, type AutopickCandidate } from "./autopick.js";
+import { queuedPlayerIds } from "./queue.js";
 import type { Notifier } from "./notifier.js";
 import { roundForPick, slotForPick } from "./snake.js";
 
@@ -271,7 +273,7 @@ export async function processExpiredPicks(
         }
         const order = await loadOrder(tx, r.id);
         const onClock = teamOnClock(r, order);
-        const pick = await pickAutopickPlayer(tx, r.leagueId, onClock.fantasyTeamId);
+        const pick = await pickAutopickPlayer(tx, r.id, r.leagueId, onClock.fantasyTeamId);
         await applyPick(tx, r, order, {
           fantasyTeamId: onClock.fantasyTeamId,
           playerId: pick.playerId,
@@ -314,7 +316,7 @@ export async function forceCurrentAutopick(
     if (r.status !== "IN_PROGRESS") return null;
     const order = await loadOrder(tx, r.id);
     const onClock = teamOnClock(r, order);
-    const pick = await pickAutopickPlayer(tx, r.leagueId, onClock.fantasyTeamId);
+    const pick = await pickAutopickPlayer(tx, r.id, r.leagueId, onClock.fantasyTeamId);
     await applyPick(tx, r, order, {
       fantasyTeamId: onClock.fantasyTeamId,
       playerId: pick.playerId,
@@ -516,9 +518,15 @@ async function applyPick(
   return { draftRoom: updatedRoom, pickNumber, round, autopicked: input.isAutopick };
 }
 
-/** Load the autopick for a team: best legal available player. */
+/**
+ * Load the autopick for a team. Prefers the team's pre-ranked draft queue (the
+ * highest-priority queued player that is still available and a legal roster
+ * addition), falling back to the best legal player by `draft_rank` when the
+ * queue is empty or yields no legal pick. Snake order / timer are unaffected.
+ */
 async function pickAutopickPlayer(
   tx: DbTx,
+  draftRoomId: number,
   leagueId: number,
   fantasyTeamId: number,
 ): Promise<AutopickCandidate> {
@@ -546,7 +554,11 @@ async function pickAutopickPlayer(
       draftRank: p.draftRank,
     }));
 
-  const { pick } = chooseAutopick(counts, available);
+  // The team's queued targets, priority order (rank asc). chooseAutopick uses
+  // these first, then falls back to draft_rank.
+  const queue = await queuedPlayerIds(tx, draftRoomId, fantasyTeamId);
+
+  const { pick } = chooseAutopick(counts, available, ROSTER_REQUIREMENTS, queue);
   if (!pick) {
     throw new DraftError(
       `autopick found no legal player for team ${fantasyTeamId}`,
@@ -688,6 +700,19 @@ export async function deliverPending(
   for (const n of pending) {
     const [mgr] = await db.select().from(manager).where(eq(manager.id, n.managerId));
     if (!mgr) continue;
+
+    // Phase 8 interim: the draft still delivers over this legacy email path
+    // (not the Phase 0 hub), so honour the manager's notification preferences
+    // here. If they have opted out of EMAIL for this category, mark the row
+    // handled so it is not retried each tick, and skip the send.
+    const channels = await allowedChannels(db, n.managerId, n.type, ["EMAIL"]);
+    if (!channels.includes("EMAIL")) {
+      await db
+        .update(draftNotification)
+        .set({ status: "SENT", sentAt: new Date() })
+        .where(eq(draftNotification.id, n.id));
+      continue;
+    }
 
     // Enrich with the league id and team name so a rich notifier can build a
     // direct draft-room link. Cheap lookups; the set of pending rows is small.

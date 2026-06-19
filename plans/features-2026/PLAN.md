@@ -236,3 +236,94 @@ All `db`-first. The public Hub scores against `HUB_RULESET_VERSION` (=
 **Pages/routes:** public `app/stats/**` (no auth) + `GET /api/stats/{team-of-the-
 stage/[stage], leaderboards, records}`. The `stats_hub` flag gates only the
 per-league nav link (`league-tabs.tsx`), not page access.
+## Appendix C — Phase 2 as-built APIs (Player Insights)
+
+Phase 2 shipped read-only over existing tables (no migration, no feature flags).
+Cross-league ownership/ADP are pure AGGREGATES — never expose which team/league
+owns whom outside the viewer's own league. Import these rather than re-deriving.
+All `db`-first.
+
+**Ownership** — `src/data/stats/ownership.ts`
+- `globalOwnership(db, { finishedDraftsOnly? }) -> OwnershipResult`
+- `ownershipForPlayer(db, playerId, opts?) -> SinglePlayerOwnership`
+- `ownershipByPlayerId(db, opts?) -> { totalFantasyTeams, byPlayerId }`
+- `finishedDraftsOnly` defaults **true** (numerator + denominator scoped to
+  leagues with status `ACTIVE|COMPLETE`).
+
+**ADP / draft analytics** — `src/data/stats/adp.ts`
+- `globalAdp(db, { completedDraftsOnly? }) -> AdpResult`
+- `adpByPlayerId(db, opts?) -> { totalDrafts, byPlayerId<PlayerAdp> }`
+- `PlayerAdp`: `adp, earliestPick, latestPick, timesPicked, takeRate, draftRank,
+  reachSteal`. `reachSteal = adp - draftRank` (NEGATIVE = reach / drafted earlier
+  than rank; null when unranked; `draft_rank <= 0` treated as unranked).
+  `totalDrafts` = drafts with >= 1 pick (or COMPLETE only when `completedDraftsOnly`).
+
+**Differentials / value** — `src/data/stats/differentials.ts`
+- `teamInsights(db, { leagueId, teamId, rulesetVersion, templateThreshold?, limit?,
+  finishedDraftsOnly? }) -> TeamInsights` — per-team differentials / template /
+  best-value. Throws if the team is not in the league. The team page mounts it
+  ONLY when `data.managerId === viewer.manager.id` (own team).
+- The team page passes the LEAGUE'S OWN `league.scoringRuleset.version` into
+  `teamInsights` (with `HUB_RULESET_VERSION` as a fallback if the league row is
+  missing), so the panel's "pts" match the rest of the roster page for custom-
+  ruleset leagues. (This corrects the agent's original use of `HUB_RULESET_VERSION`
+  — relevant since the hash fix `wcf-v1-5c4f7b33` makes positional customization
+  produce distinct versions.)
+
+**Hub composition** — `src/data/stats/hub.ts`
+- `getDraftTrends(db, { finishedDraftsOnly?, completedDraftsOnly?, limit? }) -> DraftTrends`.
+
+**Reused/extended** — `src/data/stats/aggregate.ts`
+- `loadRefs(db, playerIds)` is now exported (returns `Map<number, PlayerRef>`).
+- `PlayerBreakdown` (player modal) now carries `ownership` + `adp`;
+  `DraftBoardPlayer` now carries `adp` (read-only live overlay in the draft board).
+
+**Pages/routes:** public `GET /api/stats/{ownership, adp}` + public
+`app/stats/draft-trends/` (sortable/filterable). Ownership%/ADP columns added to
+the Stats Hub leaderboards + the per-league player modal; read-only live-ADP
+column in the draft-room player board (autopick logic untouched).
+
+---
+
+## Appendix D — Phase 8 (subset) as-built APIs (Notif prefs + draft polish)
+
+Phase 8 shipped a DELIBERATE SUBSET (phases 3/4/5/6 deferred): notification
+preferences, draft pick-queue/autopick, draft-room UI polish, and a mobile/a11y
+pass. Migration `0010_notify_prefs_draft_queue.sql` (idempotent) adds two tables.
+NOT built: goal/score alerts, deadline reminders, chat in the a11y pass.
+
+**Notification preferences** — `src/data/notify/preferences.ts`
+- `allowedChannels(db, managerId, type, requested) -> NotificationChannel[]` — the
+  single channel-gate; opt-OUT model (absent row = enabled); a no-op for any
+  `type` that is not a managed category. Pure helpers `applyPreferences`,
+  `disabledSetFromRows`, `isNotificationCategory`. `getPreferences`/`setPreference`
+  drive the UI. `NOTIFICATION_CATEGORIES` / `CATEGORY_LABELS` = the draft
+  notification types only (DRAFT_STARTED, ON_THE_CLOCK, PICK_MADE, AUTOPICK_MADE,
+  DRAFT_COMPLETE) — extend both when a new notification `type` ships.
+- Table `notification_preference (manager_id, category, channel, enabled)` PK
+  (manager_id, category, channel).
+- Enforcement: the Phase 0 hub `enqueue` filters channels via `allowedChannels`.
+  IMPORTANT: nothing actually calls `enqueue` yet, so the live path is the DRAFT's
+  own legacy delivery. The interim wiring gates that too —
+  `src/data/draft/service.ts` `deliverPending` now calls `allowedChannels(db,
+  managerId, type, ["EMAIL"])` and skips (marks SENT) a suppressed draft email.
+  When draft notifications migrate onto the hub, that interim gate can be removed.
+
+**Draft pick-queue + autopick** — `src/data/draft/queue.ts`
+- `queuedPlayerIds(db, roomId, teamId)`, `getQueue`, `addToQueue`,
+  `removeFromQueue`, `reorderQueue`. Table `draft_queue (draft_room_id,
+  fantasy_team_id, player_id, rank)` PK(room, team, player) + (room, team, rank) idx.
+- `src/data/draft/autopick.ts` `chooseAutopick(counts, available, reqs?, queue?)`
+  now takes an optional ordered `queue` and returns `fromQueue`; prefers the
+  highest-priority queued, still-available, position-legal player, else falls back
+  to `draft_rank`. `src/data/draft/service.ts` `pickAutopickPlayer` loads the
+  team's queue (signature gained `draftRoomId`).
+
+**Routes:** `GET|PUT /api/account/notifications` (account-level prefs),
+`GET|POST /api/leagues/[leagueId]/draft/queue`.
+
+**UI:** `app/account/notifications/**` (settings); draft `queue-panel.tsx`;
+draft-room timer/recent-picks-ticker/best-available hints (best-available uses the
+Phase 2 `DraftBoardPlayer.adp`); mobile/a11y pass (focus ring, 44px tap targets,
+focusable scroll regions) across league/standings/roster/Stats Hub + draft board.
+No new feature flags (prefs are account-level; queue/polish live in the draft room).
