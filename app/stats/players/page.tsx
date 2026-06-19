@@ -3,9 +3,9 @@
  *
  * A sortable, filterable table of every player with tournament data: total
  * fantasy points (HUB_RULESET_VERSION) alongside raw stats. Filter by position
- * ("highest-scoring midfielders") and/or nation ("highest-scoring Spaniards")
- * via a plain GET form, and sort by clicking any numeric column header. No
- * client JS for filter/sort; each player name opens the public stats modal.
+ * ("highest-scoring midfielders") and/or nation ("highest-scoring Spaniards"),
+ * and sort by fantasy points or any raw stat. Filtering/sorting is done with a
+ * plain GET form (no client JS); each player name opens the public stats modal.
  *
  * URL: /stats/players?position=MID&nation=12&sort=goals
  */
@@ -37,24 +37,14 @@ const POSITION_LABEL: Record<Position, string> = {
   MID: "Midfielders",
   FWD: "Forwards",
 };
-
-/** The numeric columns, each sortable by clicking its header. */
-const NUMERIC_COLUMNS: { key: PlayerSortKey; label: string; title: string }[] = [
-  { key: "points", label: "Pts", title: "Fantasy points" },
-  { key: "appearances", label: "Apps", title: "Appearances" },
-  { key: "goals", label: "G", title: "Goals" },
-  { key: "assists", label: "A", title: "Assists" },
-  { key: "saves", label: "Sv", title: "Saves" },
-  { key: "minutesPlayed", label: "Min", title: "Minutes played" },
+const SORT_OPTIONS: { key: PlayerSortKey; label: string }[] = [
+  { key: "points", label: "Fantasy points" },
+  { key: "goals", label: "Goals" },
+  { key: "assists", label: "Assists" },
+  { key: "saves", label: "Saves" },
+  { key: "minutesPlayed", label: "Minutes" },
+  { key: "appearances", label: "Appearances" },
 ];
-const SORT_LABEL: Record<PlayerSortKey, string> = {
-  points: "fantasy points",
-  appearances: "appearances",
-  goals: "goals",
-  assists: "assists",
-  saves: "saves",
-  minutesPlayed: "minutes",
-};
 
 function asPosition(v: string | undefined): Position | undefined {
   return v && (POSITIONS as readonly string[]).includes(v)
@@ -73,15 +63,6 @@ export default async function PlayerExplorerPage({
     sp.nation && /^\d+$/.test(sp.nation) ? Number(sp.nation) : undefined;
   const sort: PlayerSortKey =
     sp.sort && isPlayerSortKey(sp.sort) ? sp.sort : "points";
-
-  /** Build a sort link that preserves the current position/nation filters. */
-  function sortHref(key: PlayerSortKey): string {
-    const params = new URLSearchParams();
-    if (position) params.set("position", position);
-    if (nationId !== undefined) params.set("nation", String(nationId));
-    params.set("sort", key);
-    return `/stats/players?${params.toString()}`;
-  }
 
   let rows: PlayerExplorerRow[] = [];
   let nations: NationOption[] = [];
@@ -114,15 +95,13 @@ export default async function PlayerExplorerPage({
       <h1>Player Explorer</h1>
       <p className="subtitle">
         Every player&apos;s fantasy points and raw stats, scored against the
-        standard ruleset. Filter below and click any column header to sort, then
-        click a name for their match-by-match breakdown.
+        standard ruleset. Filter and sort, then click a name for their
+        match-by-match breakdown.
       </p>
 
       <form className="explorer-filters" method="get" action="/stats/players">
-        {/* Preserve the active sort when applying a filter. */}
-        <input type="hidden" name="sort" value={sort} />
-        <label className="explorer-field">
-          <span>Position</span>
+        <label>
+          Position
           <select name="position" defaultValue={position ?? ""}>
             <option value="">All positions</option>
             {POSITIONS.map((p) => (
@@ -132,8 +111,8 @@ export default async function PlayerExplorerPage({
             ))}
           </select>
         </label>
-        <label className="explorer-field">
-          <span>Nation</span>
+        <label>
+          Nation
           <select name="nation" defaultValue={nationId ?? ""}>
             <option value="">All nations</option>
             {nations.map((n) => (
@@ -143,15 +122,23 @@ export default async function PlayerExplorerPage({
             ))}
           </select>
         </label>
-        <button type="submit" className="explorer-apply">
-          Apply
-        </button>
+        <label>
+          Sort by
+          <select name="sort" defaultValue={sort}>
+            {SORT_OPTIONS.map((s) => (
+              <option key={s.key} value={s.key}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="submit">Apply</button>
       </form>
 
       <p className="subtitle">
         {position ? POSITION_LABEL[position] : "All players"}
         {nationName ? ` from ${nationName}` : ""} &middot; sorted by{" "}
-        {SORT_LABEL[sort]}.
+        {SORT_OPTIONS.find((s) => s.key === sort)?.label ?? "Fantasy points"}.
       </p>
 
       {error ? (
@@ -163,21 +150,46 @@ export default async function PlayerExplorerPage({
       ) : (
         <PlayerStatsProvider>
           <div className="table-scroll" tabIndex={0} role="region" aria-label="Scrollable table (use arrow keys)">
-            <table className="explorer-table">
+            <table>
               <thead>
                 <tr>
                   <th className="num">#</th>
                   <th>Player</th>
                   <th>Pos</th>
                   <th>Nation</th>
-                  {NUMERIC_COLUMNS.map((c) => (
-                    <th key={c.key} className="num">
-                      <a
-                        href={sortHref(c.key)}
-                        className={`sort-th${sort === c.key ? " sort-th-active" : ""}`}
-                        title={`Sort by ${c.title}`}
-                        aria-sort={sort === c.key ? "descending" : "none"}
-                      >
-                        {c.label}
-                        {sort === c.key ? (
-                          <span className="sort-arrow"> &darr;</span>
+                  <th className="num">Pts</th>
+                  <th className="num">Apps</th>
+                  <th className="num">G</th>
+                  <th className="num">A</th>
+                  <th className="num">Sv</th>
+                  <th className="num">Min</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr key={r.playerId}>
+                    <td className="num">{i + 1}</td>
+                    <td>
+                      <PlayerStatButton
+                        playerId={r.playerId}
+                        fullName={r.fullName}
+                      />
+                    </td>
+                    <td>{r.position}</td>
+                    <td>{r.nationalTeamName}</td>
+                    <td className="num">{r.points}</td>
+                    <td className="num">{r.appearances}</td>
+                    <td className="num">{r.goals}</td>
+                    <td className="num">{r.assists}</td>
+                    <td className="num">{r.saves}</td>
+                    <td className="num">{r.minutesPlayed}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </PlayerStatsProvider>
+      )}
+    </>
+  );
+}
