@@ -29,6 +29,7 @@ import { HUB_RULESET_VERSION } from "@/web/stats-params";
 import { teamInsights, type TeamInsights } from "@/data/stats/differentials";
 
 import { DifferentialsPanel } from "./differentials-panel";
+import { BestHaulBadge } from "./best-haul-badge";
 
 export const dynamic = "force-dynamic";
 
@@ -152,6 +153,7 @@ export default async function RosterViewPage({
           ? " Struck-through players' national teams are out of the tournament."
           : ""}
       </p>
+      <BestHaulBadge leagueId={lgId} teamId={tmId} />
 
       {data.players.length === 0 ? (
         <p className="notice">

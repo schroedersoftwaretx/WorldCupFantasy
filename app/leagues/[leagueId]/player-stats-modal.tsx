@@ -96,7 +96,8 @@ export function PlayerStatsProvider({
   leagueId,
   children,
 }: {
-  leagueId: number;
+  /** Omit for the public Stats Hub (scores against HUB_RULESET_VERSION). */
+  leagueId?: number;
   children: ReactNode;
 }) {
   const [target, setTarget] = useState<Target | null>(null);
@@ -110,7 +111,11 @@ export function PlayerStatsProvider({
       setError(null);
       if (cache[playerId]) return;
       setLoading(true);
-      fetch(`/api/leagues/${leagueId}/players/${playerId}/breakdown`)
+      const url =
+        leagueId !== undefined
+          ? `/api/leagues/${leagueId}/players/${playerId}/breakdown`
+          : `/api/stats/players/${playerId}/breakdown`;
+      fetch(url)
         .then((r) => r.json())
         .then((json) => {
           if (!json.ok) {

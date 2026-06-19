@@ -14,6 +14,10 @@ import { HUB_RULESET_VERSION, isStage } from "@/web/stats-params";
 import { STAGE_FULL } from "../../stage-labels";
 import { StageNav } from "../../stage-nav";
 import { StagePitch } from "../../stage-pitch";
+import {
+  PlayerStatsProvider,
+  PlayerStatButton,
+} from "../../../leagues/[leagueId]/player-stats-modal";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +69,7 @@ export default async function TeamOfStagePage({
           are in.
         </p>
       ) : (
+        <PlayerStatsProvider>
         <div className="tos-layout">
           <StagePitch xi={team.xi} formation={team.formation} />
           <div className="tos-detail">
@@ -90,7 +95,12 @@ export default async function TeamOfStagePage({
                   {team.xi.map((p) => (
                     <tr key={p.playerId}>
                       <td>{p.position}</td>
-                      <td>{p.fullName}</td>
+                      <td>
+                        <PlayerStatButton
+                          playerId={p.playerId}
+                          fullName={p.fullName}
+                        />
+                      </td>
                       <td>{p.nationalTeamName}</td>
                       <td className="num">{p.points}</td>
                       <td className="num">{p.goals}</td>
@@ -104,6 +114,7 @@ export default async function TeamOfStagePage({
             </div>
           </div>
         </div>
+        </PlayerStatsProvider>
       )}
     </>
   );

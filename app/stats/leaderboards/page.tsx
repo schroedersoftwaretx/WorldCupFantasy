@@ -20,6 +20,10 @@ import { getDb } from "@/web/db";
 import { HUB_RULESET_VERSION, isStage } from "@/web/stats-params";
 
 import { STAGE_FULL, STAGE_LABEL } from "../stage-labels";
+import {
+  PlayerStatsProvider,
+  PlayerStatButton,
+} from "../../leagues/[leagueId]/player-stats-modal";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +75,9 @@ function ScorerTable({
             return (
               <tr key={r.playerId}>
                 <td className="num">{i + 1}</td>
-                <td>{r.fullName}</td>
+                <td>
+                  <PlayerStatButton playerId={r.playerId} fullName={r.fullName} />
+                </td>
                 <td>{r.nationalTeamName}</td>
                 <td className="num">{r.points}</td>
                 <td className="num">{r.appearances}</td>
@@ -109,7 +115,9 @@ function StatTable({ rows }: { rows: PlayerStatTotal[] }) {
           {rows.map((r, i) => (
             <tr key={r.playerId}>
               <td className="num">{i + 1}</td>
-              <td>{r.fullName}</td>
+              <td>
+                <PlayerStatButton playerId={r.playerId} fullName={r.fullName} />
+              </td>
               <td>{r.nationalTeamName}</td>
               <td className="num">{r.total}</td>
             </tr>
@@ -139,7 +147,9 @@ function HaulTable({ rows }: { rows: MatchHaul[] }) {
           {rows.map((r, i) => (
             <tr key={`${r.playerId}-${r.fixtureId}`}>
               <td className="num">{i + 1}</td>
-              <td>{r.fullName}</td>
+              <td>
+                <PlayerStatButton playerId={r.playerId} fullName={r.fullName} />
+              </td>
               <td>{r.nationalTeamName}</td>
               <td>{STAGE_LABEL[r.stage]}</td>
               <td>{r.opponentTeamName || "—"}</td>
@@ -220,7 +230,7 @@ export default async function LeaderboardsPage({
       ) : !data ? (
         <p className="notice">No data.</p>
       ) : (
-        <>
+        <PlayerStatsProvider>
           <h2>Top fantasy scorers</h2>
           <ScorerTable rows={data.topScorers} ownership={ownershipMap} adp={adpMap} />
 
@@ -250,7 +260,7 @@ export default async function LeaderboardsPage({
 
           <h2>Biggest single-match hauls</h2>
           <HaulTable rows={data.bestHauls} />
-        </>
+        </PlayerStatsProvider>
       )}
     </>
   );

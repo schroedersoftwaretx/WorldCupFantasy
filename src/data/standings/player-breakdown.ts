@@ -187,7 +187,20 @@ export async function getPlayerBreakdown(
   const [lg] = await db.select().from(league).where(eq(league.id, leagueId));
   if (!lg) throw new Error(`league ${leagueId} does not exist`);
   const rulesetVersion = (lg.scoringRuleset as ScoringRuleset).version;
+  return getPlayerBreakdownForRuleset(db, rulesetVersion, playerId);
+}
 
+/**
+ * Build a player's breakdown against an EXPLICIT ruleset version, independent
+ * of any league. The public Stats Hub uses this with HUB_RULESET_VERSION so a
+ * player's per-fixture scoring can be inspected without joining a league. Same
+ * payload shape as {@link getPlayerBreakdown}.
+ */
+export async function getPlayerBreakdownForRuleset(
+  db: Db,
+  rulesetVersion: string,
+  playerId: number,
+): Promise<PlayerBreakdown | null> {
   const [p] = await db.select().from(player).where(eq(player.id, playerId));
   if (!p) return null;
 

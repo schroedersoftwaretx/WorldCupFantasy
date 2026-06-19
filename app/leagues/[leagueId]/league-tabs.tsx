@@ -25,7 +25,6 @@ const FUTURE_TABS: ReadonlyArray<{ flag: FeatureFlag; label: string }> = [
   { flag: "head_to_head", label: "Head-to-head" },
   { flag: "bracket", label: "Bracket" },
   { flag: "survivor", label: "Survivor" },
-  { flag: "awards", label: "Awards" },
 ];
 
 export default async function LeagueTabs({
@@ -53,6 +52,11 @@ export default async function LeagueTabs({
       {flags && flags.stats_hub ? (
         <Link href="/stats" className="league-tab">
           Stats Hub
+        </Link>
+      ) : null}
+      {flags && flags.awards ? (
+        <Link href={`/leagues/${leagueId}/awards`} className="league-tab">
+          Trophy Room
         </Link>
       ) : null}
       {flags

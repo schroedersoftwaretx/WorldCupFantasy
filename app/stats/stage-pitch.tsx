@@ -8,17 +8,12 @@
  */
 import type { TeamOfStagePlayer } from "@/data/stats/team-of-the-stage";
 
+import { StagePitchMarker } from "./stage-pitch-marker";
+
 const PITCH_W = 320;
 const PITCH_H = 460;
-const R = 24;
 
 type Pos = "GK" | "DEF" | "MID" | "FWD";
-
-function surname(full: string): string {
-  const parts = full.trim().split(/\s+/);
-  const last = parts[parts.length - 1] ?? full;
-  return last.length > 12 ? last.slice(0, 11) + "…" : last;
-}
 
 /** Evenly spaced, centred x-positions for `count` markers. */
 function rowX(count: number): number[] {
@@ -28,38 +23,6 @@ function rowX(count: number): number[] {
   const gap = Math.min(usable / (count - 1), usable / 4);
   const start = (PITCH_W - gap * (count - 1)) / 2;
   return Array.from({ length: count }, (_, i) => start + i * gap);
-}
-
-function Marker({ x, y, p }: { x: number; y: number; p: TeamOfStagePlayer }) {
-  return (
-    <g className="pitch-player">
-      <title>
-        {p.fullName} ({p.nationalTeamName}) — {p.points} pts
-      </title>
-      <circle cx={x} cy={y} r={R} fill="rgba(255,255,255,0.92)" />
-      <text
-        x={x}
-        y={y - 1}
-        textAnchor="middle"
-        fontSize="8"
-        fontFamily="system-ui,sans-serif"
-        fontWeight="700"
-        fill="#15401f"
-      >
-        {surname(p.fullName)}
-      </text>
-      <text
-        x={x}
-        y={y + 9}
-        textAnchor="middle"
-        fontSize="7"
-        fontFamily="system-ui,sans-serif"
-        fill="#2d7a3a"
-      >
-        {p.points}
-      </text>
-    </g>
-  );
 }
 
 export function StagePitch({
@@ -127,7 +90,9 @@ export function StagePitch({
         {rows.flatMap(({ players, y }) =>
           rowX(players.length).map((x, i) => {
             const p = players[i];
-            return p ? <Marker key={`${y}-${i}`} x={x} y={y} p={p} /> : null;
+            return p ? (
+              <StagePitchMarker key={`${y}-${i}`} x={x} y={y} p={p} />
+            ) : null;
           }),
         )}
       </svg>
