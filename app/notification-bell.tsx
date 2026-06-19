@@ -86,6 +86,12 @@ export default function NotificationBell() {
       </button>
       {open ? (
         <div className="notif-dropdown">
+          <div className="notif-dropdown-head">
+            <span className="notif-dropdown-title">Notifications</span>
+            <a className="notif-settings-link" href="/account/notifications">
+              Settings
+            </a>
+          </div>
           {items.length === 0 ? (
             <p className="notif-empty">No notifications.</p>
           ) : (

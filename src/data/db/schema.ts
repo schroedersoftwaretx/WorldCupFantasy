@@ -834,11 +834,79 @@ export const leagueFeatureFlag = pgTable(
   }),
 );
 
+// --- notification_preference (Phase 8) --------------------------------------
+
+/**
+ * Per-manager, per-category, per-channel notification toggle. Account-level
+ * (not league-scoped). A row exists only for a (manager, category, channel)
+ * the manager has explicitly set; an absent row falls back to enabled (an
+ * opt-out model). `category` mirrors the free-text `notification.type`
+ * (e.g. "ON_THE_CLOCK"); `channel` reuses the notification channel enum.
+ */
+export const notificationPreference = pgTable(
+  "notification_preference",
+  {
+    managerId: integer("manager_id")
+      .notNull()
+      .references(() => manager.id, { onDelete: "restrict" }),
+    category: text("category").notNull(),
+    channel: notificationChannelEnum("channel").notNull(),
+    enabled: boolean("enabled").notNull().default(true),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.managerId, t.category, t.channel] }),
+    managerIdx: index("notification_preference_manager_id_idx").on(t.managerId),
+  }),
+);
+
+// --- draft_queue (Phase 8) --------------------------------------------------
+
+/**
+ * One manager's ranked draft targets for one draft room. Lower `rank` = higher
+ * priority. The autopick consults this (still-available, position-legal)
+ * before falling back to `player.draft_rank`. Does not affect snake order or
+ * the pick timer.
+ */
+export const draftQueue = pgTable(
+  "draft_queue",
+  {
+    draftRoomId: integer("draft_room_id")
+      .notNull()
+      .references(() => draftRoom.id, { onDelete: "restrict" }),
+    fantasyTeamId: integer("fantasy_team_id")
+      .notNull()
+      .references(() => fantasyTeam.id, { onDelete: "restrict" }),
+    playerId: integer("player_id")
+      .notNull()
+      .references(() => player.id, { onDelete: "restrict" }),
+    rank: integer("rank").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.draftRoomId, t.fantasyTeamId, t.playerId] }),
+    rankIdx: index("draft_queue_room_team_rank_idx").on(
+      t.draftRoomId,
+      t.fantasyTeamId,
+      t.rank,
+    ),
+  }),
+);
+
 // --- Type helpers (continued) ------------------------------------------------
 
 export type NotificationRow = typeof notification.$inferSelect;
 export type NotificationInsert = typeof notification.$inferInsert;
 export type NotificationChannel = (typeof notificationChannelEnum.enumValues)[number];
+export type NotificationPreferenceRow = typeof notificationPreference.$inferSelect;
+export type NotificationPreferenceInsert =
+  typeof notificationPreference.$inferInsert;
+export type DraftQueueRow = typeof draftQueue.$inferSelect;
+export type DraftQueueInsert = typeof draftQueue.$inferInsert;
 export type AppNotificationStatus =
   (typeof appNotificationStatusEnum.enumValues)[number];
 export type LeagueFeatureFlagRow = typeof leagueFeatureFlag.$inferSelect;

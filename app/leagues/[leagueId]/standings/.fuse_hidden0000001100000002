@@ -235,7 +235,7 @@ export default async function StandingsPage({
             of its players on the title-winning squad). Real standings take
             over after the first match.
           </p>
-          <div className="table-scroll" tabIndex={0} role="region" aria-label="Scrollable table (use arrow keys)">
+          <div className="table-scroll">
             <table>
               <thead>
                 <tr>
@@ -283,7 +283,7 @@ export default async function StandingsPage({
         <>
           {/* ---- Overall rankings table ---- */}
           <h2>Overall standings</h2>
-          <div className="table-scroll" tabIndex={0} role="region" aria-label="Scrollable table (use arrow keys)">
+          <div className="table-scroll">
           <table>
             <thead>
               <tr>

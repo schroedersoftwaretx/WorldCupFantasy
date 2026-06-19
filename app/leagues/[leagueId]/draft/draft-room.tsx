@@ -12,8 +12,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { DraftBoardPlayer, DraftStateData } from "@/web/api-types";
+import type { QueueEntry } from "@/data/draft/queue";
 
 import PlayerBoard from "./player-board";
+import QueuePanel from "./queue-panel";
 import { BestLineupViz } from "./best-lineup";
 import { ScoringRules } from "./scoring-rules";
 
@@ -38,6 +40,45 @@ function formatRemaining(ms: number): string {
   return `${s}s`;
 }
 
+/** Under two minutes left counts as urgent (drives the timer's styling). */
+const URGENT_MS = 120_000;
+
+/**
+ * The single best still-available player per position, for the "best available"
+ * hints. Driven primarily by Phase 2 ADP (lower = goes earlier = more coveted),
+ * falling back to draft rank then projected points when ADP is absent.
+ */
+function bestAvailableByPosition(
+  players: DraftBoardPlayer[],
+): { position: string; player: DraftBoardPlayer }[] {
+  const order = ["GK", "DEF", "MID", "FWD"];
+  const score = (p: DraftBoardPlayer): [number, number, number] => [
+    p.adp ?? Number.POSITIVE_INFINITY,
+    p.draftRank != null && p.draftRank > 0 ? p.draftRank : Number.POSITIVE_INFINITY,
+    -(p.projectedTotalPoints ?? -1),
+  ];
+  const out: { position: string; player: DraftBoardPlayer }[] = [];
+  for (const pos of order) {
+    let best: DraftBoardPlayer | null = null;
+    let bestScore: [number, number, number] | null = null;
+    for (const p of players) {
+      if (p.position !== pos) continue;
+      const s = score(p);
+      if (
+        bestScore === null ||
+        s[0] < bestScore[0] ||
+        (s[0] === bestScore[0] && s[1] < bestScore[1]) ||
+        (s[0] === bestScore[0] && s[1] === bestScore[1] && s[2] < bestScore[2])
+      ) {
+        best = p;
+        bestScore = s;
+      }
+    }
+    if (best) out.push({ position: pos, player: best });
+  }
+  return out;
+}
+
 interface Envelope {
   data?: unknown;
   error?: { message?: string };
@@ -50,6 +91,8 @@ async function readBody(res: Response): Promise<Envelope | null> {
 export default function DraftRoom({ leagueId }: { leagueId: number }) {
   const [state, setState] = useState<DraftStateData | null>(null);
   const [board, setBoard] = useState<DraftBoardPlayer[] | null>(null);
+  const [queue, setQueue] = useState<QueueEntry[]>([]);
+  const [queueBusy, setQueueBusy] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
@@ -89,6 +132,42 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
       setLoadError(e instanceof Error ? e.message : "could not load the board");
     }
   }, [leagueId]);
+
+  const fetchQueue = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/draft/queue`, {
+        cache: "no-store",
+      });
+      const body = await readBody(res);
+      if (!res.ok || !body?.data) return;
+      setQueue((body.data as { queue: QueueEntry[] }).queue);
+    } catch {
+      // Non-fatal: the queue panel just keeps its last state.
+    }
+  }, [leagueId]);
+
+  const mutateQueue = useCallback(
+    async (payload: unknown) => {
+      setQueueBusy(true);
+      try {
+        const res = await fetch(`/api/leagues/${leagueId}/draft/queue`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const body = await readBody(res);
+        if (!res.ok || !body?.data) {
+          throw new Error(body?.error?.message ?? "could not update the queue");
+        }
+        setQueue((body.data as { queue: QueueEntry[] }).queue);
+      } catch (e) {
+        setActionError(e instanceof Error ? e.message : "could not update the queue");
+      } finally {
+        setQueueBusy(false);
+      }
+    },
+    [leagueId],
+  );
 
   // Live state via Server-Sent Events: the stream pushes a fresh payload on
   // connect and whenever a pick or timeout changes the draft, so updates land
@@ -138,8 +217,9 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
     if (boardBasis.current !== state.picksMade) {
       boardBasis.current = state.picksMade;
       void fetchBoard();
+      void fetchQueue();
     }
-  }, [state, fetchBoard]);
+  }, [state, fetchBoard, fetchQueue]);
 
   // One-second clock for the deadline countdown.
   useEffect(() => {
@@ -229,6 +309,12 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
   }
 
   const { viewer } = state;
+  const queuedIds = new Set(queue.map((e) => e.playerId));
+  const toggleQueue = (playerId: number, queued: boolean): void => {
+    void mutateQueue(
+      queued ? { action: "add", playerId } : { action: "remove", playerId },
+    );
+  };
   const errorBar = actionError ? (
     <p className="error">{actionError}</p>
   ) : null;
@@ -458,11 +544,34 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
             {state.currentRound} &middot; {state.picksMade}/{state.totalPicks}{" "}
             made
           </div>
-          <div>
-            {viewer.isOnClock
-              ? "You are on the clock"
-              : `On the clock: ${onClockSlot?.teamName ?? "-"}`}
-            {remaining !== null ? ` - ${formatRemaining(remaining)}` : ""}
+          <div className="draft-banner-clock">
+            <span>
+              {viewer.isOnClock
+                ? "You are on the clock"
+                : `On the clock: ${onClockSlot?.teamName ?? "-"}`}
+            </span>
+            {remaining !== null ? (
+              <span
+                role="timer"
+                aria-live={
+                  remaining <= URGENT_MS && remaining > 0 ? "assertive" : "polite"
+                }
+                aria-label={
+                  remaining <= 0
+                    ? "Pick is overdue"
+                    : `Time remaining: ${formatRemaining(remaining)}`
+                }
+                className={
+                  remaining <= 0
+                    ? "draft-timer overdue"
+                    : remaining <= URGENT_MS
+                      ? "draft-timer urgent"
+                      : "draft-timer"
+                }
+              >
+                {remaining <= 0 ? "overdue" : formatRemaining(remaining)}
+              </span>
+            ) : null}
           </div>
         </div>
       ) : (
@@ -477,6 +586,48 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
         </div>
       )}
 
+      {inProgress ? (
+        <>
+          <div
+            className="picks-ticker"
+            aria-label="Recent picks"
+            aria-live="polite"
+          >
+            <span className="picks-ticker-label">Recent:</span>
+            {state.picks.length === 0 ? (
+              <span className="field-hint">no picks yet</span>
+            ) : (
+              [...state.picks]
+                .reverse()
+                .slice(0, 8)
+                .map((p) => (
+                  <span key={p.pickNumber} className="ticker-pick">
+                    <span className="field-hint">#{p.pickNumber}</span>{" "}
+                    <span className="pos-badge">{p.position}</span> {p.playerName}{" "}
+                    <span className="field-hint">
+                      &rarr; {p.teamName}
+                      {p.isAutopick ? " (auto)" : ""}
+                    </span>
+                  </span>
+                ))
+            )}
+          </div>
+          {board ? (
+            <div className="best-available" aria-label="Best available by position">
+              <span className="best-available-label">Best available:</span>
+              {bestAvailableByPosition(board).map(({ position, player }) => (
+                <span key={position} className="best-available-item">
+                  <span className="pos-badge">{position}</span> {player.fullName}
+                  {player.adp != null ? (
+                    <span className="field-hint"> ADP {player.adp}</span>
+                  ) : null}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </>
+      ) : null}
+
       <div className="draft-grid">
         <div className="draft-main">
           {inProgress ? (
@@ -488,6 +639,8 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
                 onDraft={(playerId) =>
                   void runAction("/draft/pick", { playerId })
                 }
+                queuedIds={queuedIds}
+                onToggleQueue={toggleQueue}
               />
             ) : (
               <p className="notice">Loading players...</p>
@@ -498,6 +651,16 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
         </div>
         <aside className="draft-side">
           {rosterPanel}
+          {inProgress ? (
+            <QueuePanel
+              queue={queue}
+              busy={queueBusy}
+              onReorder={(order) => void mutateQueue({ action: "reorder", order })}
+              onRemove={(playerId) =>
+                void mutateQueue({ action: "remove", playerId })
+              }
+            />
+          ) : null}
           <ScoringRules />
           {orderPanel}
           {inProgress ? picksPanel : null}

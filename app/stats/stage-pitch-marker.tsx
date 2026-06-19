@@ -4,7 +4,8 @@
  * Pulled out of StagePitch so the SVG circle/label can open the public player
  * stats modal via usePlayerStats(). When no PlayerStatsProvider is mounted the
  * opener is null and the marker renders as a plain (non-interactive) circle, so
- * the server-rendered pitch is always safe.
+ * the server-rendered pitch is always safe. Reuses the same `.pitch-player
+ * .clickable` styling as the draft/roster pitches.
  */
 "use client";
 
@@ -17,7 +18,7 @@ const R = 24;
 function surname(full: string): string {
   const parts = full.trim().split(/\s+/);
   const last = parts[parts.length - 1] ?? full;
-  return last.length > 12 ? last.slice(0, 11) + "…" : last;
+  return last.length > 12 ? last.slice(0, 11) + ".." : last;
 }
 
 export function StagePitchMarker({
@@ -34,7 +35,7 @@ export function StagePitchMarker({
 
   return (
     <g
-      className={open ? "pitch-player pitch-player-click" : "pitch-player"}
+      className={open ? "pitch-player clickable" : "pitch-player"}
       role={open ? "button" : undefined}
       tabIndex={open ? 0 : undefined}
       style={open ? { cursor: "pointer" } : undefined}

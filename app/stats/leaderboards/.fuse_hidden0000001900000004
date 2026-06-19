@@ -55,7 +55,7 @@ function ScorerTable({
   if (rows.length === 0) return <p className="notice">No data yet.</p>;
   const showExtra = ownership !== undefined || adp !== undefined;
   return (
-    <div className="table-scroll" tabIndex={0} role="region" aria-label="Scrollable table (use arrow keys)">
+    <div className="table-scroll">
       <table>
         <thead>
           <tr>
@@ -101,7 +101,7 @@ function ScorerTable({
 function StatTable({ rows }: { rows: PlayerStatTotal[] }) {
   if (rows.length === 0) return <p className="notice">No data yet.</p>;
   return (
-    <div className="table-scroll" tabIndex={0} role="region" aria-label="Scrollable table (use arrow keys)">
+    <div className="table-scroll">
       <table>
         <thead>
           <tr>
@@ -131,7 +131,7 @@ function StatTable({ rows }: { rows: PlayerStatTotal[] }) {
 function HaulTable({ rows }: { rows: MatchHaul[] }) {
   if (rows.length === 0) return <p className="notice">No data yet.</p>;
   return (
-    <div className="table-scroll" tabIndex={0} role="region" aria-label="Scrollable table (use arrow keys)">
+    <div className="table-scroll">
       <table>
         <thead>
           <tr>

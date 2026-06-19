@@ -162,7 +162,7 @@ export default async function PlayerExplorerPage({
         </p>
       ) : (
         <PlayerStatsProvider>
-          <div className="table-scroll" tabIndex={0} role="region" aria-label="Scrollable table (use arrow keys)">
+          <div className="table-scroll">
             <table className="explorer-table">
               <thead>
                 <tr>
@@ -181,3 +181,51 @@ export default async function PlayerExplorerPage({
                         {c.label}
                         {sort === c.key ? (
                           <span className="sort-arrow"> &darr;</span>
+                        ) : null}
+                      </a>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr key={r.playerId}>
+                    <td className="num">{i + 1}</td>
+                    <td>
+                      <PlayerStatButton
+                        playerId={r.playerId}
+                        fullName={r.fullName}
+                      />
+                    </td>
+                    <td>{r.position}</td>
+                    <td>{r.nationalTeamName}</td>
+                    <td className={`num${sort === "points" ? " sort-col" : ""}`}>
+                      {r.points}
+                    </td>
+                    <td className={`num${sort === "appearances" ? " sort-col" : ""}`}>
+                      {r.appearances}
+                    </td>
+                    <td className={`num${sort === "goals" ? " sort-col" : ""}`}>
+                      {r.goals}
+                    </td>
+                    <td className={`num${sort === "assists" ? " sort-col" : ""}`}>
+                      {r.assists}
+                    </td>
+                    <td className={`num${sort === "saves" ? " sort-col" : ""}`}>
+                      {r.saves}
+                    </td>
+                    <td
+                      className={`num${sort === "minutesPlayed" ? " sort-col" : ""}`}
+                    >
+                      {r.minutesPlayed}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </PlayerStatsProvider>
+      )}
+    </>
+  );
+}

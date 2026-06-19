@@ -23,6 +23,7 @@ import {
   type NotificationChannel,
   type NotificationRow,
 } from "../db/schema.js";
+import { allowedChannels } from "./preferences.js";
 import type { EmailMessage, EmailTransport } from "./transport.js";
 
 export interface EnqueueInput {
@@ -57,7 +58,14 @@ export async function enqueue(
   const link = input.link ?? null;
 
   // De-duplicate the requested channel list itself.
-  const channels = requested.filter((c, i) => requested.indexOf(c) === i);
+  const deduped = requested.filter((c, i) => requested.indexOf(c) === i);
+
+  // Respect the manager's per-category notification preferences: a channel the
+  // manager has opted out of for this notification type is dropped before any
+  // row is written, so an opted-out category produces no notification at all.
+  // Unmanaged types pass through unchanged.
+  const channels = await allowedChannels(db, input.managerId, input.type, deduped);
+  if (channels.length === 0) return [];
 
   // Which channels already exist for this dedupe key (so we skip them)?
   let existing = new Set<NotificationChannel>();

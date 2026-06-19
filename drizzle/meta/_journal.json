@@ -71,6 +71,13 @@
       "when": 1781399573541,
       "tag": "0009_foundations",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1782000000000,
+      "tag": "0010_notify_prefs_draft_queue",
+      "breakpoints": true
     }
   ]
 }
