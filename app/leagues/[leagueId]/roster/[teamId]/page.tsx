@@ -25,6 +25,10 @@ import { getDb } from "@/web/db";
 import { getMembershipRole } from "@/web/queries";
 import { getRosterScores } from "@/web/standings-view";
 import { flagImg } from "@/web/flags";
+import { eq } from "drizzle-orm";
+
+import { league } from "@/data/db/schema";
+import type { ScoringRuleset } from "@/data/scoring/ruleset";
 import { HUB_RULESET_VERSION } from "@/web/stats-params";
 import { teamInsights, type TeamInsights } from "@/data/stats/differentials";
 
@@ -90,10 +94,21 @@ export default async function RosterViewPage({
       data = await getRosterScores(db, lgId, tmId);
       // Privacy: differentials are only ever shown for the viewer's OWN team.
       if (data.managerId === user.manager.id) {
+        // Use the league's OWN ruleset version so the panel's points match the
+        // rest of this roster page (which scores under the league ruleset),
+        // not the public Hub default. Falls back to the Hub default if the
+        // league row is somehow missing.
+        const [lg] = await db
+          .select({ scoringRuleset: league.scoringRuleset })
+          .from(league)
+          .where(eq(league.id, lgId));
+        const rulesetVersion =
+          (lg?.scoringRuleset as ScoringRuleset | undefined)?.version ??
+          HUB_RULESET_VERSION;
         insights = await teamInsights(db, {
           leagueId: lgId,
           teamId: tmId,
-          rulesetVersion: HUB_RULESET_VERSION,
+          rulesetVersion,
         });
       }
     }

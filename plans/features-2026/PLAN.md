@@ -236,3 +236,52 @@ All `db`-first. The public Hub scores against `HUB_RULESET_VERSION` (=
 **Pages/routes:** public `app/stats/**` (no auth) + `GET /api/stats/{team-of-the-
 stage/[stage], leaderboards, records}`. The `stats_hub` flag gates only the
 per-league nav link (`league-tabs.tsx`), not page access.
+
+---
+
+## Appendix C — Phase 2 as-built APIs (Player Insights)
+
+Phase 2 shipped read-only over existing tables (no migration, no feature flags).
+Cross-league ownership/ADP are pure AGGREGATES — never expose which team/league
+owns whom outside the viewer's own league. Import these rather than re-deriving.
+All `db`-first.
+
+**Ownership** — `src/data/stats/ownership.ts`
+- `globalOwnership(db, { finishedDraftsOnly? }) -> OwnershipResult`
+- `ownershipForPlayer(db, playerId, opts?) -> SinglePlayerOwnership`
+- `ownershipByPlayerId(db, opts?) -> { totalFantasyTeams, byPlayerId }`
+- `finishedDraftsOnly` defaults **true** (numerator + denominator scoped to
+  leagues with status `ACTIVE|COMPLETE`).
+
+**ADP / draft analytics** — `src/data/stats/adp.ts`
+- `globalAdp(db, { completedDraftsOnly? }) -> AdpResult`
+- `adpByPlayerId(db, opts?) -> { totalDrafts, byPlayerId<PlayerAdp> }`
+- `PlayerAdp`: `adp, earliestPick, latestPick, timesPicked, takeRate, draftRank,
+  reachSteal`. `reachSteal = adp - draftRank` (NEGATIVE = reach / drafted earlier
+  than rank; null when unranked; `draft_rank <= 0` treated as unranked).
+  `totalDrafts` = drafts with >= 1 pick (or COMPLETE only when `completedDraftsOnly`).
+
+**Differentials / value** — `src/data/stats/differentials.ts`
+- `teamInsights(db, { leagueId, teamId, rulesetVersion, templateThreshold?, limit?,
+  finishedDraftsOnly? }) -> TeamInsights` — per-team differentials / template /
+  best-value. Throws if the team is not in the league. The team page mounts it
+  ONLY when `data.managerId === viewer.manager.id` (own team).
+- The team page passes the LEAGUE'S OWN `league.scoringRuleset.version` into
+  `teamInsights` (with `HUB_RULESET_VERSION` as a fallback if the league row is
+  missing), so the panel's "pts" match the rest of the roster page for custom-
+  ruleset leagues. (This corrects the agent's original use of `HUB_RULESET_VERSION`
+  — relevant since the hash fix `wcf-v1-5c4f7b33` makes positional customization
+  produce distinct versions.)
+
+**Hub composition** — `src/data/stats/hub.ts`
+- `getDraftTrends(db, { finishedDraftsOnly?, completedDraftsOnly?, limit? }) -> DraftTrends`.
+
+**Reused/extended** — `src/data/stats/aggregate.ts`
+- `loadRefs(db, playerIds)` is now exported (returns `Map<number, PlayerRef>`).
+- `PlayerBreakdown` (player modal) now carries `ownership` + `adp`;
+  `DraftBoardPlayer` now carries `adp` (read-only live overlay in the draft board).
+
+**Pages/routes:** public `GET /api/stats/{ownership, adp}` + public
+`app/stats/draft-trends/` (sortable/filterable). Ownership%/ADP columns added to
+the Stats Hub leaderboards + the per-league player modal; read-only live-ADP
+column in the draft-room player board (autopick logic untouched).
