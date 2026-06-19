@@ -25,6 +25,11 @@ import {
   type ManagerOfStage,
 } from "@/data/standings/snapshot";
 import { getAliveCounts, type TeamAliveCount } from "@/web/alive";
+import {
+  getYetToPlayCounts,
+  type TeamYetToPlayCount,
+} from "@/web/yet-to-play";
+import type { Stage } from "@/data/db/schema";
 import { formatPoints } from "@/web/format";
 import type { LeagueDetail } from "@/web/api-types";
 import { getCurrentUser } from "@/web/auth/current-user";
@@ -98,6 +103,9 @@ export default async function StandingsPage({
   let projected: ProjectedStandingsEntry[] = [];
   let aliveStarted = false;
   let aliveByTeam = new Map<number, TeamAliveCount>();
+  let ytpActive = false;
+  let currentStage: Stage = "GROUP_1";
+  let ytpByTeam = new Map<number, TeamYetToPlayCount>();
   let prevRanks = new Map<number, number>();
   let hasMovement = false;
   let stageStar: ManagerOfStage | null = null;
@@ -114,6 +122,13 @@ export default async function StandingsPage({
         const alive = await getAliveCounts(db, id);
         aliveStarted = alive.started;
         aliveByTeam = alive.byFantasyTeam;
+
+        // Yet-to-play: rostered players with an unfinished current-stage
+        // fixture, plus the current stage used for the points column header.
+        const ytp = await getYetToPlayCounts(db, id);
+        ytpActive = ytp.active;
+        currentStage = ytp.currentStage;
+        ytpByTeam = ytp.byFantasyTeam;
 
         // B2: rank movement vs the end of the previous scored stage, from
         // the persisted snapshot (falling back to a live derivation when no
@@ -292,8 +307,9 @@ export default async function StandingsPage({
                 <th>Team</th>
                 <th>Manager</th>
                 <th className="num">Total</th>
+                <th className="num">{STAGE_LABEL[currentStage] ?? currentStage} pts</th>
                 {aliveStarted ? <th className="num">Alive</th> : null}
-                <th className="num">Final pts</th>
+                {ytpActive ? <th className="num">Yet to play</th> : null}
                 <th className="num">Goals</th>
                 <th className="num">Assists</th>
               </tr>
@@ -309,6 +325,14 @@ export default async function StandingsPage({
                     : 0;
                 const aliveTone =
                   alivePct >= 60 ? "ok" : alivePct >= 30 ? "warn" : "bad";
+                const ytp = ytpByTeam.get(entry.fantasyTeamId);
+                const ytpPct =
+                  ytp && ytp.total > 0
+                    ? Math.round((ytp.yetToPlay / ytp.total) * 100)
+                    : 0;
+                const currentStagePoints =
+                  entry.periods.find((p) => p.stage === currentStage)?.points ??
+                  0;
                 return (
                 <tr key={entry.fantasyTeamId}>
                   <td className="num">{entry.rank}</td>
@@ -350,6 +374,7 @@ export default async function StandingsPage({
                       `manager #${entry.managerId}`}
                   </td>
                   <td className="num">{formatPoints(entry.total)}</td>
+                  <td className="num">{formatPoints(currentStagePoints)}</td>
                   {aliveStarted ? (
                     <td className="num alive-cell">
                       {alive ? (
@@ -367,7 +392,23 @@ export default async function StandingsPage({
                       )}
                     </td>
                   ) : null}
-                  <td className="num">{entry.tieBreakers.finalMatchPoints}</td>
+                  {ytpActive ? (
+                    <td className="num ytp-cell">
+                      {ytp ? (
+                        <>
+                          <span className="ytp-bar">
+                            <span
+                              className="ytp-bar-fill"
+                              style={{ width: `${ytpPct}%` }}
+                            />
+                          </span>
+                          {ytp.yetToPlay}/{ytp.total}
+                        </>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                  ) : null}
                   <td className="num">{entry.tieBreakers.tournamentGoals}</td>
                   <td className="num">
                     {entry.tieBreakers.tournamentAssists}

@@ -1323,6 +1323,29 @@ details[open] .scoring-rules-summary::before {
 .alive-warn .alive-bar-fill { background: #f9a825; }
 .alive-bad .alive-bar-fill  { background: #c62828; }
 
+/* ---- Yet-to-play (current-stage fixtures still to come) ---- */
+.ytp-cell {
+  white-space: nowrap;
+}
+
+.ytp-bar {
+  display: inline-block;
+  width: 3rem;
+  height: 0.45rem;
+  margin-right: 0.4rem;
+  border-radius: 3px;
+  background: var(--border);
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.ytp-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: #1565c0;
+}
+
 .tag-alive {
   background: #e8f5e9;
   color: #2e7d32;
