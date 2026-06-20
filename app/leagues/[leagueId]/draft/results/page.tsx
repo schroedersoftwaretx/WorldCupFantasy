@@ -73,6 +73,7 @@ function ValueList({
       {picks.length === 0 ? (
         <p className="notice">Nothing stands out.</p>
       ) : (
+        <div className="table-scroll">
         <table>
           <thead>
             <tr>
@@ -103,6 +104,7 @@ function ValueList({
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </section>
   );

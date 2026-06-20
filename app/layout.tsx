@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 
@@ -11,6 +11,12 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "World Cup Fantasy",
   description: "2026 World Cup fantasy draft league",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({

@@ -468,6 +468,8 @@ th.num {
 .board-scroll {
   max-height: 60vh;
   overflow-y: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid var(--border);
   border-radius: 8px;
 }

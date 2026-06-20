@@ -16,6 +16,7 @@ export function ScoringRules() {
           The flex slot goes to whichever eligible player scored more that period.
         </p>
 
+        <div className="table-scroll">
         <table className="scoring-table">
           <thead>
             <tr>
@@ -51,6 +52,7 @@ export function ScoringRules() {
             <tr><td>Goal conceded (GK only, each)</td><td className="num pts-neg">−1</td></tr>
           </tbody>
         </table>
+        </div>
         <p className="scoring-note">
           Extra-time stats count normally. Shootout goals do not score.
           Clean sheet requires 60+ minutes and 0 goals conceded in

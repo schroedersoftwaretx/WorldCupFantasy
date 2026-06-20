@@ -99,6 +99,7 @@ export default async function LeagueOverviewPage({
       <LeagueTabs leagueId={detail.id} isOwner={isOwner} />
 
       <h2>Managers</h2>
+      <div className="table-scroll">
       <table>
         <thead>
           <tr>
@@ -126,6 +127,7 @@ export default async function LeagueOverviewPage({
           ))}
         </tbody>
       </table>
+      </div>
 
       <p className="lead-link">
         <Link href={`/leagues/${detail.id}/draft`}>
