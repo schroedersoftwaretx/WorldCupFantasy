@@ -36,7 +36,7 @@
           "teamId": 4713,
           "position": "F",
           "substitute": false,
-          "statistics": { "minutesPlayed": 90, "goals": 2, "onTargetScoringAttempt": 3, "shotOffTarget": 1, "blockedScoringAttempt": 1, "accuratePass": 15, "totalPass": 22 }
+          "statistics": { "minutesPlayed": 90, "goals": 2, "onTargetScoringAttempt": 3, "shotOffTarget": 1, "blockedScoringAttempt": 1, "accuratePass": 15, "totalPass": 22, "keyPass": 4, "bigChanceCreated": 2 }
         },
         {
           "player": { "id": 859765, "name": "Phil Foden", "position": "M" },

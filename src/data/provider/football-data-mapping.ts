@@ -389,6 +389,9 @@ export function mapFdFixtureStats(
       tacklesSuccessful: 0,
       crosses: 0,
       passesCompleted: 0,
+      // No playmaking detail on the free tier; leave 0 (hand-enter if needed).
+      keyPasses: 0,
+      bigChancesCreated: 0,
       // No per-player conceded; charge a keeper the team's conceded count so
       // the "goal conceded by keeper" rule still works on this provider.
       goalsConceded: teamConcededInRegulationAndEt,

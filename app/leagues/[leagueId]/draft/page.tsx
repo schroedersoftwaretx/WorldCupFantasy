@@ -6,7 +6,10 @@
  */
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
 
+import { league } from "@/data/db/schema";
+import type { ScoringRuleset } from "@/data/scoring/ruleset";
 import { getCurrentUser } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { getMembershipRole } from "@/web/queries";
@@ -42,10 +45,14 @@ export default async function DraftPage({
     );
   }
 
+  const db = getDb();
   let role: string | null = null;
+  let ruleset: ScoringRuleset | null = null;
   let error: string | null = null;
   try {
-    role = await getMembershipRole(getDb(), id, user.manager.id);
+    role = await getMembershipRole(db, id, user.manager.id);
+    const [lg] = await db.select().from(league).where(eq(league.id, id));
+    ruleset = lg ? (lg.scoringRuleset as ScoringRuleset) : null;
   } catch (e) {
     error = e instanceof Error ? e.message : "could not load the draft";
   }
@@ -58,7 +65,7 @@ export default async function DraftPage({
       </>
     );
   }
-  if (!role) {
+  if (!role || !ruleset) {
     return (
       <>
         {back}
@@ -70,7 +77,7 @@ export default async function DraftPage({
   return (
     <>
       {back}
-      <DraftRoom leagueId={id} />
+      <DraftRoom leagueId={id} ruleset={ruleset} />
     </>
   );
 }

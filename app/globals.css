@@ -1068,6 +1068,60 @@ details[open] .scoring-rules-summary::before {
   line-height: 1.4;
 }
 
+/* ── League scoring editor ─────────────────────────────────────────── */
+.scoring-editor {
+  margin-top: 1.25rem;
+}
+
+.scoring-editor-group {
+  margin-top: 1rem;
+}
+
+.scoring-editor-group legend {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0 0.4rem;
+}
+
+.scoring-editor-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 0.55rem 1.5rem;
+}
+
+.scoring-editor-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.scoring-editor-field span {
+  color: var(--fg);
+}
+
+.scoring-editor-field input {
+  width: 5.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  text-align: right;
+}
+
+.scoring-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
 /* ── Team rename inline form ───────────────────────────────────────── */
 .rename-team-row {
   display: inline-flex;

@@ -81,6 +81,10 @@ export interface ProviderStatLine {
   tacklesSuccessful: number;
   crosses: number;
   passesCompleted: number;
+  /** Playmaking: key passes (a pass leading to a shot). 0 when unavailable. */
+  keyPasses: number;
+  /** Playmaking: big chances created. 0 when unavailable. */
+  bigChancesCreated: number;
   /** Goals conceded attributable to this player as keeper. */
   goalsConceded: number;
   /**

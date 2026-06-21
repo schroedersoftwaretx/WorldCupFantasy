@@ -243,6 +243,10 @@ export const statLine = pgTable(
     tacklesSuccessful: integer("tackles_successful").notNull().default(0),
     crosses: integer("crosses").notNull().default(0),
     passesCompleted: integer("passes_completed").notNull().default(0),
+    /** Playmaking: key passes (a pass leading to a shot). */
+    keyPasses: integer("key_passes").notNull().default(0),
+    /** Playmaking: big chances created. */
+    bigChancesCreated: integer("big_chances_created").notNull().default(0),
     /** Goals conceded charged to this player as keeper (= team conceded for a
      * GK who played the full match; provider per-player value otherwise). */
     goalsConceded: integer("goals_conceded").notNull().default(0),

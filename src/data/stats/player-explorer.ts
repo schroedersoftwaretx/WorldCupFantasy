@@ -28,6 +28,8 @@ export type PlayerSortKey =
   | "appearances"
   | "goals"
   | "assists"
+  | "keyPasses"
+  | "bigChancesCreated"
   | "saves"
   | "minutesPlayed";
 
@@ -36,6 +38,8 @@ export const PLAYER_SORT_KEYS: readonly PlayerSortKey[] = [
   "appearances",
   "goals",
   "assists",
+  "keyPasses",
+  "bigChancesCreated",
   "saves",
   "minutesPlayed",
 ];
@@ -70,6 +74,10 @@ export interface PlayerExplorerRow {
   appearances: number;
   goals: number;
   assists: number;
+  /** Raw key passes (provider count, not de-duplicated). */
+  keyPasses: number;
+  /** Raw big chances created (provider count, not de-duplicated). */
+  bigChancesCreated: number;
   saves: number;
   minutesPlayed: number;
 }
@@ -89,6 +97,8 @@ interface Candidate {
   appearances: number;
   goals: number;
   assists: number;
+  keyPasses: number;
+  bigChancesCreated: number;
   saves: number;
   minutesPlayed: number;
 }
@@ -112,6 +122,8 @@ async function loadCandidates(
         appearances: 0,
         goals: 0,
         assists: 0,
+        keyPasses: 0,
+        bigChancesCreated: 0,
         saves: 0,
         minutesPlayed: 0,
       };
@@ -135,6 +147,8 @@ async function loadCandidates(
       playerId: statLine.playerId,
       goals: statLine.goals,
       assists: statLine.assists,
+      keyPasses: statLine.keyPasses,
+      bigChancesCreated: statLine.bigChancesCreated,
       saves: statLine.saves,
       minutesPlayed: statLine.minutesPlayed,
     })
@@ -143,6 +157,8 @@ async function loadCandidates(
     const c = ensure(st.playerId);
     c.goals += st.goals;
     c.assists += st.assists;
+    c.keyPasses += st.keyPasses;
+    c.bigChancesCreated += st.bigChancesCreated;
     c.saves += st.saves;
     c.minutesPlayed += st.minutesPlayed;
   }
@@ -160,6 +176,10 @@ function metric(c: Candidate, key: PlayerSortKey): number {
       return c.goals;
     case "assists":
       return c.assists;
+    case "keyPasses":
+      return c.keyPasses;
+    case "bigChancesCreated":
+      return c.bigChancesCreated;
     case "saves":
       return c.saves;
     case "minutesPlayed":
@@ -223,6 +243,8 @@ export async function playerExplorer(
       appearances: c.appearances,
       goals: c.goals,
       assists: c.assists,
+      keyPasses: c.keyPasses,
+      bigChancesCreated: c.bigChancesCreated,
       saves: c.saves,
       minutesPlayed: c.minutesPlayed,
     });

@@ -50,6 +50,10 @@ export interface ScoreBreakdown {
   tacklesSuccessful: number;
   crosses: number;
   passesCompleted: number;
+  /** Playmaking: each key pass (a pass leading to a shot). */
+  keyPasses: number;
+  /** Playmaking: each big chance created. */
+  bigChancesCreated: number;
   /** GK-only: goals conceded penalty. */
   goalsConcededByKeeper: number;
   /** GK-only: flat win bonus. */
@@ -85,6 +89,8 @@ export type ScorableStatLine = Pick<
   | "tacklesSuccessful"
   | "crosses"
   | "passesCompleted"
+  | "keyPasses"
+  | "bigChancesCreated"
   | "goalsConceded"
   | "teamScoredInRegulationAndEt"
 >;
@@ -96,6 +102,34 @@ export type ScorableStatLine = Pick<
  */
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
+}
+
+/**
+ * Resolve the overlap between assists, big chances created, and key passes
+ * into the counts that actually earn points, so one action is paid once.
+ *
+ * The three SofaScore/Opta metrics overlap by design: a big chance that is
+ * converted is ALSO an assist, and an unconverted big chance that drew a shot
+ * is ALSO a key pass. Priority is assist > big chance > key pass:
+ *
+ *   - Big chances that were converted (i.e. are among the assists) earn
+ *     nothing extra — the assist already pays:
+ *         effectiveBig = bigChancesCreated - assists
+ *   - Of the remaining (non-assist) big chances, the ones that were also key
+ *     passes earn the big-chance bonus only, not the key-pass value as well:
+ *         effectiveKey = keyPasses - effectiveBig
+ *
+ * Both clamp at 0. We only have per-match totals (not which specific pass was
+ * which), so this assumes maximal overlap — the most aggressive de-dup. It can
+ * mildly under-count when a big chance produced no shot at all, which errs on
+ * the side of never double-paying.
+ */
+export function effectivePlaymakingCounts(
+  stat: Pick<ScorableStatLine, "assists" | "keyPasses" | "bigChancesCreated">,
+): { keyPasses: number; bigChancesCreated: number } {
+  const bigChancesCreated = Math.max(0, stat.bigChancesCreated - stat.assists);
+  const keyPasses = Math.max(0, stat.keyPasses - bigChancesCreated);
+  return { keyPasses, bigChancesCreated };
 }
 
 export function scoreStatLine(
@@ -120,6 +154,8 @@ export function scoreStatLine(
     tacklesSuccessful: 0,
     crosses: 0,
     passesCompleted: 0,
+    keyPasses: 0,
+    bigChancesCreated: 0,
     goalsConcededByKeeper: 0,
     gameWon: 0,
   };
@@ -172,6 +208,17 @@ export function scoreStatLine(
   breakdown.crosses = round2(stat.crosses * ruleset.cross);
   breakdown.passesCompleted = round2(stat.passesCompleted * ruleset.passCompleted);
 
+  // Playmaking rewards (any position), de-duplicated against assists and each
+  // other so a single action is paid once (see effectivePlaymakingCounts).
+  // `?? 0` guards rulesets persisted before these rules existed (e.g. a league
+  // still on an older ruleset version): the field is absent at runtime even
+  // though the type says number, and `count * undefined` would be NaN.
+  const play = effectivePlaymakingCounts(stat);
+  breakdown.keyPasses = round2(play.keyPasses * (ruleset.keyPass ?? 0));
+  breakdown.bigChancesCreated = round2(
+    play.bigChancesCreated * (ruleset.bigChanceCreated ?? 0),
+  );
+
   // Goalkeeper-only rules.
   if (position === "GK") {
     breakdown.goalsConcededByKeeper = stat.goalsConceded * ruleset.goalConcededByKeeper;
@@ -199,6 +246,8 @@ export function scoreStatLine(
       breakdown.tacklesSuccessful +
       breakdown.crosses +
       breakdown.passesCompleted +
+      breakdown.keyPasses +
+      breakdown.bigChancesCreated +
       breakdown.goalsConcededByKeeper +
       breakdown.gameWon,
   );

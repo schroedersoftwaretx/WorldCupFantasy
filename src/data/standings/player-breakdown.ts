@@ -27,6 +27,7 @@ import {
   type Stage,
 } from "../db/schema.js";
 import type { ScoreBreakdown } from "../scoring/score.js";
+import { effectivePlaymakingCounts } from "../scoring/score.js";
 import type { ScoringRuleset } from "../scoring/ruleset.js";
 import { ownershipForPlayer } from "../stats/ownership.js";
 import { adpByPlayerId } from "../stats/adp.js";
@@ -88,6 +89,8 @@ const RULE_LABELS: { key: keyof ScoreBreakdown; label: string }[] = [
   { key: "assists", label: "Assists" },
   { key: "shotsOnTarget", label: "Shots on target" },
   { key: "shotsOffTarget", label: "Shots off target" },
+  { key: "bigChancesCreated", label: "Big chances created" },
+  { key: "keyPasses", label: "Key passes" },
   { key: "crosses", label: "Crosses" },
   { key: "passesCompleted", label: "Passes completed" },
   { key: "tacklesSuccessful", label: "Tackles won" },
@@ -127,6 +130,12 @@ function ruleCount(
       return stat.crosses;
     case "passesCompleted":
       return stat.passesCompleted;
+    // Show the de-duplicated counts that actually earned points, so the
+    // "count × rate = points" the UI renders stays internally consistent.
+    case "keyPasses":
+      return effectivePlaymakingCounts(stat).keyPasses;
+    case "bigChancesCreated":
+      return effectivePlaymakingCounts(stat).bigChancesCreated;
     case "penaltiesSaved":
       return stat.penaltiesSaved;
     case "penaltiesMissed":

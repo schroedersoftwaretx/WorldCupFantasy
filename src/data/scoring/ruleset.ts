@@ -81,6 +81,10 @@ export interface ScoringRuleset {
   readonly cross: number;
   /** Each completed pass (any position). Small per-event value. */
   readonly passCompleted: number;
+  /** Each key pass — a pass leading to a shot (any position). Playmaker reward. */
+  readonly keyPass: number;
+  /** Each big chance created (any position). Playmaker reward. */
+  readonly bigChanceCreated: number;
   /**
    * Per goal conceded, charged to the GOALKEEPER only. Negative. Applied to
    * stat.goalsConceded (the keeper's own conceded count, which for a keeper
@@ -172,6 +176,100 @@ export const DEFAULT_RULESET: ScoringRuleset = buildRuleset({
   tackleSuccessful: 0.5,
   cross: 0.5,
   passCompleted: 0.05,
+  keyPass: 0.5,
+  bigChanceCreated: 2,
   goalConcededByKeeper: -1,
   gameWonKeeper: 5,
 });
+
+/**
+ * Thrown by {@link sanitizeRulesetInput} when an untrusted payload cannot be
+ * coerced into a valid ruleset. The API layer maps this to a 400.
+ */
+export class RulesetValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RulesetValidationError";
+  }
+}
+
+/** Coerce a point value: finite, within +/-100, snapped to 2dp (engine uses round2). */
+function pointValue(value: unknown, label: string): number {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) {
+    throw new RulesetValidationError(`${label} must be a finite number`);
+  }
+  if (n < -100 || n > 100) {
+    throw new RulesetValidationError(`${label} must be between -100 and 100`);
+  }
+  return Math.round(n * 100) / 100;
+}
+
+/** Coerce an integer in [min, max]. */
+function intValue(value: unknown, label: string, min: number, max: number): number {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isInteger(n)) {
+    throw new RulesetValidationError(`${label} must be a whole number`);
+  }
+  if (n < min || n > max) {
+    throw new RulesetValidationError(`${label} must be between ${min} and ${max}`);
+  }
+  return n;
+}
+
+function asObject(value: unknown, label: string): Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new RulesetValidationError(`${label} must be an object`);
+  }
+  return value as Record<string, unknown>;
+}
+
+/**
+ * Validate + coerce an untrusted payload (e.g. an API request body) into the
+ * value half of a ScoringRuleset. Every numeric field is required and range-
+ * checked; unknown extra keys are ignored. Pass the result to {@link buildRuleset}
+ * to compute the content-hash version. Throws {@link RulesetValidationError} on
+ * any malformed field so the caller can return a clean 400.
+ *
+ * cleanSheetByPosition is fixed to GK + DEF (the only positions that earn a
+ * clean sheet); MID/FWD values in the payload are ignored.
+ */
+export function sanitizeRulesetInput(
+  input: unknown,
+): Omit<ScoringRuleset, "version"> {
+  const o = asObject(input, "ruleset");
+  const goals = asObject(o["goalByPosition"], "goalByPosition");
+  const clean = asObject(o["cleanSheetByPosition"], "cleanSheetByPosition");
+
+  return {
+    appearance: pointValue(o["appearance"], "appearance"),
+    played60Plus: pointValue(o["played60Plus"], "played60Plus"),
+    goalByPosition: {
+      GK: pointValue(goals["GK"], "goalByPosition.GK"),
+      DEF: pointValue(goals["DEF"], "goalByPosition.DEF"),
+      MID: pointValue(goals["MID"], "goalByPosition.MID"),
+      FWD: pointValue(goals["FWD"], "goalByPosition.FWD"),
+    },
+    assist: pointValue(o["assist"], "assist"),
+    save: pointValue(o["save"], "save"),
+    cleanSheetByPosition: {
+      GK: pointValue(clean["GK"], "cleanSheetByPosition.GK"),
+      DEF: pointValue(clean["DEF"], "cleanSheetByPosition.DEF"),
+    },
+    cleanSheetMinMinutes: intValue(o["cleanSheetMinMinutes"], "cleanSheetMinMinutes", 0, 120),
+    penaltySaved: pointValue(o["penaltySaved"], "penaltySaved"),
+    penaltyMissed: pointValue(o["penaltyMissed"], "penaltyMissed"),
+    ownGoal: pointValue(o["ownGoal"], "ownGoal"),
+    yellowCard: pointValue(o["yellowCard"], "yellowCard"),
+    redCard: pointValue(o["redCard"], "redCard"),
+    shotOnTarget: pointValue(o["shotOnTarget"], "shotOnTarget"),
+    shotOffTarget: pointValue(o["shotOffTarget"], "shotOffTarget"),
+    tackleSuccessful: pointValue(o["tackleSuccessful"], "tackleSuccessful"),
+    cross: pointValue(o["cross"], "cross"),
+    passCompleted: pointValue(o["passCompleted"], "passCompleted"),
+    keyPass: pointValue(o["keyPass"], "keyPass"),
+    bigChanceCreated: pointValue(o["bigChanceCreated"], "bigChanceCreated"),
+    goalConcededByKeeper: pointValue(o["goalConcededByKeeper"], "goalConcededByKeeper"),
+    gameWonKeeper: pointValue(o["gameWonKeeper"], "gameWonKeeper"),
+  };
+}

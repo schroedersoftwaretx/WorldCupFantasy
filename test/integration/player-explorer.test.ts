@@ -79,7 +79,14 @@ async function score(playerId: number, fixtureId: number, points: number): Promi
 async function stat(
   playerId: number,
   fixtureId: number,
-  v: { goals?: number; assists?: number; saves?: number; minutesPlayed?: number },
+  v: {
+    goals?: number;
+    assists?: number;
+    saves?: number;
+    minutesPlayed?: number;
+    keyPasses?: number;
+    bigChancesCreated?: number;
+  },
 ): Promise<void> {
   await ctx.db.insert(statLine).values({
     playerId,
@@ -88,6 +95,8 @@ async function stat(
     assists: v.assists ?? 0,
     saves: v.saves ?? 0,
     minutesPlayed: v.minutesPlayed ?? 0,
+    keyPasses: v.keyPasses ?? 0,
+    bigChancesCreated: v.bigChancesCreated ?? 0,
     sourceRevision: "test",
   });
 }
@@ -120,9 +129,9 @@ async function seed(): Promise<World> {
   await score(vini, f1, 20);
   await score(keeperE, f1, 6);
 
-  await stat(pedri, f1, { goals: 1, assists: 2, minutesPlayed: 90 });
+  await stat(pedri, f1, { goals: 1, assists: 2, minutesPlayed: 90, keyPasses: 3, bigChancesCreated: 1 });
   await stat(pedri, f2, { assists: 1, minutesPlayed: 90 });
-  await stat(rodri, f1, { goals: 2, assists: 1, minutesPlayed: 90 });
+  await stat(rodri, f1, { goals: 2, assists: 1, minutesPlayed: 90, keyPasses: 1, bigChancesCreated: 2 });
   await stat(vini, f1, { goals: 3, minutesPlayed: 90 });
   await stat(keeperE, f1, { saves: 5, minutesPlayed: 90 });
   await stat(statOnly, f1, { minutesPlayed: 45 });
@@ -187,6 +196,29 @@ describe("player explorer (filter + sort)", () => {
     expect(mids.map((r) => [r.playerId, r.assists])).toEqual([
       [w.pedri, 3],
       [w.rodri, 1],
+    ]);
+  });
+
+  it("sorts by the new playmaking columns (key passes, big chances created)", async () => {
+    const w = await seed();
+    const byKp = await playerExplorer(ctx.db, {
+      rulesetVersion: RULESET,
+      position: "MID",
+      sort: "keyPasses",
+    });
+    expect(byKp.map((r) => [r.playerId, r.keyPasses])).toEqual([
+      [w.pedri, 3],
+      [w.rodri, 1],
+    ]);
+
+    const byBcc = await playerExplorer(ctx.db, {
+      rulesetVersion: RULESET,
+      position: "MID",
+      sort: "bigChancesCreated",
+    });
+    expect(byBcc.map((r) => [r.playerId, r.bigChancesCreated])).toEqual([
+      [w.rodri, 2],
+      [w.pedri, 1],
     ]);
   });
 

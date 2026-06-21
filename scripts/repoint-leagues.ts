@@ -71,7 +71,23 @@ async function main(): Promise<void> {
       ...newDefaultValues,
       goalByPosition: { GK: 10, DEF: 6, MID: 5, FWD: 4 },
     };
-    const defaultShapes = new Set([stable(newDefaultValues), stable(oldDefaultValues)]);
+    // Pre-playmaker default shapes: leagues created before keyPass /
+    // bigChanceCreated were added (e.g. version wcf-v1-5c4f7b33) carry the
+    // default values MINUS those two fields. Recognise them so they normalise
+    // onto the current default (which now rewards playmaking) rather than being
+    // treated as bespoke custom rulesets and left on the old version.
+    const stripPlaymaking = (
+      v: Omit<ScoringRuleset, "version">,
+    ): Record<string, unknown> => {
+      const { keyPass: _k, bigChanceCreated: _b, ...rest } = v;
+      return rest;
+    };
+    const defaultShapes = new Set([
+      stable(newDefaultValues),
+      stable(oldDefaultValues),
+      stable(stripPlaymaking(newDefaultValues)),
+      stable(stripPlaymaking(oldDefaultValues)),
+    ]);
 
     const leagues = await db
       .select({ id: league.id, name: league.name, scoringRuleset: league.scoringRuleset })

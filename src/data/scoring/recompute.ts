@@ -73,6 +73,8 @@ export async function recomputeAll(
       tacklesSuccessful: statLine.tacklesSuccessful,
       crosses: statLine.crosses,
       passesCompleted: statLine.passesCompleted,
+      keyPasses: statLine.keyPasses,
+      bigChancesCreated: statLine.bigChancesCreated,
       goalsConceded: statLine.goalsConceded,
       teamScoredInRegulationAndEt: statLine.teamScoredInRegulationAndEt,
       position: player.position,
@@ -95,19 +97,9 @@ export async function recomputeAll(
     const key = `${r.playerId}:${r.fixtureId}`;
     const prev = existingByKey.get(key);
 
-    if (!prev) {
-      await db.insert(scoreEntry).values({
-        playerId: r.playerId,
-        fixtureId: r.fixtureId,
-        rulesetVersion: ruleset.version,
-        points: result.points,
-        breakdown: result.breakdown,
-      });
-      summary.inserted += 1;
-      continue;
-    }
-
+    // Unchanged row: skip the write entirely to avoid churn.
     if (
+      prev &&
       prev.points === result.points &&
       breakdownEquals(prev.breakdown as ScoreBreakdown, result.breakdown)
     ) {
@@ -115,21 +107,35 @@ export async function recomputeAll(
       continue;
     }
 
+    // Upsert on the score_entry primary key. ON CONFLICT keeps recompute
+    // idempotent and immune to a pre-existing row the `existing` snapshot did
+    // not include (e.g. a leftover row from an interrupted run, or a stale
+    // read on a pooled connection) — a bare INSERT would hit those as a
+    // duplicate-key violation and abort the whole recompute.
     await db
-      .update(scoreEntry)
-      .set({
+      .insert(scoreEntry)
+      .values({
+        playerId: r.playerId,
+        fixtureId: r.fixtureId,
+        rulesetVersion: ruleset.version,
         points: result.points,
         breakdown: result.breakdown,
-        computedAt: new Date(),
       })
-      .where(
-        and(
-          eq(scoreEntry.playerId, r.playerId),
-          eq(scoreEntry.fixtureId, r.fixtureId),
-          eq(scoreEntry.rulesetVersion, ruleset.version),
-        ),
-      );
-    summary.updated += 1;
+      .onConflictDoUpdate({
+        target: [
+          scoreEntry.playerId,
+          scoreEntry.fixtureId,
+          scoreEntry.rulesetVersion,
+        ],
+        set: {
+          points: result.points,
+          breakdown: result.breakdown,
+          computedAt: new Date(),
+        },
+      });
+
+    if (prev) summary.updated += 1;
+    else summary.inserted += 1;
   }
   return summary;
 }
@@ -205,6 +211,8 @@ export async function recomputeForFixture(
       tacklesSuccessful: statLine.tacklesSuccessful,
       crosses: statLine.crosses,
       passesCompleted: statLine.passesCompleted,
+      keyPasses: statLine.keyPasses,
+      bigChancesCreated: statLine.bigChancesCreated,
       goalsConceded: statLine.goalsConceded,
       teamScoredInRegulationAndEt: statLine.teamScoredInRegulationAndEt,
       position: player.position,
@@ -232,19 +240,9 @@ export async function recomputeForFixture(
     const key = `${r.playerId}:${r.fixtureId}`;
     const prev = existingByKey.get(key);
 
-    if (!prev) {
-      await db.insert(scoreEntry).values({
-        playerId: r.playerId,
-        fixtureId: r.fixtureId,
-        rulesetVersion: ruleset.version,
-        points: result.points,
-        breakdown: result.breakdown,
-      });
-      summary.inserted += 1;
-      continue;
-    }
-
+    // Unchanged row: skip the write entirely to avoid churn.
     if (
+      prev &&
       prev.points === result.points &&
       breakdownEquals(prev.breakdown as ScoreBreakdown, result.breakdown)
     ) {
@@ -252,21 +250,35 @@ export async function recomputeForFixture(
       continue;
     }
 
+    // Upsert on the score_entry primary key. ON CONFLICT keeps recompute
+    // idempotent and immune to a pre-existing row the `existing` snapshot did
+    // not include (e.g. a leftover row from an interrupted run, or a stale
+    // read on a pooled connection) — a bare INSERT would hit those as a
+    // duplicate-key violation and abort the whole recompute.
     await db
-      .update(scoreEntry)
-      .set({
+      .insert(scoreEntry)
+      .values({
+        playerId: r.playerId,
+        fixtureId: r.fixtureId,
+        rulesetVersion: ruleset.version,
         points: result.points,
         breakdown: result.breakdown,
-        computedAt: new Date(),
       })
-      .where(
-        and(
-          eq(scoreEntry.playerId, r.playerId),
-          eq(scoreEntry.fixtureId, r.fixtureId),
-          eq(scoreEntry.rulesetVersion, ruleset.version),
-        ),
-      );
-    summary.updated += 1;
+      .onConflictDoUpdate({
+        target: [
+          scoreEntry.playerId,
+          scoreEntry.fixtureId,
+          scoreEntry.rulesetVersion,
+        ],
+        set: {
+          points: result.points,
+          breakdown: result.breakdown,
+          computedAt: new Date(),
+        },
+      });
+
+    if (prev) summary.updated += 1;
+    else summary.inserted += 1;
   }
   return summary;
 }
@@ -290,6 +302,8 @@ function breakdownEquals(a: ScoreBreakdown, b: ScoreBreakdown): boolean {
     a.tacklesSuccessful === b.tacklesSuccessful &&
     a.crosses === b.crosses &&
     a.passesCompleted === b.passesCompleted &&
+    a.keyPasses === b.keyPasses &&
+    a.bigChancesCreated === b.bigChancesCreated &&
     a.goalsConcededByKeeper === b.goalsConcededByKeeper &&
     a.gameWon === b.gameWon
   );

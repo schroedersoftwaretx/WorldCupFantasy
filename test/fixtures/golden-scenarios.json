@@ -105,6 +105,18 @@
       "expected": { "points": 5 }
     },
     {
+      "name": "playmaker: MID 2 big chances + 4 key passes (deduped, no assists)",
+      "position": "MID",
+      "stat": { "minutesPlayed": 90, "bigChancesCreated": 2, "keyPasses": 4, "teamConcededInRegulationAndEt": 1 },
+      "expected": { "points": 7 }
+    },
+    {
+      "name": "playmaker: converted big chance scores the assist only (no double count)",
+      "position": "MID",
+      "stat": { "minutesPlayed": 90, "assists": 1, "bigChancesCreated": 1, "teamConcededInRegulationAndEt": 1 },
+      "expected": { "points": 6 }
+    },
+    {
       "name": "v2: GK clean sheet + win bonus + 2 saves",
       "position": "GK",
       "stat": { "minutesPlayed": 90, "saves": 2, "teamConcededInRegulationAndEt": 0, "teamScoredInRegulationAndEt": 2, "goalsConceded": 0 },

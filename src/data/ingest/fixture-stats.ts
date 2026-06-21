@@ -41,6 +41,15 @@ export interface IngestFixtureStatsOptions {
    * undrafted players — so one unknown player doesn't abort the whole fixture.
    */
   skipUnknownPlayers?: boolean;
+  /**
+   * When true, overwrite an existing row even if the provider's
+   * `source_revision` is not newer than the stored one. The revision guard
+   * normally makes re-runs idempotent, but a re-ingest after the mapping
+   * gained new fields (e.g. key passes / big chances) carries the SAME
+   * revision yet needs to write the new columns. Force still respects the
+   * manual-edit lock — hand-corrected rows are never clobbered.
+   */
+  force?: boolean;
 }
 
 export async function ingestFixtureStats(
@@ -124,6 +133,8 @@ async function upsertStatLines(
         tacklesSuccessful: line.tacklesSuccessful,
         crosses: line.crosses,
         passesCompleted: line.passesCompleted,
+        keyPasses: line.keyPasses,
+        bigChancesCreated: line.bigChancesCreated,
         goalsConceded: line.goalsConceded,
         sourceRevision: line.sourceRevision,
       });
@@ -138,16 +149,19 @@ async function upsertStatLines(
       continue;
     }
 
-    // Same-or-older revision is a no-op. This is what makes re-running with
-    // the same provider data idempotent.
-    if (line.sourceRevision < existing.sourceRevision) {
-      summary.skipped += 1;
-      continue;
-    }
-    if (line.sourceRevision === existing.sourceRevision) {
-      // Same revision and presumably same data; nothing to do.
-      summary.skipped += 1;
-      continue;
+    // Same-or-older revision is normally a no-op — this is what makes
+    // re-running with the same provider data idempotent. `force` overrides it
+    // so a backfill can rewrite rows whose revision is unchanged.
+    if (!opts.force) {
+      if (line.sourceRevision < existing.sourceRevision) {
+        summary.skipped += 1;
+        continue;
+      }
+      if (line.sourceRevision === existing.sourceRevision) {
+        // Same revision and presumably same data; nothing to do.
+        summary.skipped += 1;
+        continue;
+      }
     }
 
     // Newer revision — overwrite the entire row.
@@ -171,6 +185,8 @@ async function upsertStatLines(
         tacklesSuccessful: line.tacklesSuccessful,
         crosses: line.crosses,
         passesCompleted: line.passesCompleted,
+        keyPasses: line.keyPasses,
+        bigChancesCreated: line.bigChancesCreated,
         goalsConceded: line.goalsConceded,
         sourceRevision: line.sourceRevision,
         ingestedAt: new Date(),

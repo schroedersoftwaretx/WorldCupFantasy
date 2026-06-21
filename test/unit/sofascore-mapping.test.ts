@@ -159,6 +159,8 @@ describe("mapSsFixtureStats", () => {
     expect(rashford.goals).toBe(2);
     expect(rashford.shotsOnTarget).toBe(3);
     expect(rashford.shotsOffTarget).toBe(2); // shotOffTarget 1 + blocked 1
+    expect(rashford.keyPasses).toBe(4); // keyPass
+    expect(rashford.bigChancesCreated).toBe(2); // bigChanceCreated
 
     const ward = by.get("197428")!;
     expect(ward.saves).toBe(4);
