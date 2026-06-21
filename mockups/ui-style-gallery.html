@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fantasy World Cup — UI Style Gallery</title>
+<style>
+  /* ---------- shared reset ---------- */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #0c0d10; color: #e8e8ea; }
+  .toolbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+    padding: 12px 20px; background: #15161b; border-bottom: 1px solid #2a2c34;
+  }
+  .toolbar h1 { font-size: 14px; font-weight: 700; letter-spacing: .3px; margin-right: 8px; }
+  .toolbar .group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .toolbar .label { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: #8a8d99; margin-right: 4px; }
+  .chip {
+    font: inherit; font-size: 12px; cursor: pointer;
+    padding: 6px 12px; border-radius: 999px; border: 1px solid #34363f;
+    background: #1d1f26; color: #c9ccd6;
+  }
+  .chip:hover { border-color: #565a68; }
+  .chip[aria-pressed="true"] { background: #e8e8ea; color: #15161b; border-color: #e8e8ea; font-weight: 600; }
+  .stage { padding: 28px 18px 60px; display: flex; justify-content: center; }
+  .frame { width: 100%; max-width: 1080px; }
+  .style-name { font-size: 12px; color: #8a8d99; text-align: center; margin-bottom: 18px; }
+  .style-name b { color: #c9ccd6; }
+
+  /* page visibility */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ============================================================
+     STYLE 1 — BROADCAST (ESPN-style dark, dense, neon accent)
+     ============================================================ */
+  [data-style="broadcast"] {
+    --bg:#0a0e1a; --panel:#111726; --panel2:#0d1320; --line:#1e2942;
+    --text:#eaf0ff; --muted:#7e8baa; --accent:#00e0a4; --accent2:#ffb000; --rowhover:#16203a;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+  [data-style="broadcast"].surface { background: var(--bg); color: var(--text); padding: 22px; border-radius: 8px; }
+  [data-style="broadcast"] .hd { display:flex; align-items:center; gap:12px; border-left:4px solid var(--accent); padding-left:12px; margin-bottom:18px; }
+  [data-style="broadcast"] .hd h2 { font-size:20px; font-weight:800; text-transform:uppercase; letter-spacing:1px; }
+  [data-style="broadcast"] .hd .tag { margin-left:auto; font-size:11px; font-weight:700; color:#06121f; background:var(--accent); padding:4px 10px; border-radius:3px; text-transform:uppercase; }
+  [data-style="broadcast"] table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+  [data-style="broadcast"] thead th { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); text-align:right; padding:8px 10px; border-bottom:2px solid var(--line); }
+  [data-style="broadcast"] thead th.l { text-align:left; }
+  [data-style="broadcast"] tbody td { padding:11px 10px; text-align:right; border-bottom:1px solid var(--line); font-size:13px; }
+  [data-style="broadcast"] tbody td.l { text-align:left; }
+  [data-style="broadcast"] tbody tr:hover { background:var(--rowhover); }
+  [data-style="broadcast"] .rank { font-weight:800; color:var(--accent); width:34px; }
+  [data-style="broadcast"] .team { font-weight:700; }
+  [data-style="broadcast"] .pts { font-weight:800; font-size:15px; color:var(--accent); }
+  [data-style="broadcast"] .up { color:var(--accent); } [data-style="broadcast"] .down { color:#ff5b6e; }
+  [data-style="broadcast"] .pill { display:inline-block; font-size:10px; font-weight:700; padding:2px 7px; border-radius:3px; background:#10243a; color:var(--accent); }
+  [data-style="broadcast"] .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+  [data-style="broadcast"] .stat { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:14px; }
+  [data-style="broadcast"] .stat .k { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); }
+  [data-style="broadcast"] .stat .v { font-size:24px; font-weight:800; color:var(--text); margin-top:4px; }
+  [data-style="broadcast"] .stat .v.acc { color:var(--accent); }
+  [data-style="broadcast"] .card { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:16px; }
+  [data-style="broadcast"] .pcard { display:flex; gap:14px; align-items:center; padding:12px; border-bottom:1px solid var(--line); }
+  [data-style="broadcast"] .pcard .num { width:40px;height:40px;border-radius:6px;background:#10243a;color:var(--accent);font-weight:800;display:grid;place-items:center;font-size:15px;}
+  [data-style="broadcast"] .pcard .pos { font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+  [data-style="broadcast"] .pcard .ppts{margin-left:auto;font-weight:800;color:var(--accent);font-size:16px;}
+
+  /* ============================================================
+     STYLE 2 — SAAS DASHBOARD (Linear/Vercel light, airy, neutral)
+     ============================================================ */
+  [data-style="saas"] {
+    --bg:#f7f8fa; --panel:#ffffff; --line:#e8eaef; --text:#1a1d24; --muted:#6b7180; --accent:#5b5bd6; --good:#16a34a; --bad:#dc2626;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+  [data-style="saas"].surface { background:var(--bg); color:var(--text); padding:26px; border-radius:14px; }
+  [data-style="saas"] .hd { display:flex; align-items:baseline; gap:10px; margin-bottom:20px; }
+  [data-style="saas"] .hd h2 { font-size:22px; font-weight:680; letter-spacing:-.4px; }
+  [data-style="saas"] .hd .sub { font-size:13px; color:var(--muted); }
+  [data-style="saas"] .hd .btn { margin-left:auto; font-size:13px; font-weight:550; color:#fff; background:var(--accent); padding:8px 14px; border-radius:8px; }
+  [data-style="saas"] .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  [data-style="saas"] table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+  [data-style="saas"] thead th { font-size:11px; font-weight:600; color:var(--muted); text-align:right; padding:12px 14px; background:#fbfbfd; border-bottom:1px solid var(--line); }
+  [data-style="saas"] thead th.l { text-align:left; }
+  [data-style="saas"] tbody td { padding:13px 14px; text-align:right; border-bottom:1px solid var(--line); font-size:13.5px; }
+  [data-style="saas"] tbody td.l { text-align:left; }
+  [data-style="saas"] tbody tr:last-child td { border-bottom:none; }
+  [data-style="saas"] tbody tr:hover { background:#fafaff; }
+  [data-style="saas"] .rank { color:var(--muted); font-weight:600; width:30px; }
+  [data-style="saas"] .team { font-weight:600; }
+  [data-style="saas"] .av { display:inline-grid; place-items:center; width:26px;height:26px;border-radius:50%;background:#ececfa;color:var(--accent);font-size:11px;font-weight:700;margin-right:9px;vertical-align:middle;}
+  [data-style="saas"] .pts { font-weight:700; }
+  [data-style="saas"] .up{color:var(--good);} [data-style="saas"] .down{color:var(--bad);}
+  [data-style="saas"] .badge{font-size:11px;font-weight:600;color:var(--accent);background:#ececfa;padding:3px 9px;border-radius:999px;}
+  [data-style="saas"] .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+  [data-style="saas"] .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;}
+  [data-style="saas"] .stat .k{font-size:12px;color:var(--muted);font-weight:550;}
+  [data-style="saas"] .stat .v{font-size:26px;font-weight:680;letter-spacing:-.5px;margin-top:6px;}
+  [data-style="saas"] .stat .d{font-size:12px;margin-top:4px;}
+  [data-style="saas"] .pcard{display:flex;gap:13px;align-items:center;padding:13px 16px;border-bottom:1px solid var(--line);}
+  [data-style="saas"] .pcard:last-child{border-bottom:none;}
+  [data-style="saas"] .pcard .num{width:38px;height:38px;border-radius:10px;background:#ececfa;color:var(--accent);font-weight:700;display:grid;place-items:center;}
+  [data-style="saas"] .pcard .pos{font-size:12px;color:var(--muted);}
+  [data-style="saas"] .pcard .ppts{margin-left:auto;font-weight:700;}
+
+  /* ============================================================
+     STYLE 3 — NEO-BRUTALIST (chunky borders, hard shadows, bright)
+     ============================================================ */
+  [data-style="brutal"] {
+    --bg:#fde84a; --panel:#ffffff; --ink:#111111; --accent:#ff4d2e; --accent2:#2e6bff; --accent3:#1ec773;
+    font-family: "Arial Black", "Helvetica Neue", system-ui, sans-serif;
+  }
+  [data-style="brutal"].surface{background:var(--bg);color:var(--ink);padding:24px;border:3px solid var(--ink);border-radius:0;}
+  [data-style="brutal"] .hd{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+  [data-style="brutal"] .hd h2{font-size:26px;font-weight:900;text-transform:uppercase;letter-spacing:-.5px;}
+  [data-style="brutal"] .hd .tag{margin-left:auto;font-size:12px;font-weight:900;background:var(--accent);color:#fff;padding:6px 12px;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);text-transform:uppercase;}
+  [data-style="brutal"] .panel{background:var(--panel);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--ink);}
+  [data-style="brutal"] table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;}
+  [data-style="brutal"] thead th{font-size:11px;font-weight:900;text-transform:uppercase;text-align:right;padding:11px 12px;border-bottom:3px solid var(--ink);background:var(--ink);color:#fff;}
+  [data-style="brutal"] thead th.l{text-align:left;}
+  [data-style="brutal"] tbody td{padding:12px;text-align:right;border-bottom:2px solid var(--ink);font-size:14px;font-weight:700;}
+  [data-style="brutal"] tbody td.l{text-align:left;}
+  [data-style="brutal"] tbody tr:hover{background:#fff6b8;}
+  [data-style="brutal"] .rank{font-weight:900;width:34px;}
+  [data-style="brutal"] tbody tr:nth-child(1) .rank{background:var(--accent3);} 
+  [data-style="brutal"] .rank{display:inline-grid;place-items:center;}
+  [data-style="brutal"] .team{font-weight:900;text-transform:uppercase;font-size:13px;}
+  [data-style="brutal"] .pts{font-weight:900;font-size:16px;}
+  [data-style="brutal"] .up{color:var(--accent3);} [data-style="brutal"] .down{color:var(--accent);}
+  [data-style="brutal"] .pill{display:inline-block;font-size:11px;font-weight:900;padding:2px 8px;background:var(--accent2);color:#fff;border:2px solid var(--ink);text-transform:uppercase;}
+  [data-style="brutal"] .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+  [data-style="brutal"] .stat{background:var(--panel);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);padding:14px;}
+  [data-style="brutal"] .stat:nth-child(2){background:var(--accent2);color:#fff;}
+  [data-style="brutal"] .stat:nth-child(3){background:var(--accent3);} 
+  [data-style="brutal"] .stat .k{font-size:11px;font-weight:900;text-transform:uppercase;}
+  [data-style="brutal"] .stat .v{font-size:30px;font-weight:900;margin-top:4px;}
+  [data-style="brutal"] .pcard{display:flex;gap:13px;align-items:center;padding:13px;border-bottom:3px solid var(--ink);}
+  [data-style="brutal"] .pcard .num{width:40px;height:40px;background:var(--accent);color:#fff;font-weight:900;display:grid;place-items:center;border:3px solid var(--ink);}
+  [data-style="brutal"] .pcard .pos{font-size:11px;font-weight:900;text-transform:uppercase;}
+  [data-style="brutal"] .pcard .ppts{margin-left:auto;font-weight:900;font-size:17px;}
+
+  /* ============================================================
+     STYLE 4 — GLASS / BENTO (pitch gradient, frosted cards)
+     ============================================================ */
+  [data-style="glass"] {
+    --text:#f2f6ff; --muted:#aab8d4; --accent:#5eead4; --accent2:#a78bfa;
+    font-family:"Inter", system-ui, sans-serif;
+  }
+  [data-style="glass"].surface{background:linear-gradient(135deg,#0b3d2e 0%,#0a2540 55%,#1a1145 100%);color:var(--text);padding:26px;border-radius:20px;}
+  [data-style="glass"] .hd{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+  [data-style="glass"] .hd h2{font-size:23px;font-weight:700;letter-spacing:-.3px;}
+  [data-style="glass"] .hd .tag{margin-left:auto;font-size:11px;font-weight:600;color:#062;background:var(--accent);padding:5px 12px;border-radius:999px;}
+  [data-style="glass"] .glasscard{background:rgba(255,255,255,.07);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.14);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.25);}
+  [data-style="glass"] table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;}
+  [data-style="glass"] thead th{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);text-align:right;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.12);}
+  [data-style="glass"] thead th.l{text-align:left;}
+  [data-style="glass"] tbody td{padding:13px 14px;text-align:right;border-bottom:1px solid rgba(255,255,255,.08);font-size:13.5px;}
+  [data-style="glass"] tbody td.l{text-align:left;}
+  [data-style="glass"] tbody tr:hover{background:rgba(255,255,255,.05);}
+  [data-style="glass"] .rank{font-weight:700;color:var(--accent);width:30px;}
+  [data-style="glass"] .team{font-weight:600;}
+  [data-style="glass"] .pts{font-weight:700;color:var(--accent);}
+  [data-style="glass"] .up{color:var(--accent);} [data-style="glass"] .down{color:#fb7185;}
+  [data-style="glass"] .pill{font-size:10px;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(94,234,212,.16);color:var(--accent);}
+  [data-style="glass"] .grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(96px,auto);gap:14px;margin-bottom:18px;}
+  [data-style="glass"] .stat{background:rgba(255,255,255,.07);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:16px;}
+  [data-style="glass"] .stat.wide{grid-column:span 2;}
+  [data-style="glass"] .stat .k{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);}
+  [data-style="glass"] .stat .v{font-size:27px;font-weight:700;margin-top:6px;}
+  [data-style="glass"] .stat .v.acc{color:var(--accent);}
+  [data-style="glass"] .pcard{display:flex;gap:13px;align-items:center;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+  [data-style="glass"] .pcard .num{width:38px;height:38px;border-radius:12px;background:rgba(167,139,250,.22);color:var(--accent2);font-weight:700;display:grid;place-items:center;}
+  [data-style="glass"] .pcard .pos{font-size:12px;color:var(--muted);}
+  [data-style="glass"] .pcard .ppts{margin-left:auto;font-weight:700;color:var(--accent);}
+
+  /* ============================================================
+     STYLE 5 — EDITORIAL (classic, serif, print-like, restrained)
+     ============================================================ */
+  [data-style="editorial"] {
+    --bg:#f4f1ea; --panel:#fffdf8; --line:#d9d3c4; --ink:#1c1a16; --muted:#6f6a5e; --accent:#7a1f2b;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  [data-style="editorial"].surface{background:var(--bg);color:var(--ink);padding:30px;border-radius:4px;}
+  [data-style="editorial"] .hd{border-bottom:3px double var(--ink);padding-bottom:14px;margin-bottom:22px;text-align:center;}
+  [data-style="editorial"] .hd h2{font-size:30px;font-weight:700;letter-spacing:.5px;}
+  [data-style="editorial"] .hd .sub{font-size:12px;text-transform:uppercase;letter-spacing:3px;color:var(--muted);margin-top:6px;}
+  [data-style="editorial"] table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;}
+  [data-style="editorial"] thead th{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);text-align:right;padding:10px 12px;border-bottom:2px solid var(--ink);font-family:system-ui,sans-serif;}
+  [data-style="editorial"] thead th.l{text-align:left;}
+  [data-style="editorial"] tbody td{padding:12px;text-align:right;border-bottom:1px solid var(--line);font-size:15px;}
+  [data-style="editorial"] tbody td.l{text-align:left;}
+  [data-style="editorial"] tbody tr:hover{background:#efe9da;}
+  [data-style="editorial"] .rank{font-weight:700;color:var(--accent);width:32px;font-size:17px;}
+  [data-style="editorial"] .team{font-weight:700;}
+  [data-style="editorial"] .pts{font-weight:700;font-size:16px;}
+  [data-style="editorial"] .up{color:#2f6e3b;} [data-style="editorial"] .down{color:var(--accent);}
+  [data-style="editorial"] .pill{font-size:11px;font-style:italic;color:var(--accent);border-bottom:1px solid var(--accent);}
+  [data-style="editorial"] .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:22px;border:1px solid var(--line);background:var(--panel);}
+  [data-style="editorial"] .stat{padding:18px;border-right:1px solid var(--line);text-align:center;}
+  [data-style="editorial"] .stat:last-child{border-right:none;}
+  [data-style="editorial"] .stat .k{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);font-family:system-ui,sans-serif;}
+  [data-style="editorial"] .stat .v{font-size:30px;font-weight:700;margin-top:6px;}
+  [data-style="editorial"] .pcard{display:flex;gap:14px;align-items:center;padding:14px 4px;border-bottom:1px solid var(--line);}
+  [data-style="editorial"] .pcard .num{width:36px;height:36px;border-radius:50%;border:2px solid var(--ink);color:var(--ink);font-weight:700;display:grid;place-items:center;}
+  [data-style="editorial"] .pcard .pos{font-size:12px;color:var(--muted);font-style:italic;}
+  [data-style="editorial"] .pcard .ppts{margin-left:auto;font-weight:700;font-size:17px;}
+
+  /* ============================================================
+     STYLE 6 — RETRO TERMINAL (CRT monospace, green phosphor)
+     ============================================================ */
+  [data-style="terminal"]{--bg:#001405;--panel:#00210a;--line:#0a5a22;--text:#39ff7a;--muted:#1f9d4d;--accent:#c8ff00;--bad:#ff5252;font-family:"Courier New",ui-monospace,monospace;}
+  [data-style="terminal"].surface{background:var(--bg);color:var(--text);padding:22px;border-radius:6px;border:1px solid var(--line);text-shadow:0 0 4px rgba(57,255,122,.45);}
+  [data-style="terminal"] .hd{display:flex;align-items:center;gap:10px;border-bottom:1px dashed var(--line);padding-bottom:12px;margin-bottom:18px;}
+  [data-style="terminal"] .hd h2{font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+  [data-style="terminal"] .hd h2::before{content:"> ";color:var(--accent);}
+  [data-style="terminal"] .hd .sub{font-size:12px;color:var(--muted);}
+  [data-style="terminal"] .hd .tag,[data-style="terminal"] .hd .btn{margin-left:8px;font-size:11px;text-transform:uppercase;border:1px solid var(--accent);color:var(--accent);padding:3px 8px;}
+  [data-style="terminal"] .hd .tag{margin-left:auto;}
+  [data-style="terminal"] .panel,[data-style="terminal"] .glasscard{border:1px solid var(--line);background:var(--panel);}
+  [data-style="terminal"] table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;}
+  [data-style="terminal"] thead th{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);text-align:right;padding:9px 10px;border-bottom:1px dashed var(--line);}
+  [data-style="terminal"] thead th.l{text-align:left;}
+  [data-style="terminal"] tbody td{padding:10px;text-align:right;border-bottom:1px dotted var(--line);font-size:13px;}
+  [data-style="terminal"] tbody td.l{text-align:left;}
+  [data-style="terminal"] tbody tr:hover{background:rgba(57,255,122,.08);}
+  [data-style="terminal"] .rank{color:var(--accent);font-weight:700;width:30px;}
+  [data-style="terminal"] .team{font-weight:700;}
+  [data-style="terminal"] .av{display:none;}
+  [data-style="terminal"] .pts{color:var(--accent);font-weight:700;}
+  [data-style="terminal"] .up{color:var(--accent);} [data-style="terminal"] .down{color:var(--bad);}
+  [data-style="terminal"] .pill,[data-style="terminal"] .badge{font-size:11px;border:1px solid var(--line);padding:1px 7px;color:var(--text);}
+  [data-style="terminal"] .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+  [data-style="terminal"] .stat{border:1px solid var(--line);background:var(--panel);padding:13px;}
+  [data-style="terminal"] .stat .k{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+  [data-style="terminal"] .stat .k::before{content:"[ ";} [data-style="terminal"] .stat .k::after{content:" ]";}
+  [data-style="terminal"] .stat .v{font-size:24px;font-weight:700;margin-top:5px;}
+  [data-style="terminal"] .stat .v.acc{color:var(--accent);}
+  [data-style="terminal"] .pcard{display:flex;gap:12px;align-items:center;padding:11px;border-bottom:1px dotted var(--line);}
+  [data-style="terminal"] .pcard .num{width:36px;height:36px;border:1px solid var(--accent);color:var(--accent);font-weight:700;display:grid;place-items:center;}
+  [data-style="terminal"] .pcard .pos{font-size:11px;color:var(--muted);text-transform:uppercase;}
+  [data-style="terminal"] .pcard .ppts{margin-left:auto;font-weight:700;color:var(--accent);}
+
+  /* ============================================================
+     STYLE 7 — MATERIAL / MOBILE (soft rounded, elevation, M3 purple)
+     ============================================================ */
+  [data-style="material"]{--bg:#f3edf7;--panel:#fffbfe;--line:#e7e0ec;--text:#1c1b1f;--muted:#605d66;--accent:#6750a4;--accentc:#eaddff;--good:#386a20;--bad:#b3261e;font-family:"Roboto","Inter",system-ui,sans-serif;}
+  [data-style="material"].surface{background:var(--bg);color:var(--text);padding:22px;border-radius:24px;}
+  [data-style="material"] .hd{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+  [data-style="material"] .hd h2{font-size:22px;font-weight:500;}
+  [data-style="material"] .hd .sub{font-size:13px;color:var(--muted);}
+  [data-style="material"] .hd .tag{margin-left:auto;font-size:12px;font-weight:500;color:var(--accent);background:var(--accentc);padding:5px 12px;border-radius:999px;}
+  [data-style="material"] .hd .btn{font-size:13px;font-weight:500;color:#fff;background:var(--accent);padding:9px 18px;border-radius:999px;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  [data-style="material"] .panel,[data-style="material"] .glasscard{background:var(--panel);border-radius:20px;box-shadow:0 1px 2px rgba(0,0,0,.08),0 4px 14px rgba(0,0,0,.06);overflow:hidden;}
+  [data-style="material"] table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;}
+  [data-style="material"] thead th{font-size:12px;font-weight:500;color:var(--muted);text-align:right;padding:14px;border-bottom:1px solid var(--line);}
+  [data-style="material"] thead th.l{text-align:left;}
+  [data-style="material"] tbody td{padding:14px;text-align:right;border-bottom:1px solid var(--line);font-size:14px;}
+  [data-style="material"] tbody td.l{text-align:left;}
+  [data-style="material"] tbody tr:last-child td{border-bottom:none;}
+  [data-style="material"] tbody tr:hover{background:#f7f2fb;}
+  [data-style="material"] .rank{color:var(--muted);font-weight:500;width:28px;}
+  [data-style="material"] .team{font-weight:500;}
+  [data-style="material"] .av{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--accentc);color:var(--accent);font-size:11px;font-weight:600;margin-right:10px;vertical-align:middle;}
+  [data-style="material"] .pts{font-weight:600;}
+  [data-style="material"] .up{color:var(--good);} [data-style="material"] .down{color:var(--bad);}
+  [data-style="material"] .pill,[data-style="material"] .badge{font-size:12px;font-weight:500;color:var(--accent);background:var(--accentc);padding:3px 11px;border-radius:999px;}
+  [data-style="material"] .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+  [data-style="material"] .stat{background:var(--panel);border-radius:20px;box-shadow:0 1px 2px rgba(0,0,0,.08),0 4px 14px rgba(0,0,0,.05);padding:18px;}
+  [data-style="material"] .stat:nth-child(1){background:var(--accentc);}
+  [data-style="material"] .stat .k{font-size:12px;color:var(--muted);}
+  [data-style="material"] .stat .v{font-size:28px;font-weight:500;margin-top:6px;}
+  [data-style="material"] .stat .v.acc{color:var(--accent);}
+  [data-style="material"] .pcard{display:flex;gap:14px;align-items:center;padding:15px 18px;border-bottom:1px solid var(--line);}
+  [data-style="material"] .pcard:last-child{border-bottom:none;}
+  [data-style="material"] .pcard .num{width:40px;height:40px;border-radius:50%;background:var(--accentc);color:var(--accent);font-weight:600;display:grid;place-items:center;}
+  [data-style="material"] .pcard .pos{font-size:13px;color:var(--muted);}
+  [data-style="material"] .pcard .ppts{margin-left:auto;font-weight:600;}
+
+  /* ============================================================
+     STYLE 8 — CYBERPUNK NEON (dark, neon pink/cyan, glow)
+     ============================================================ */
+  [data-style="cyber"]{--bg:#0a0118;--panel:#140a26;--line:#3a1f5c;--text:#e7e0ff;--muted:#8c79c0;--accent:#ff2e97;--accent2:#00f0ff;font-family:"Inter",system-ui,sans-serif;}
+  [data-style="cyber"].surface{background:radial-gradient(1200px 400px at 80% -10%,rgba(255,46,151,.18),transparent),radial-gradient(900px 400px at 0% 110%,rgba(0,240,255,.16),transparent),var(--bg);color:var(--text);padding:24px;border-radius:8px;border:1px solid var(--line);}
+  [data-style="cyber"] .hd{display:flex;align-items:center;gap:12px;margin-bottom:20px;border-left:3px solid var(--accent2);padding-left:12px;}
+  [data-style="cyber"] .hd h2{font-size:21px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#fff;text-shadow:0 0 12px rgba(0,240,255,.6);}
+  [data-style="cyber"] .hd .sub{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+  [data-style="cyber"] .hd .tag{margin-left:auto;font-size:11px;font-weight:800;text-transform:uppercase;color:#0a0118;background:var(--accent2);padding:4px 11px;border-radius:3px;box-shadow:0 0 14px rgba(0,240,255,.6);}
+  [data-style="cyber"] .hd .btn{font-size:12px;font-weight:700;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);padding:6px 12px;border-radius:3px;box-shadow:0 0 12px rgba(255,46,151,.4);}
+  [data-style="cyber"] .panel,[data-style="cyber"] .glasscard{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:inset 0 0 30px rgba(255,46,151,.06);}
+  [data-style="cyber"] table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;}
+  [data-style="cyber"] thead th{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--accent2);text-align:right;padding:10px;border-bottom:1px solid var(--line);}
+  [data-style="cyber"] thead th.l{text-align:left;}
+  [data-style="cyber"] tbody td{padding:12px 10px;text-align:right;border-bottom:1px solid rgba(58,31,92,.5);font-size:13px;}
+  [data-style="cyber"] tbody td.l{text-align:left;}
+  [data-style="cyber"] tbody tr:hover{background:rgba(255,46,151,.07);}
+  [data-style="cyber"] .rank{font-weight:800;color:var(--accent);width:30px;text-shadow:0 0 10px rgba(255,46,151,.7);}
+  [data-style="cyber"] .team{font-weight:700;}
+  [data-style="cyber"] .av{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:4px;background:rgba(0,240,255,.14);color:var(--accent2);font-size:11px;font-weight:700;margin-right:9px;vertical-align:middle;}
+  [data-style="cyber"] .pts{font-weight:800;color:var(--accent2);text-shadow:0 0 10px rgba(0,240,255,.6);}
+  [data-style="cyber"] .up{color:var(--accent2);} [data-style="cyber"] .down{color:var(--accent);}
+  [data-style="cyber"] .pill,[data-style="cyber"] .badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:3px;background:rgba(0,240,255,.12);color:var(--accent2);}
+  [data-style="cyber"] .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px;}
+  [data-style="cyber"] .stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:15px;box-shadow:inset 0 0 24px rgba(0,240,255,.05);}
+  [data-style="cyber"] .stat .k{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);}
+  [data-style="cyber"] .stat .v{font-size:26px;font-weight:800;margin-top:5px;}
+  [data-style="cyber"] .stat .v.acc{color:var(--accent);text-shadow:0 0 12px rgba(255,46,151,.6);}
+  [data-style="cyber"] .pcard{display:flex;gap:13px;align-items:center;padding:13px;border-bottom:1px solid rgba(58,31,92,.5);}
+  [data-style="cyber"] .pcard .num{width:38px;height:38px;border-radius:6px;background:rgba(255,46,151,.14);color:var(--accent);font-weight:800;display:grid;place-items:center;box-shadow:0 0 14px rgba(255,46,151,.3);}
+  [data-style="cyber"] .pcard .pos{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+  [data-style="cyber"] .pcard .ppts{margin-left:auto;font-weight:800;color:var(--accent2);text-shadow:0 0 10px rgba(0,240,255,.5);}
+
+  /* ============================================================
+     STYLE 9 — MINIMAL MONO (black & white, ultra-clean, no color)
+     ============================================================ */
+  [data-style="mono"]{--bg:#ffffff;--panel:#ffffff;--line:#e6e6e6;--text:#0b0b0b;--muted:#9a9a9a;--accent:#0b0b0b;font-family:"Inter","Helvetica Neue",system-ui,sans-serif;}
+  [data-style="mono"].surface{background:var(--bg);color:var(--text);padding:30px;border:1px solid var(--line);border-radius:2px;}
+  [data-style="mono"] .hd{display:flex;align-items:baseline;gap:12px;margin-bottom:26px;padding-bottom:16px;border-bottom:1px solid var(--text);}
+  [data-style="mono"] .hd h2{font-size:20px;font-weight:600;letter-spacing:-.3px;}
+  [data-style="mono"] .hd .sub{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;}
+  [data-style="mono"] .hd .tag{margin-left:auto;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);}
+  [data-style="mono"] .hd .btn{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text);border:1px solid var(--text);padding:7px 14px;}
+  [data-style="mono"] .panel,[data-style="mono"] .glasscard{background:var(--panel);}
+  [data-style="mono"] table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;}
+  [data-style="mono"] thead th{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);text-align:right;padding:12px 12px;border-bottom:1px solid var(--text);font-weight:500;}
+  [data-style="mono"] thead th.l{text-align:left;}
+  [data-style="mono"] tbody td{padding:15px 12px;text-align:right;border-bottom:1px solid var(--line);font-size:14px;}
+  [data-style="mono"] tbody td.l{text-align:left;}
+  [data-style="mono"] tbody tr:hover{background:#fafafa;}
+  [data-style="mono"] .rank{font-weight:600;width:30px;}
+  [data-style="mono"] .team{font-weight:600;}
+  [data-style="mono"] .av{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;border:1px solid var(--text);color:var(--text);font-size:10px;font-weight:600;margin-right:10px;vertical-align:middle;}
+  [data-style="mono"] .pts{font-weight:700;}
+  [data-style="mono"] .up,[data-style="mono"] .down{color:var(--muted);font-size:11px;}
+  [data-style="mono"] .pill,[data-style="mono"] .badge{font-size:11px;color:var(--text);border:1px solid var(--line);padding:2px 9px;border-radius:999px;}
+  [data-style="mono"] .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:22px;border:1px solid var(--line);}
+  [data-style="mono"] .stat{padding:20px;border-right:1px solid var(--line);}
+  [data-style="mono"] .stat:last-child{border-right:none;}
+  [data-style="mono"] .stat .k{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);}
+  [data-style="mono"] .stat .v{font-size:30px;font-weight:600;letter-spacing:-1px;margin-top:8px;}
+  [data-style="mono"] .stat .v.acc{color:var(--text);}
+  [data-style="mono"] .pcard{display:flex;gap:14px;align-items:center;padding:16px 4px;border-bottom:1px solid var(--line);}
+  [data-style="mono"] .pcard .num{width:38px;height:38px;border-radius:50%;border:1px solid var(--text);color:var(--text);font-weight:600;display:grid;place-items:center;}
+  [data-style="mono"] .pcard .pos{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+  [data-style="mono"] .pcard .ppts{margin-left:auto;font-weight:700;}
+
+  .panel, .glasscard { margin-top:2px; }
+  @media (max-width:720px){ .grid{grid-template-columns:repeat(2,1fr)!important;} }
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <h1>⚽ Fantasy World Cup — Style Gallery</h1>
+  <div class="group">
+    <span class="label">Style</span>
+    <button class="chip" data-set-style="broadcast" aria-pressed="true">Broadcast</button>
+    <button class="chip" data-set-style="saas">SaaS Dashboard</button>
+    <button class="chip" data-set-style="brutal">Neo-Brutalist</button>
+    <button class="chip" data-set-style="glass">Glass / Bento</button>
+    <button class="chip" data-set-style="editorial">Editorial</button>
+    <button class="chip" data-set-style="terminal">Retro Terminal</button>
+    <button class="chip" data-set-style="material">Material / Mobile</button>
+    <button class="chip" data-set-style="cyber">Cyberpunk Neon</button>
+    <button class="chip" data-set-style="mono">Minimal Mono</button>
+  </div>
+  <div class="group">
+    <span class="label">Page</span>
+    <button class="chip" data-set-page="standings" aria-pressed="true">Standings</button>
+    <button class="chip" data-set-page="dashboard">League Home</button>
+    <button class="chip" data-set-page="roster">Roster</button>
+  </div>
+</div>
+
+<div class="stage">
+  <div class="frame">
+    <div class="style-name">Showing <b id="styleLabel">Broadcast</b> — <span id="pageLabel">Standings</span></div>
+    <div class="surface" id="surface" data-style="broadcast">
+
+      <!-- ===== STANDINGS ===== -->
+      <div class="page active" data-page="standings">
+        <div class="hd">
+          <h2>League Standings</h2>
+          <span class="sub">Best-ball · through Round of 16</span>
+          <span class="tag">Live</span>
+          <span class="btn">Recompute</span>
+        </div>
+        <div class="panel glasscard">
+        <table>
+          <thead>
+            <tr>
+              <th class="l">#</th><th class="l">Manager</th>
+              <th>G1</th><th>G2</th><th>G3</th><th>R32</th><th>R16</th>
+              <th>Alive</th><th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="rank">1</td><td class="l"><span class="av">AX</span><span class="team">Aidan's XI</span> <span class="up">▲2</span></td><td>71</td><td>83</td><td>96</td><td>188</td><td>204</td><td><span class="pill">9</span></td><td class="pts">642</td></tr>
+            <tr><td class="rank">2</td><td class="l"><span class="av">GD</span><span class="team">Group of Death</span> <span class="down">▼1</span></td><td>78</td><td>74</td><td>90</td><td>199</td><td>190</td><td><span class="pill">8</span></td><td class="pts">631</td></tr>
+            <tr><td class="rank">3</td><td class="l"><span class="av">TT</span><span class="team">Tiki-Taka-Toe</span> <span class="up">▲1</span></td><td>69</td><td>81</td><td>88</td><td>181</td><td>199</td><td><span class="pill">8</span></td><td class="pts">618</td></tr>
+            <tr><td class="rank">4</td><td class="l"><span class="av">MM</span><span class="team">Mbappé Maybe Not</span> <span class="down">▼2</span></td><td>74</td><td>70</td><td>85</td><td>185</td><td>183</td><td><span class="pill">7</span></td><td class="pts">597</td></tr>
+            <tr><td class="rank">5</td><td class="l"><span class="av">PP</span><span class="team">Pulisic Pandemonium</span></td><td>66</td><td>77</td><td>82</td><td>176</td><td>183</td><td><span class="pill">7</span></td><td class="pts">584</td></tr>
+            <tr><td class="rank">6</td><td class="l"><span class="av">GP</span><span class="team">The Gegenpressers</span> <span class="up">▲1</span></td><td>72</td><td>68</td><td>79</td><td>174</td><td>180</td><td><span class="pill">6</span></td><td class="pts">573</td></tr>
+            <tr><td class="rank">7</td><td class="l"><span class="av">BM</span><span class="team">Bench Mob</span> <span class="down">▼1</span></td><td>63</td><td>71</td><td>80</td><td>170</td><td>177</td><td><span class="pill">5</span></td><td class="pts">561</td></tr>
+            <tr><td class="rank">8</td><td class="l"><span class="av">PB</span><span class="team">Parking the Bus</span></td><td>61</td><td>66</td><td>74</td><td>168</td><td>171</td><td><span class="pill">4</span></td><td class="pts">540</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+
+      <!-- ===== DASHBOARD ===== -->
+      <div class="page" data-page="dashboard">
+        <div class="hd">
+          <h2>The Group of Death League</h2>
+          <span class="sub">8 managers · Round of 16</span>
+          <span class="tag">Owner</span>
+          <span class="btn">Invite</span>
+        </div>
+        <div class="grid">
+          <div class="stat"><div class="k">Your Rank</div><div class="v acc">1st</div><div class="d up">▲2 since R32</div></div>
+          <div class="stat wide"><div class="k">Your Total</div><div class="v">642 <span style="font-size:13px">pts</span></div><div class="d up">+204 in R16</div></div>
+          <div class="stat"><div class="k">Players Alive</div><div class="v">9 / 11</div></div>
+          <div class="stat"><div class="k">Manager of the Stage</div><div class="v" style="font-size:16px">Aidan's XI</div><div class="d">R16 · 204 pts</div></div>
+          <div class="stat"><div class="k">Lead over 2nd</div><div class="v acc">+11</div></div>
+          <div class="stat"><div class="k">Next Deadline</div><div class="v" style="font-size:18px">Sat 17:00</div><div class="d">Quarter-finals</div></div>
+          <div class="stat wide"><div class="k">Top Scorer (your XI)</div><div class="v" style="font-size:16px">J. Bellingham — 48 pts</div></div>
+        </div>
+        <div class="panel glasscard" style="padding:16px">
+          <div class="pcard"><div class="num">1</div><div><div class="team">Aidan's XI moved into 1st</div><div class="pos">Round of 16 · +204 pts</div></div><div class="ppts">642</div></div>
+          <div class="pcard"><div class="num">2</div><div><div class="team">Group of Death slipped to 2nd</div><div class="pos">Round of 16 · +190 pts</div></div><div class="ppts">631</div></div>
+          <div class="pcard"><div class="num">3</div><div><div class="team">Tiki-Taka-Toe climbed to 3rd</div><div class="pos">Round of 16 · +199 pts</div></div><div class="ppts">618</div></div>
+        </div>
+      </div>
+
+      <!-- ===== ROSTER ===== -->
+      <div class="page" data-page="roster">
+        <div class="hd">
+          <h2>Aidan's XI — Roster</h2>
+          <span class="sub">Best-ball XI · Round of 16</span>
+          <span class="tag">642 pts</span>
+        </div>
+        <div class="grid">
+          <div class="stat"><div class="k">Squad Points</div><div class="v acc">642</div></div>
+          <div class="stat"><div class="k">Players Alive</div><div class="v">9 / 11</div></div>
+          <div class="stat"><div class="k">Best Performer</div><div class="v" style="font-size:15px">Bellingham</div></div>
+          <div class="stat"><div class="k">Captain</div><div class="v" style="font-size:15px">Mbappé</div></div>
+        </div>
+        <div class="panel glasscard">
+          <div class="pcard"><div class="num">10</div><div><div class="team">Kylian Mbappé</div><div class="pos">FWD · France · alive</div></div><div class="ppts">52</div></div>
+          <div class="pcard"><div class="num">22</div><div><div class="team">Jude Bellingham</div><div class="pos">MID · England · alive</div></div><div class="ppts">48</div></div>
+          <div class="pcard"><div class="num">7</div><div><div class="team">Vinícius Júnior</div><div class="pos">FWD · Brazil · alive</div></div><div class="ppts">44</div></div>
+          <div class="pcard"><div class="num">5</div><div><div class="team">Pedri</div><div class="pos">MID · Spain · alive</div></div><div class="ppts">39</div></div>
+          <div class="pcard"><div class="num">4</div><div><div class="team">Virgil van Dijk</div><div class="pos">DEF · Netherlands · eliminated</div></div><div class="ppts">31</div></div>
+          <div class="pcard"><div class="num">1</div><div><div class="team">Emiliano Martínez</div><div class="pos">GK · Argentina · alive</div></div><div class="ppts">28</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const surface = document.getElementById('surface');
+  const styleLabel = document.getElementById('styleLabel');
+  const pageLabel = document.getElementById('pageLabel');
+  const names = { broadcast:'Broadcast', saas:'SaaS Dashboard', brutal:'Neo-Brutalist', glass:'Glass / Bento', editorial:'Editorial', terminal:'Retro Terminal', material:'Material / Mobile', cyber:'Cyberpunk Neon', mono:'Minimal Mono' };
+  const pages = { standings:'Standings', dashboard:'League Home', roster:'Roster' };
+
+  document.querySelectorAll('[data-set-style]').forEach(b => b.addEventListener('click', () => {
+    const s = b.dataset.setStyle;
+    surface.dataset.style = s;
+    styleLabel.textContent = names[s];
+    document.querySelectorAll('[data-set-style]').forEach(x => x.setAttribute('aria-pressed', x===b));
+  }));
+  document.querySelectorAll('[data-set-page]').forEach(b => b.addEventListener('click', () => {
+    const p = b.dataset.setPage;
+    document.querySelectorAll('.page').forEach(pg => pg.classList.toggle('active', pg.dataset.page===p));
+    pageLabel.textContent = pages[p];
+    document.querySelectorAll('[data-set-page]').forEach(x => x.setAttribute('aria-pressed', x===b));
+  }));
+</script>
+</body>
+</html>

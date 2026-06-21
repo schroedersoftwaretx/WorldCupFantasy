@@ -1,0 +1,79 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mobile pass — preview</title>
+<style>
+  :root{--fg:#1a1a1a;--muted:#666;--bg:#fafafa;--card:#fff;--border:#e2e2e2;--accent:#1f6feb;--accent-bg:#eef4ff;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#3a3d44;color:var(--fg);padding:24px;display:flex;gap:28px;flex-wrap:wrap;justify-content:center;}
+  .cap{color:#cfd2d8;font-size:12px;text-align:center;margin-bottom:10px;max-width:380px;}
+  .cap b{color:#fff;}
+  /* phone frame ~390px */
+  .phone{width:390px;height:760px;background:var(--bg);border-radius:34px;border:10px solid #111;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 18px 50px rgba(0,0,0,.45);}
+  .site-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;border-bottom:1px solid var(--border);background:var(--card);padding:.85rem;}
+  .site-title{font-weight:700;font-size:1.05rem;color:var(--fg);text-decoration:none;}
+  .user-chip{font-size:.8rem;color:var(--muted);}
+  .site-main{flex:1;overflow-y:auto;padding:1rem .85rem calc(4.5rem + 8px);}
+  h2{font-size:1rem;margin:.2rem 0 .6rem;}
+  .subtitle{font-size:.78rem;color:var(--muted);margin-bottom:.7rem;}
+
+  /* ---- copied from the real globals mobile pass ---- */
+  .table-scroll{position:relative;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    background:
+      linear-gradient(to right,var(--card) 28%,rgba(255,255,255,0)) left center/28px 100% no-repeat,
+      linear-gradient(to left,var(--card) 28%,rgba(255,255,255,0)) right center/28px 100% no-repeat,
+      radial-gradient(farthest-side at 0 50%,rgba(0,0,0,.16),rgba(0,0,0,0)) left center/14px 100% no-repeat,
+      radial-gradient(farthest-side at 100% 50%,rgba(0,0,0,.16),rgba(0,0,0,0)) right center/14px 100% no-repeat;
+    background-attachment:local,local,scroll,scroll;}
+  table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;}
+  th,td{border-bottom:1px solid var(--border);white-space:nowrap;}
+  thead th{font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);text-align:right;}
+  th.l,td.l{text-align:left;}
+  td{text-align:right;}
+  .team-link{color:var(--accent);text-decoration:none;font-weight:600;}
+
+  @media all{ /* force the mobile rules on regardless of width for this preview */
+    .table-scroll table{font-size:.8rem;}
+    .table-scroll th,.table-scroll td{padding:.4rem .5rem;}
+    .table-scroll thead th:first-child,.table-scroll tbody td:first-child{position:sticky;left:0;z-index:1;background:var(--card);}
+    .table-scroll thead th:first-child{z-index:2;}
+    .table-scroll th:first-child::after,.table-scroll td:first-child::after{content:"";position:absolute;top:0;right:0;bottom:0;width:1px;background:var(--border);}
+  }
+
+  .bottom-nav{display:flex;position:absolute;left:0;right:0;bottom:0;z-index:40;background:var(--card);border-top:1px solid var(--border);box-shadow:0 -2px 10px rgba(0,0,0,.06);}
+  .bottom-nav-link{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:56px;padding:.45rem .25rem;color:var(--muted);font-size:.7rem;font-weight:600;text-decoration:none;}
+  .bottom-nav-link.is-active{color:var(--accent);}
+  .bottom-nav-icon svg{width:22px;height:22px;display:block;}
+</style></head>
+<body>
+<div>
+  <div class="cap"><b>Standings</b> — scroll the table sideways with your finger. The <b>Team</b> column stays pinned, and the soft edge shadow shows there's more to the right.</div>
+  <div class="phone">
+    <header class="site-header"><a class="site-title" href="#">World Cup Fantasy</a><span class="user-chip">Aidan ▾</span></header>
+    <div class="site-main">
+      <h2>Best-ball points by period</h2>
+      <p class="subtitle">Tap a cell to reveal that team's XI.</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th class="l">Team</th><th>G1</th><th>G2</th><th>G3</th><th>R32</th><th>R16</th><th>QF</th><th>SF</th><th>Final</th><th>Total</th></tr></thead>
+          <tbody>
+            <tr><td class="l"><a class="team-link" href="#">Aidan's XI</a></td><td>71</td><td>83</td><td>96</td><td>188</td><td>204</td><td>—</td><td>—</td><td>—</td><td>642</td></tr>
+            <tr><td class="l"><a class="team-link" href="#">Group of Death</a></td><td>78</td><td>74</td><td>90</td><td>199</td><td>190</td><td>—</td><td>—</td><td>—</td><td>631</td></tr>
+            <tr><td class="l"><a class="team-link" href="#">Tiki-Taka-Toe</a></td><td>69</td><td>81</td><td>88</td><td>181</td><td>199</td><td>—</td><td>—</td><td>—</td><td>618</td></tr>
+            <tr><td class="l"><a class="team-link" href="#">Mbappé Maybe Not</a></td><td>74</td><td>70</td><td>85</td><td>185</td><td>183</td><td>—</td><td>—</td><td>—</td><td>597</td></tr>
+            <tr><td class="l"><a class="team-link" href="#">Pulisic Pandemonium</a></td><td>66</td><td>77</td><td>82</td><td>176</td><td>183</td><td>—</td><td>—</td><td>—</td><td>584</td></tr>
+            <tr><td class="l"><a class="team-link" href="#">The Gegenpressers</a></td><td>72</td><td>68</td><td>79</td><td>174</td><td>180</td><td>—</td><td>—</td><td>—</td><td>573</td></tr>
+            <tr><td class="l"><a class="team-link" href="#">Bench Mob</a></td><td>63</td><td>71</td><td>80</td><td>170</td><td>177</td><td>—</td><td>—</td><td>—</td><td>561</td></tr>
+            <tr><td class="l"><a class="team-link" href="#">Parking the Bus</a></td><td>61</td><td>66</td><td>74</td><td>168</td><td>171</td><td>—</td><td>—</td><td>—</td><td>540</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="subtitle" style="margin-top:1rem">↑ Drag the table left/right — the team names hold their place.</p>
+    </div>
+    <nav class="bottom-nav">
+      <a class="bottom-nav-link is-active"><span class="bottom-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg></span>Home</a>
+      <a class="bottom-nav-link"><span class="bottom-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></span>Stats</a>
+      <a class="bottom-nav-link"><span class="bottom-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>Account</a>
+    </nav>
+  </div>
+</div>
+</body></html>
