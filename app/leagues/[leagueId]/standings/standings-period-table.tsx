@@ -212,6 +212,7 @@ export default function StandingsPeriodTable({
             <p className="xi-hint">
               Click a player to see their score breakdown.
             </p>
+            <div className="table-scroll">
             <table className="xi-table">
               <thead>
                 <tr>
@@ -316,6 +317,7 @@ export default function StandingsPeriodTable({
                   })}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       ) : null}
