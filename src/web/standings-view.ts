@@ -21,6 +21,7 @@ import {
   scoreEntry,
   stageEnum,
   stageOdds,
+  statLine,
   type Stage,
 } from "../data/db/schema.js";
 import type { ScoringRuleset } from "../data/scoring/ruleset.js";
@@ -114,6 +115,29 @@ export async function getRosterScores(
     fixtures.map((f) => [f.id, f.stage]),
   );
 
+  // Raw stat lines (goals / assists) for these players, so the roster page can
+  // show per-week goals + assists alongside points. Keyed by (playerId,stage).
+  const statLines = await db
+    .select()
+    .from(statLine)
+    .where(inArray(statLine.playerId, playerIds));
+  const goalsAssistsByKey = new Map<string, { goals: number; assists: number }>();
+  for (const sl of statLines) {
+    const stage = stageByFixtureId.get(sl.fixtureId);
+    if (!stage) continue;
+    const key = `${sl.playerId}:${stage}`;
+    const agg = goalsAssistsByKey.get(key) ?? { goals: 0, assists: 0 };
+    agg.goals += sl.goals;
+    agg.assists += sl.assists;
+    goalsAssistsByKey.set(key, agg);
+  }
+  function playerGoalsAssistsInStage(
+    playerId: number,
+    stage: Stage,
+  ): { goals: number; assists: number } {
+    return goalsAssistsByKey.get(`${playerId}:${stage}`) ?? { goals: 0, assists: 0 };
+  }
+
   // (playerId, stage) -> raw points
   function playerPointsInStage(playerId: number, stage: Stage): number {
     let sum = 0;
@@ -181,9 +205,12 @@ export async function getRosterScores(
       const points = playerPointsInStage(pid, stage);
       const inXi = xiPlayerIds[idx]?.has(pid) ?? false;
       if (inXi) totalPoints += points;
+      const { goals, assists } = playerGoalsAssistsInStage(pid, stage);
       return {
         stage,
         points,
+        goals,
+        assists,
         inXi,
         appeared: playerAppearedInStage(pid, stage),
       };

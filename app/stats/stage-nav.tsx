@@ -12,12 +12,16 @@ import { STAGE_LABEL, STAGE_ORDER } from "./stage-labels";
 export function StageNav({
   current,
   scored,
+  all = false,
 }: {
   current: Stage | null;
   /** Stages that have any score_entry (the rest render disabled). */
   scored: readonly Stage[];
+  /** True when the whole-tournament ("All") view is the current page. */
+  all?: boolean;
 }) {
   const scoredSet = new Set(scored);
+  const anyScored = scored.length > 0;
   return (
     <nav className="stage-nav" aria-label="Tournament stage">
       {STAGE_ORDER.map((stage) => {
@@ -44,6 +48,24 @@ export function StageNav({
           </Link>
         );
       })}
+      {/* Whole-tournament best XI. Enabled once any stage has scores. */}
+      {anyScored ? (
+        <Link
+          href="/stats/team-of-the-stage/all"
+          className={`stage-chip${all ? " stage-chip-active" : ""}`}
+          aria-current={all ? "page" : undefined}
+          title="Best XI across the whole tournament"
+        >
+          All
+        </Link>
+      ) : (
+        <span
+          className="stage-chip stage-chip-disabled"
+          aria-disabled="true"
+        >
+          All
+        </span>
+      )}
     </nav>
   );
 }

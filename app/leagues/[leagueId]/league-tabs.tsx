@@ -14,9 +14,19 @@ import Link from "next/link";
 import { getFlags, type FeatureFlag } from "@/data/league/feature-flags";
 import { getDb } from "@/web/db";
 
+/** Which tab is the current page, so it can render as active. */
+type CurrentTab =
+  | "overview"
+  | "standings"
+  | "draft"
+  | "stats"
+  | "awards"
+  | "settings";
+
 interface LeagueTabsProps {
   leagueId: number;
   isOwner: boolean;
+  current?: CurrentTab;
 }
 
 /** Future-phase flags and the label each will surface in the tab strip. */
@@ -30,6 +40,7 @@ const FUTURE_TABS: ReadonlyArray<{ flag: FeatureFlag; label: string }> = [
 export default async function LeagueTabs({
   leagueId,
   isOwner,
+  current,
 }: LeagueTabsProps) {
   let flags;
   try {
@@ -38,24 +49,43 @@ export default async function LeagueTabs({
     flags = null;
   }
 
+  const tabClass = (tab: CurrentTab) =>
+    `league-tab${current === tab ? " active" : ""}`;
+
   return (
-    <nav className="league-tabs">
-      <Link href={`/leagues/${leagueId}`} className="league-tab">
+    <nav className="league-tabs" aria-label="League navigation">
+      <Link
+        href={`/leagues/${leagueId}`}
+        className={tabClass("overview")}
+        aria-current={current === "overview" ? "page" : undefined}
+      >
         Overview
       </Link>
-      <Link href={`/leagues/${leagueId}/standings`} className="league-tab">
+      <Link
+        href={`/leagues/${leagueId}/standings`}
+        className={tabClass("standings")}
+        aria-current={current === "standings" ? "page" : undefined}
+      >
         Standings
       </Link>
-      <Link href={`/leagues/${leagueId}/draft`} className="league-tab">
+      <Link
+        href={`/leagues/${leagueId}/draft`}
+        className={tabClass("draft")}
+        aria-current={current === "draft" ? "page" : undefined}
+      >
         Draft
       </Link>
       {flags && flags.stats_hub ? (
-        <Link href="/stats" className="league-tab">
+        <Link href="/stats" className={tabClass("stats")}>
           Stats Hub
         </Link>
       ) : null}
       {flags && flags.awards ? (
-        <Link href={`/leagues/${leagueId}/awards`} className="league-tab">
+        <Link
+          href={`/leagues/${leagueId}/awards`}
+          className={tabClass("awards")}
+          aria-current={current === "awards" ? "page" : undefined}
+        >
           Trophy Room
         </Link>
       ) : null}
@@ -73,7 +103,8 @@ export default async function LeagueTabs({
       {isOwner ? (
         <Link
           href={`/leagues/${leagueId}/settings`}
-          className="league-tab"
+          className={tabClass("settings")}
+          aria-current={current === "settings" ? "page" : undefined}
         >
           Settings
         </Link>

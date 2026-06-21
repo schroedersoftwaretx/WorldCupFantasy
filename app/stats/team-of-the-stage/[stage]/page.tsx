@@ -5,8 +5,14 @@
 import Link from "next/link";
 
 import { stagesWithScores } from "@/data/stats/aggregate";
-import { teamOfTheStage } from "@/data/stats/team-of-the-stage";
-import type { TeamOfStage } from "@/data/stats/team-of-the-stage";
+import {
+  teamOfTheStage,
+  teamOfTheTournament,
+} from "@/data/stats/team-of-the-stage";
+import type {
+  TeamOfStage,
+  TeamOfTournament,
+} from "@/data/stats/team-of-the-stage";
 import type { Stage } from "@/data/db/schema";
 import { getDb } from "@/web/db";
 import { HUB_RULESET_VERSION, isStage } from "@/web/stats-params";
@@ -33,7 +39,9 @@ export default async function TeamOfStagePage({
     </Link>
   );
 
-  if (!isStage(stage)) {
+  const isAll = stage === "all";
+
+  if (!isAll && !isStage(stage)) {
     return (
       <>
         {back}
@@ -41,15 +49,20 @@ export default async function TeamOfStagePage({
       </>
     );
   }
-  const s: Stage = stage;
+  const s: Stage | null = isAll ? null : (stage as Stage);
 
-  let team: TeamOfStage | null = null;
+  let team: TeamOfStage | TeamOfTournament | null = null;
   let scored: Stage[] = [];
   let error: string | null = null;
   try {
     const db = getDb();
     scored = await stagesWithScores(db, HUB_RULESET_VERSION);
-    team = await teamOfTheStage(db, { rulesetVersion: HUB_RULESET_VERSION, stage: s });
+    team = isAll
+      ? await teamOfTheTournament(db, { rulesetVersion: HUB_RULESET_VERSION })
+      : await teamOfTheStage(db, {
+          rulesetVersion: HUB_RULESET_VERSION,
+          stage: s as Stage,
+        });
   } catch (e) {
     error = e instanceof Error ? e.message : "could not load the team of the stage";
   }
@@ -57,16 +70,19 @@ export default async function TeamOfStagePage({
   return (
     <>
       {back}
-      <h1>Team of the Stage</h1>
-      <p className="subtitle">{STAGE_FULL[s]}</p>
-      <StageNav current={s} scored={scored} />
+      <h1>{isAll ? "Team of the Tournament" : "Team of the Stage"}</h1>
+      <p className="subtitle">
+        {isAll ? "Best XI across the whole tournament" : STAGE_FULL[s as Stage]}
+      </p>
+      <StageNav current={s} scored={scored} all={isAll} />
 
       {error ? (
         <p className="error">Could not load: {error}</p>
       ) : !team || team.xi.length === 0 ? (
         <p className="notice">
-          No scored matches for this stage yet. The best XI appears once results
-          are in.
+          {isAll
+            ? "No scored matches yet. The best XI appears once results are in."
+            : "No scored matches for this stage yet. The best XI appears once results are in."}
         </p>
       ) : (
         <PlayerStatsProvider>

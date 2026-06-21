@@ -59,6 +59,14 @@ export interface TeamOfStage {
   xi: TeamOfStagePlayer[];
 }
 
+/** The whole-tournament best XI (Team of the Tournament). Same shape minus the
+ * single stage, since it spans every scored fixture. */
+export interface TeamOfTournament {
+  formation: string | null;
+  points: number;
+  xi: TeamOfStagePlayer[];
+}
+
 /**
  * Can `pool` field ANY of the four legal formations? The optimizer throws on a
  * pool that can fill none (too few of some position); this guard lets the
@@ -91,40 +99,37 @@ export interface TeamOfStageQuery {
 }
 
 /**
- * The Team of the Stage: load every player's total points across the stage's
- * fixtures, run the best-ball optimizer over the whole pool, and decorate the
- * winning XI with names + key raw stats. Pure read - makes no writes.
+ * Shared core: build the best legal XI over an explicit set of fixtures, with
+ * each pick decorated by its names + key raw stats summed over those fixtures.
+ * `null` fixtureIds means "every fixture" (the whole-tournament view). Returns
+ * `{ formation: null, points: 0, xi: [] }` when no legal XI can be fielded.
+ * Pure read - makes no writes.
  */
-export async function teamOfTheStage(
+async function bestGlobalXi(
   db: Db | DbTx,
-  query: TeamOfStageQuery,
-): Promise<TeamOfStage> {
-  const empty: TeamOfStage = {
-    stage: query.stage,
-    formation: null,
-    points: 0,
-    xi: [],
-  };
+  rulesetVersion: string,
+  fxIds: number[] | null,
+): Promise<TeamOfTournament> {
+  const empty: TeamOfTournament = { formation: null, points: 0, xi: [] };
 
-  const fxRows = await db
-    .select({ id: fixture.id })
-    .from(fixture)
-    .where(eq(fixture.stage, query.stage));
-  const fxIds = fxRows.map((r) => r.id);
-  if (fxIds.length === 0) return empty;
+  // Restrict to the given fixtures, or score over all of them when null.
+  // Comparing `fxIds !== null` inline lets TS narrow it to number[].
+  if (fxIds !== null && fxIds.length === 0) return empty;
 
   const scores = await db
     .select()
     .from(scoreEntry)
     .where(
-      and(
-        eq(scoreEntry.rulesetVersion, query.rulesetVersion),
-        inArray(scoreEntry.fixtureId, fxIds),
-      ),
+      fxIds !== null
+        ? and(
+            eq(scoreEntry.rulesetVersion, rulesetVersion),
+            inArray(scoreEntry.fixtureId, fxIds),
+          )
+        : eq(scoreEntry.rulesetVersion, rulesetVersion),
     );
   if (scores.length === 0) return empty;
 
-  // Sum each player's points across the stage's fixtures.
+  // Sum each player's points across the in-scope fixtures.
   const pts = new Map<number, number>();
   for (const s of scores) pts.set(s.playerId, (pts.get(s.playerId) ?? 0) + s.points);
 
@@ -151,7 +156,12 @@ export async function teamOfTheStage(
     .select()
     .from(statLine)
     .where(
-      and(inArray(statLine.playerId, xiIds), inArray(statLine.fixtureId, fxIds)),
+      fxIds !== null
+        ? and(
+            inArray(statLine.playerId, xiIds),
+            inArray(statLine.fixtureId, fxIds),
+          )
+        : inArray(statLine.playerId, xiIds),
     );
   const statAgg = new Map<
     number,
@@ -202,9 +212,39 @@ export async function teamOfTheStage(
   });
 
   return {
-    stage: query.stage,
     formation: formationLabel(best.formation),
     points: round2(best.points),
     xi,
   };
+}
+
+/**
+ * The Team of the Stage: load every player's total points across the stage's
+ * fixtures, run the best-ball optimizer over the whole pool, and decorate the
+ * winning XI with names + key raw stats. Pure read - makes no writes.
+ */
+export async function teamOfTheStage(
+  db: Db | DbTx,
+  query: TeamOfStageQuery,
+): Promise<TeamOfStage> {
+  const fxRows = await db
+    .select({ id: fixture.id })
+    .from(fixture)
+    .where(eq(fixture.stage, query.stage));
+  const fxIds = fxRows.map((r) => r.id);
+
+  const best = await bestGlobalXi(db, query.rulesetVersion, fxIds);
+  return { stage: query.stage, ...best };
+}
+
+/**
+ * The Team of the Tournament: the single best legal XI across EVERY scored
+ * fixture, ranked by each player's cumulative points. Same decoration as the
+ * per-stage version. Pure read - makes no writes.
+ */
+export async function teamOfTheTournament(
+  db: Db | DbTx,
+  query: { rulesetVersion: string },
+): Promise<TeamOfTournament> {
+  return bestGlobalXi(db, query.rulesetVersion, null);
 }

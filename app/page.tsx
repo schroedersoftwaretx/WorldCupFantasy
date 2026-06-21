@@ -44,7 +44,7 @@ export default async function HomePage() {
         <ul className="card-list">
           {leagues.map((lg) => (
             <li key={lg.id}>
-              <Link href={`/leagues/${lg.id}`} className="card">
+              <Link href={`/leagues/${lg.id}/standings`} className="card">
                 <span className="card-title">{lg.name}</span>
                 <span className="tag">{lg.status}</span>
                 <div className="card-meta">

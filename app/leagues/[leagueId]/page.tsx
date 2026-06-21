@@ -96,7 +96,7 @@ export default async function LeagueOverviewPage({
         {isOwner ? "the owner" : "a member"}.
       </p>
 
-      <LeagueTabs leagueId={detail.id} isOwner={isOwner} />
+      <LeagueTabs leagueId={detail.id} isOwner={isOwner} current="overview" />
 
       <h2>Managers</h2>
       <div className="table-scroll">

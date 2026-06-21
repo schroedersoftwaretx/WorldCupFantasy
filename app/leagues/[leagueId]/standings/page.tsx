@@ -40,6 +40,7 @@ import {
   type ProjectedStandingsEntry,
 } from "@/web/standings-view";
 
+import LeagueTabs from "../league-tabs";
 import RecomputeButton from "./recompute-button";
 import StandingsPeriodTable from "./standings-period-table";
 
@@ -83,8 +84,8 @@ export default async function StandingsPage({
   const validId = Number.isInteger(id) && id > 0;
 
   const back = (
-    <Link href={validId ? `/leagues/${id}` : "/"} className="back-link">
-      &larr; {validId ? "Back to league" : "Your leagues"}
+    <Link href="/" className="back-link">
+      &larr; Your leagues
     </Link>
   );
 
@@ -202,6 +203,9 @@ export default async function StandingsPage({
         {detail.name}
         <span className="tag">{detail.status}</span>
       </h1>
+
+      <LeagueTabs leagueId={id} isOwner={isOwner} current="standings" />
+
       <p className="subtitle">
         Standings &mdash; cumulative best-ball totals. Recomputed live on every
         load.{" "}

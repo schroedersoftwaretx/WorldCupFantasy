@@ -241,6 +241,10 @@ export interface RosterPlayerScore {
   periods: Array<{
     stage: string;
     points: number;
+    /** Goals scored in that period (summed across the period's fixtures). */
+    goals: number;
+    /** Assists in that period (summed across the period's fixtures). */
+    assists: number;
     /** True when this player was selected in the best-ball XI for the period. */
     inXi: boolean;
     /** True when the player featured (has a score row) in that period. Drives
