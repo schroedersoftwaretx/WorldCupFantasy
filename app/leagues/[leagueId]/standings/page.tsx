@@ -213,7 +213,11 @@ export default async function StandingsPage({
       {isOwner && (
         <div className="recompute-banner">
           <span>
-            Owner: recompute scores from the latest ingested match stats.
+            Owner: recompute scores from the latest ingested match stats, or{" "}
+            <Link href={`/leagues/${id}/scoring`} className="refresh-link">
+              edit scoring rules
+            </Link>
+            .
           </span>
           <RecomputeButton leagueId={id} />
         </div>

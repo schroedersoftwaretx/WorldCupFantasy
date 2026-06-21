@@ -31,7 +31,7 @@ import {
   type LeagueRow,
   type ManagerRow,
 } from "../db/schema.js";
-import { DEFAULT_RULESET, type ScoringRuleset } from "../scoring/ruleset.js";
+import { buildRuleset, DEFAULT_RULESET, type ScoringRuleset } from "../scoring/ruleset.js";
 import { LeagueError } from "./errors.js";
 
 const MIN_MANAGERS = 2;
@@ -184,6 +184,34 @@ export async function createLeague(
 
     return { league: createdLeague, ownerMembership, ownerTeam };
   });
+}
+
+/**
+ * Replace a league's scoring ruleset. `values` is the value half of a ruleset
+ * (already validated, e.g. via sanitizeRulesetInput); the content-hash version
+ * is recomputed here through buildRuleset, so changing any point value yields a
+ * new ruleset_version. Returns the stored ruleset (including its new version)
+ * so the caller can recompute score_entry rows against it.
+ *
+ * This only writes league.scoring_ruleset. Score recomputation is the caller's
+ * responsibility (the API route runs recomputeAll afterwards) so the heavy work
+ * stays out of the transaction-light service layer.
+ */
+export async function setLeagueScoringRuleset(
+  db: Db,
+  leagueId: number,
+  values: Omit<ScoringRuleset, "version">,
+): Promise<ScoringRuleset> {
+  const ruleset = buildRuleset(values);
+  const [updated] = await db
+    .update(league)
+    .set({ scoringRuleset: ruleset })
+    .where(eq(league.id, leagueId))
+    .returning();
+  if (!updated) {
+    throw new LeagueError(`league ${leagueId} not found`, "LEAGUE_NOT_FOUND");
+  }
+  return ruleset;
 }
 
 // --- invites ----------------------------------------------------------------

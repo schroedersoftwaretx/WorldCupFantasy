@@ -476,6 +476,10 @@ export function mapSsFixtureStats(
         // Completed crosses; `totalCross` is the attempted count if you prefer.
         crosses: statNum(s, "accurateCross"),
         passesCompleted: statNum(s, "accuratePass"),
+        // Playmaking. SofaScore exposes `keyPass` (pass leading to a shot) and
+        // `bigChanceCreated` per player; both 0 when absent.
+        keyPasses: statNum(s, "keyPass"),
+        bigChancesCreated: statNum(s, "bigChanceCreated"),
         // SofaScore has no per-player goals-conceded stat; for the keeper it is
         // the team's reg+ET goals against. Outfield players never use this
         // field in scoring, so 0 is correct for them.

@@ -1,8 +1,32 @@
 /**
  * ScoringRules — collapsible panel with the scoring table and best-ball
- * lineup explanation. Uses native <details>/<summary> — no JS state needed.
+ * lineup explanation. The point values are read from the league's live
+ * ScoringRuleset, so the sheet always matches the rules actually in force
+ * (including any owner customizations). Uses native <details>/<summary> —
+ * no JS state needed.
  */
-export function ScoringRules() {
+import type { ScoringRuleset } from "@/data/scoring/ruleset";
+
+/** Signed display, e.g. +1, +0.5, −2 (uses the unicode minus to match the app). */
+function fmt(n: number): string {
+  return `${n >= 0 ? "+" : "−"}${Math.abs(n)}`;
+}
+
+function Row({ label, value }: { label: string; value: number }) {
+  return (
+    <tr>
+      <td>{label}</td>
+      <td className={`num ${value >= 0 ? "pts-pos" : "pts-neg"}`}>{fmt(value)}</td>
+    </tr>
+  );
+}
+
+export function ScoringRules({ ruleset }: { ruleset: ScoringRuleset }) {
+  const csGK = ruleset.cleanSheetByPosition.GK;
+  const csDEF = ruleset.cleanSheetByPosition.DEF;
+  const csMin = ruleset.cleanSheetMinMinutes;
+  const csCombined = csGK !== undefined && csDEF !== undefined && csGK === csDEF;
+
   return (
     <details className="panel scoring-rules-panel">
       <summary className="scoring-rules-summary">
@@ -25,38 +49,61 @@ export function ScoringRules() {
             </tr>
           </thead>
           <tbody>
-            <tr><td>Appearance (played any minutes)</td><td className="num pts-pos">+1</td></tr>
-            <tr><td>Played 60+ minutes (additional)</td><td className="num pts-pos">+1</td></tr>
+            <Row label="Appearance (played any minutes)" value={ruleset.appearance} />
+            <Row label="Played 60+ minutes (additional)" value={ruleset.played60Plus} />
             <tr className="rule-divider"><td colSpan={2} className="rule-group">Goals</td></tr>
-            <tr><td>Goal — GK</td><td className="num pts-pos">+10</td></tr>
-            <tr><td>Goal — DEF</td><td className="num pts-pos">+6</td></tr>
-            <tr><td>Goal — MID</td><td className="num pts-pos">+5</td></tr>
-            <tr><td>Goal — FWD</td><td className="num pts-pos">+4</td></tr>
+            <Row label="Goal — GK" value={ruleset.goalByPosition.GK} />
+            <Row label="Goal — DEF" value={ruleset.goalByPosition.DEF} />
+            <Row label="Goal — MID" value={ruleset.goalByPosition.MID} />
+            <Row label="Goal — FWD" value={ruleset.goalByPosition.FWD} />
             <tr className="rule-divider"><td colSpan={2} className="rule-group">Other positive</td></tr>
-            <tr><td>Assist (any position)</td><td className="num pts-pos">+4</td></tr>
-            <tr><td>Clean sheet — GK or DEF (60+ min, 0 conceded)</td><td className="num pts-pos">+5</td></tr>
-            <tr><td>Save (each, GK)</td><td className="num pts-pos">+1</td></tr>
-            <tr><td>Penalty saved (GK)</td><td className="num pts-pos">+2</td></tr>
-            <tr><td>Game won (GK only)</td><td className="num pts-pos">+5</td></tr>
+            <Row label="Assist (any position)" value={ruleset.assist} />
+            {csCombined ? (
+              <Row
+                label={`Clean sheet — GK or DEF (${csMin}+ min, 0 conceded)`}
+                value={csGK as number}
+              />
+            ) : (
+              <>
+                {csGK !== undefined && (
+                  <Row label={`Clean sheet — GK (${csMin}+ min, 0 conceded)`} value={csGK} />
+                )}
+                {csDEF !== undefined && (
+                  <Row label={`Clean sheet — DEF (${csMin}+ min, 0 conceded)`} value={csDEF} />
+                )}
+              </>
+            )}
+            <Row label="Save (each, GK)" value={ruleset.save} />
+            <Row label="Penalty saved (GK)" value={ruleset.penaltySaved} />
+            <Row label="Game won (GK only)" value={ruleset.gameWonKeeper} />
             <tr className="rule-divider"><td colSpan={2} className="rule-group">Detailed actions (each)</td></tr>
-            <tr><td>Shot on target</td><td className="num pts-pos">+1</td></tr>
-            <tr><td>Shot off target</td><td className="num pts-pos">+0.5</td></tr>
-            <tr><td>Successful tackle</td><td className="num pts-pos">+0.5</td></tr>
-            <tr><td>Cross</td><td className="num pts-pos">+0.5</td></tr>
-            <tr><td>Completed pass</td><td className="num pts-pos">+0.05</td></tr>
+            <Row label="Shot on target" value={ruleset.shotOnTarget} />
+            <Row label="Shot off target" value={ruleset.shotOffTarget} />
+            <Row label="Big chance created" value={ruleset.bigChanceCreated} />
+            <Row label="Key pass" value={ruleset.keyPass} />
+            <Row label="Successful tackle" value={ruleset.tackleSuccessful} />
+            <Row label="Cross" value={ruleset.cross} />
+            <Row label="Completed pass" value={ruleset.passCompleted} />
             <tr className="rule-divider"><td colSpan={2} className="rule-group">Deductions</td></tr>
-            <tr><td>Yellow card</td><td className="num pts-neg">−1</td></tr>
-            <tr><td>Red card</td><td className="num pts-neg">−5</td></tr>
-            <tr><td>Penalty missed</td><td className="num pts-neg">−2</td></tr>
-            <tr><td>Own goal</td><td className="num pts-neg">−2</td></tr>
-            <tr><td>Goal conceded (GK only, each)</td><td className="num pts-neg">−1</td></tr>
+            <Row label="Yellow card" value={ruleset.yellowCard} />
+            <Row label="Red card" value={ruleset.redCard} />
+            <Row label="Penalty missed" value={ruleset.penaltyMissed} />
+            <Row label="Own goal" value={ruleset.ownGoal} />
+            <Row label="Goal conceded (GK only, each)" value={ruleset.goalConcededByKeeper} />
           </tbody>
         </table>
         </div>
         <p className="scoring-note">
           Extra-time stats count normally. Shootout goals do not score.
-          Clean sheet requires 60+ minutes and 0 goals conceded in
+          Clean sheet requires {csMin}+ minutes and 0 goals conceded in
           regulation + extra time.
+        </p>
+        <p className="scoring-note">
+          Playmaking is never double-counted. A chance is paid once, in order
+          of value: a big chance that was converted scores only the{" "}
+          <strong>assist</strong>; an unconverted big chance scores only the{" "}
+          <strong>big chance</strong> bonus (not the key pass on top); a plain
+          key pass scores the <strong>key pass</strong> value.
         </p>
       </div>
     </details>

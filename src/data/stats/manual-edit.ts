@@ -40,6 +40,8 @@ export const EDITABLE_STAT_FIELDS = [
   "tacklesSuccessful",
   "crosses",
   "passesCompleted",
+  "keyPasses",
+  "bigChancesCreated",
   "goalsConceded",
 ] as const;
 

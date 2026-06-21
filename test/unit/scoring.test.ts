@@ -29,6 +29,8 @@ function makeStat(overrides: Partial<ScorableStatLine> = {}): ScorableStatLine {
     tacklesSuccessful: 0,
     crosses: 0,
     passesCompleted: 0,
+    keyPasses: 0,
+    bigChancesCreated: 0,
     goalsConceded: 0,
     ...overrides,
   };
@@ -241,6 +243,88 @@ describe("scoreStatLine: deductions", () => {
       DEFAULT_RULESET,
     );
     expect(res.breakdown.redCards).toBe(-5);
+  });
+});
+
+describe("scoreStatLine: playmaking", () => {
+  it("rewards big chances created at +2 each", () => {
+    const res = scoreStatLine(
+      makeStat({ minutesPlayed: 90, bigChancesCreated: 3, teamConcededInRegulationAndEt: 1 }),
+      "MID",
+      DEFAULT_RULESET,
+    );
+    expect(res.breakdown.bigChancesCreated).toBe(6);
+    // 1 (appearance) + 1 (60+) + 6 (3 big chances) = 8
+    expect(res.points).toBe(8);
+  });
+
+  it("rewards key passes at +0.5 each", () => {
+    const res = scoreStatLine(
+      makeStat({ minutesPlayed: 90, keyPasses: 5, teamConcededInRegulationAndEt: 1 }),
+      "MID",
+      DEFAULT_RULESET,
+    );
+    expect(res.breakdown.keyPasses).toBe(2.5);
+    // 1 + 1 + 2.5 = 4.5
+    expect(res.points).toBe(4.5);
+  });
+
+  it("a converted big chance pays the assist only, not the big-chance bonus", () => {
+    // 1 assist that was also a big chance: assist +4, big-chance bonus removed.
+    const res = scoreStatLine(
+      makeStat({
+        minutesPlayed: 90,
+        assists: 1,
+        bigChancesCreated: 1,
+        teamConcededInRegulationAndEt: 1,
+      }),
+      "MID",
+      DEFAULT_RULESET,
+    );
+    expect(res.breakdown.assists).toBe(4);
+    expect(res.breakdown.bigChancesCreated).toBe(0);
+    // 1 + 1 + 4 = 6
+    expect(res.points).toBe(6);
+  });
+
+  it("an unconverted big chance that was a key pass pays the bonus only, not both", () => {
+    // 1 key pass that was also a big chance: +2 (big chance), key pass removed.
+    const res = scoreStatLine(
+      makeStat({
+        minutesPlayed: 90,
+        keyPasses: 1,
+        bigChancesCreated: 1,
+        teamConcededInRegulationAndEt: 1,
+      }),
+      "MID",
+      DEFAULT_RULESET,
+    );
+    expect(res.breakdown.bigChancesCreated).toBe(2);
+    expect(res.breakdown.keyPasses).toBe(0);
+    // 1 + 1 + 2 = 4 (NOT 4.5)
+    expect(res.points).toBe(4);
+  });
+
+  it("de-dups assist > big chance > key pass across mixed counts", () => {
+    // assists 1, bigChances 2, keyPasses 3:
+    //   effectiveBig = max(0, 2 - 1) = 1  -> +2
+    //   effectiveKey = max(0, 3 - 1) = 2  -> +1.0
+    // 1 + 1 + (1*6 goal) + (1*4 assist) + 2 + 1.0 = 15
+    const res = scoreStatLine(
+      makeStat({
+        minutesPlayed: 90,
+        goals: 1,
+        assists: 1,
+        keyPasses: 3,
+        bigChancesCreated: 2,
+        teamConcededInRegulationAndEt: 1,
+      }),
+      "MID",
+      DEFAULT_RULESET,
+    );
+    expect(res.breakdown.bigChancesCreated).toBe(2);
+    expect(res.breakdown.keyPasses).toBe(1);
+    expect(res.points).toBe(15);
   });
 });
 

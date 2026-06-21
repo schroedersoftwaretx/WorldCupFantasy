@@ -361,6 +361,9 @@ export function mapFixtureStats(
         // api-sports.io has no per-player crosses field; left 0 (enter
         // manually or switch to a provider that supplies crosses).
         crosses: 0,
+        // api-sports.io has no key-pass / big-chance detail; left 0.
+        keyPasses: 0,
+        bigChancesCreated: 0,
         passesCompleted,
         goalsConceded: nz(goals.conceded),
         sourceRevision,

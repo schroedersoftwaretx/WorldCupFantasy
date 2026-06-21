@@ -343,6 +343,9 @@ export function mapSmFixtureStats(
       crosses: statTotal(s, "total-crosses"),
       // "accurate-passes" = passes that found a teammate = completed passes.
       passesCompleted: statTotal(s, "accurate-passes"),
+      // Playmaking. Sportmonks types: key passes and big chances created.
+      keyPasses: statTotal(s, "key-passes"),
+      bigChancesCreated: statTotal(s, "big-chances-created"),
       goalsConceded: statTotal(s, "goals-conceded"),
       sourceRevision,
     });

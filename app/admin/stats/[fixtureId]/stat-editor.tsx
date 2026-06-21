@@ -25,6 +25,8 @@ export interface EditorStat {
   tacklesSuccessful: number;
   crosses: number;
   passesCompleted: number;
+  keyPasses: number;
+  bigChancesCreated: number;
   goalsConceded: number;
 }
 
@@ -54,6 +56,8 @@ const COLS: Array<{ key: keyof EditorStat; label: string; title: string }> = [
   { key: "tacklesSuccessful", label: "Tkl", title: "Successful tackles" },
   { key: "crosses", label: "Crs", title: "Crosses" },
   { key: "passesCompleted", label: "Pass", title: "Completed passes" },
+  { key: "keyPasses", label: "KP", title: "Key passes (pass leading to a shot)" },
+  { key: "bigChancesCreated", label: "BCC", title: "Big chances created" },
   { key: "yellowCards", label: "YC", title: "Yellow cards" },
   { key: "redCards", label: "RC", title: "Red cards" },
   { key: "penaltiesScored", label: "PSc", title: "Penalties scored" },

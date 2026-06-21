@@ -41,6 +41,8 @@ const SORT_OPTIONS: { key: PlayerSortKey; label: string }[] = [
   { key: "points", label: "Fantasy points" },
   { key: "goals", label: "Goals" },
   { key: "assists", label: "Assists" },
+  { key: "keyPasses", label: "Key passes" },
+  { key: "bigChancesCreated", label: "Big chances created" },
   { key: "saves", label: "Saves" },
   { key: "minutesPlayed", label: "Minutes" },
   { key: "appearances", label: "Appearances" },
@@ -161,6 +163,8 @@ export default async function PlayerExplorerPage({
                   <th className="num">Apps</th>
                   <th className="num">G</th>
                   <th className="num">A</th>
+                  <th className="num" title="Key passes">KP</th>
+                  <th className="num" title="Big chances created">BCC</th>
                   <th className="num">Sv</th>
                   <th className="num">Min</th>
                 </tr>
@@ -181,6 +185,8 @@ export default async function PlayerExplorerPage({
                     <td className="num">{r.appearances}</td>
                     <td className="num">{r.goals}</td>
                     <td className="num">{r.assists}</td>
+                    <td className="num">{r.keyPasses}</td>
+                    <td className="num">{r.bigChancesCreated}</td>
                     <td className="num">{r.saves}</td>
                     <td className="num">{r.minutesPlayed}</td>
                   </tr>

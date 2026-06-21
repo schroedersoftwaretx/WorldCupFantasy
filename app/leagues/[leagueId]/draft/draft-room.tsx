@@ -18,6 +18,7 @@ import PlayerBoard from "./player-board";
 import QueuePanel from "./queue-panel";
 import { BestLineupViz } from "./best-lineup";
 import { ScoringRules } from "./scoring-rules";
+import type { ScoringRuleset } from "@/data/scoring/ruleset";
 
 const POLL_MS = 5000;
 const POSITIONS = ["GK", "DEF", "MID", "FWD"] as const;
@@ -88,7 +89,13 @@ async function readBody(res: Response): Promise<Envelope | null> {
   return res.json().catch(() => null);
 }
 
-export default function DraftRoom({ leagueId }: { leagueId: number }) {
+export default function DraftRoom({
+  leagueId,
+  ruleset,
+}: {
+  leagueId: number;
+  ruleset: ScoringRuleset;
+}) {
   const [state, setState] = useState<DraftStateData | null>(null);
   const [board, setBoard] = useState<DraftBoardPlayer[] | null>(null);
   const [queue, setQueue] = useState<QueueEntry[]>([]);
@@ -661,7 +668,7 @@ export default function DraftRoom({ leagueId }: { leagueId: number }) {
               }
             />
           ) : null}
-          <ScoringRules />
+          <ScoringRules ruleset={ruleset} />
           {orderPanel}
           {inProgress ? picksPanel : null}
           {inProgress ? (

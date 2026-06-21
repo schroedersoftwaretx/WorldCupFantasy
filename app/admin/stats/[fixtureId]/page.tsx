@@ -93,6 +93,8 @@ export default async function AdminFixtureStats({
           tacklesSuccessful: l?.tacklesSuccessful ?? 0,
           crosses: l?.crosses ?? 0,
           passesCompleted: l?.passesCompleted ?? 0,
+          keyPasses: l?.keyPasses ?? 0,
+          bigChancesCreated: l?.bigChancesCreated ?? 0,
           goalsConceded: l?.goalsConceded ?? 0,
         },
       };

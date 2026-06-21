@@ -59,6 +59,8 @@ function defaults(): ScorableStatLine {
     tacklesSuccessful: 0,
     crosses: 0,
     passesCompleted: 0,
+    keyPasses: 0,
+    bigChancesCreated: 0,
     goalsConceded: 0,
   };
 }
