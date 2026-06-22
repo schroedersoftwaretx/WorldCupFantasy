@@ -195,7 +195,7 @@ describe("mapSsFixtureStats", () => {
 
     expect(pointsOf("138530")).toBe(15); // GK: +saves +clean sheet +passes +win
     expect(pointsOf("152077")).toBe(11); // DEF: clean sheet + tackles + cross + passes
-    expect(pointsOf("814590")).toBe(16.75); // FWD: 2 goals + shots + passes
+    expect(pointsOf("814590")).toBe(21.75); // FWD: 2 goals + shots + key passes + big chances + passes
     expect(pointsOf("859765")).toBe(2.25); // MID: shot + passes - missed pen
     expect(pointsOf("786028")).toBe(7.5); // MID: assist + passes
     expect(pointsOf("197428")).toBe(5.5); // GK: saves + pen save + passes - 3 conceded
