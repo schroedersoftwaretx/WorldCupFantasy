@@ -1856,3 +1856,100 @@ textarea:focus-visible,
 .sort-th-active { font-weight: 700; }
 .sort-arrow { color: #9ad7a9; font-weight: 700; }
 .explorer-table td.sort-col { background: rgba(154, 215, 169, 0.12); font-weight: 600; }
+
+/* ===========================================================================
+ * Mobile-friendly pass — completes plans/mobile-friendly-plan.md
+ * (header reflow, tab tap targets, table density, iOS form-zoom, small phones).
+ * The viewport meta, table-scroll wrappers, and pitch scaling are already in
+ * place; this block finishes P1.4, P2.6, P3.9 and P3.11.
+ * ======================================================================== */
+
+@media (max-width: 720px) {
+  /* P1.4 — header reflow: wrap instead of cramming title + nav + user chip
+   * onto one cramped row. */
+  .site-header {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+  .site-title {
+    font-size: 0.98rem;
+  }
+  .user-chip {
+    flex-wrap: wrap;
+  }
+
+  /* League tabs: scroll the strip horizontally rather than wrapping into a
+   * tall stack when several tabs are present. */
+  .league-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .league-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .league-tab {
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  /* P2.6 — denser tables so more columns fit before horizontal scroll kicks
+   * in (the scroll wrappers stay as the fallback for very wide tables). */
+  .table-scroll table,
+  .board-scroll table {
+    font-size: 0.82rem;
+  }
+  .table-scroll th,
+  .table-scroll td,
+  .board-scroll th,
+  .board-scroll td {
+    padding: 0.4rem 0.45rem;
+  }
+
+  /* P3.11 — 16px form controls stop iOS Safari auto-zooming on focus. Listed
+   * explicitly so these win over the per-field class rules (equal specificity,
+   * later in the cascade). */
+  input,
+  select,
+  textarea,
+  .field input,
+  .invite-link-input,
+  .rename-team-input,
+  .board-filters input,
+  .board-filters select,
+  .scoring-editor-field input,
+  .explorer-field select {
+    font-size: 16px;
+  }
+}
+
+/* P3.9 — small phones (<=380px): smaller base size + tighter chip spacing. */
+@media (max-width: 380px) {
+  body {
+    font-size: 0.95rem;
+  }
+  h1 {
+    font-size: 1.3rem;
+  }
+  .site-main {
+    padding: 1rem 0.7rem 2.25rem;
+  }
+  .stage-chip,
+  .league-tab {
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
+  }
+}
+
+/* P1.3 / P2 — >=44px touch targets for the primary controls not already
+ * covered by the earlier pointer:coarse block (tabs, stage chips, header nav). */
+@media (pointer: coarse) {
+  .league-tab,
+  .stage-chip,
+  .site-nav-link {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
