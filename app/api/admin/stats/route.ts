@@ -15,40 +15,45 @@
  * reflect the change immediately.
  */
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 
 import { fixture, league } from "@/data/db/schema";
 import { recomputeForFixture } from "@/data/scoring/recompute";
 import { DEFAULT_RULESET, type ScoringRuleset } from "@/data/scoring/ruleset";
 import { applyManualStatEdit, sanitizeStatEdit } from "@/data/stats/manual-edit";
-import { handle, HttpError, parseId } from "@/web/api";
+import { handle, HttpError } from "@/web/api";
 import { requireAdminForRoute } from "@/web/auth/admin";
 import { getDb } from "@/web/db";
+import { parseBody } from "@/web/validate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-interface EditBody {
-  fixtureId?: unknown;
-  playerId?: unknown;
-  edit?: unknown;
-  note?: unknown;
-}
+/**
+ * POST body. ids are coerced from string/number to a positive int (matching
+ * the old `parseId(String(...))`). The `edit` map's field-level validation
+ * stays in `sanitizeStatEdit` (INVALID_EDIT). A non-string `note` is tolerated
+ * and treated as absent, as before.
+ */
+const StatEditSchema = z.object({
+  fixtureId: z.coerce.number().int().positive(),
+  playerId: z.coerce.number().int().positive(),
+  edit: z.record(z.string(), z.unknown()),
+  note: z.unknown().optional().transform((v) => (typeof v === "string" ? v : null)),
+});
 
 export function POST(request: Request): Promise<Response> {
   return handle(async () => {
     await requireAdminForRoute(request);
 
-    const body = (await request.json().catch(() => ({}))) as EditBody;
-    const fixtureId = parseId(String(body.fixtureId), "fixtureId");
-    const playerId = parseId(String(body.playerId), "playerId");
-    if (typeof body.edit !== "object" || body.edit === null) {
-      throw new HttpError("missing `edit` object", "INVALID_BODY", 400);
-    }
-    const note = typeof body.note === "string" ? body.note : null;
+    const body = await parseBody(request, StatEditSchema);
+    const fixtureId = body.fixtureId;
+    const playerId = body.playerId;
+    const note = body.note ?? null;
 
     let edit;
     try {
-      edit = sanitizeStatEdit(body.edit as Record<string, unknown>);
+      edit = sanitizeStatEdit(body.edit);
     } catch (e) {
       throw new HttpError(e instanceof Error ? e.message : "invalid edit", "INVALID_EDIT", 400);
     }

@@ -5,15 +5,28 @@
  * Both are auth-gated (W2). The list is scoped to the caller's memberships
  * (W3) - there is no "all leagues" view.
  */
+import { z } from "zod";
+
 import { createLeague } from "@/data/league/service";
-import { handle, HttpError } from "@/web/api";
+import { handle } from "@/web/api";
 import type { LeagueCreatedData } from "@/web/api-types";
 import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { listLeaguesForManager } from "@/web/queries";
+import { parseBody } from "@/web/validate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/**
+ * POST body. `name` is required and non-blank. `maxManagers` is optional; a
+ * non-numeric value is tolerated (ignored) exactly as the previous hand-rolled
+ * parser did, via `.catch(undefined)`.
+ */
+const CreateLeagueSchema = z.object({
+  name: z.string().refine((v) => v.trim().length > 0, "league name is required"),
+  maxManagers: z.number().optional().catch(undefined),
+});
 
 export function GET(request: Request): Promise<Response> {
   return handle(async () => {
@@ -26,19 +39,7 @@ export function POST(request: Request): Promise<Response> {
   return handle(async () => {
     const { manager } = await requireUserForRoute(request);
 
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      throw new HttpError("request body must be JSON", "BAD_REQUEST", 400);
-    }
-    const { name, maxManagers } = body as {
-      name?: unknown;
-      maxManagers?: unknown;
-    };
-    if (typeof name !== "string" || name.trim().length === 0) {
-      throw new HttpError("league name is required", "BAD_REQUEST", 400);
-    }
+    const body = await parseBody(request, CreateLeagueSchema);
 
     // Build the input conditionally - exactOptionalPropertyTypes forbids
     // assigning an explicit `undefined` to the optional maxManagers.
@@ -46,9 +47,9 @@ export function POST(request: Request): Promise<Response> {
       ownerManagerId: number;
       name: string;
       maxManagers?: number;
-    } = { ownerManagerId: manager.id, name: name.trim() };
-    if (typeof maxManagers === "number") {
-      input.maxManagers = maxManagers;
+    } = { ownerManagerId: manager.id, name: body.name.trim() };
+    if (typeof body.maxManagers === "number") {
+      input.maxManagers = body.maxManagers;
     }
 
     const result = await createLeague(getDb(), input);

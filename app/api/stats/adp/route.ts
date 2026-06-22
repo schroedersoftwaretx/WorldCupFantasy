@@ -8,17 +8,27 @@
  * Query params:
  *   completedOnly=1  only count COMPLETE drafts (default: any started draft).
  */
+import { z } from "zod";
+
 import { globalAdp } from "@/data/stats/adp";
 import { handle } from "@/web/api";
 import { getDb } from "@/web/db";
+import { parseQuery } from "@/web/validate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/** Query: ?completedOnly=1 to count only COMPLETE drafts. */
+const AdpQuerySchema = z.object({
+  completedOnly: z.string().optional().transform((v) => v === "1"),
+});
+
 export function GET(request: Request): Promise<Response> {
   return handle(async () => {
-    const completedOnly =
-      new URL(request.url).searchParams.get("completedOnly") === "1";
+    const { completedOnly } = parseQuery(
+      new URL(request.url).searchParams,
+      AdpQuerySchema,
+    );
     const db = getDb();
     return globalAdp(db, { completedDraftsOnly: completedOnly });
   });

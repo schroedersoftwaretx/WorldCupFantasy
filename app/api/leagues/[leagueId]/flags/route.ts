@@ -6,9 +6,11 @@
  *   { flag: FeatureFlag, enabled: boolean, config?: unknown }
  * Returns the full flag-state map after the change so the caller can re-render.
  */
+import { z } from "zod";
+
 import {
+  FLAGS,
   getFlagStates,
-  isFeatureFlag,
   setFlag,
   type FlagStateMap,
 } from "@/data/league/feature-flags";
@@ -16,9 +18,17 @@ import { handle, HttpError, parseId } from "@/web/api";
 import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { getMembershipRole } from "@/web/queries";
+import { parseBody } from "@/web/validate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/** PUT body: toggle one known flag on/off, with optional opaque config. */
+const FlagUpdateSchema = z.object({
+  flag: z.enum(FLAGS),
+  enabled: z.boolean(),
+  config: z.unknown().optional(),
+});
 
 export function GET(
   request: Request,
@@ -60,17 +70,7 @@ export function PUT(
       );
     }
 
-    const body = (await request.json()) as {
-      flag?: unknown;
-      enabled?: unknown;
-      config?: unknown;
-    };
-    if (typeof body.flag !== "string" || !isFeatureFlag(body.flag)) {
-      throw new HttpError("unknown feature flag", "INVALID_FLAG", 400);
-    }
-    if (typeof body.enabled !== "boolean") {
-      throw new HttpError("enabled must be a boolean", "INVALID_FLAG", 400);
-    }
+    const body = await parseBody(request, FlagUpdateSchema);
 
     await setFlag(db, id, body.flag, {
       enabled: body.enabled,
