@@ -11,6 +11,7 @@ import { getDb } from "@/web/db";
 import { getMembershipRole } from "@/web/queries";
 import { getDraftRoomRow } from "@/web/draft-view";
 import { getNotifier } from "@/web/notifier";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,6 +37,11 @@ export function POST(
         403,
       );
     }
+    await enforceRateLimit(request, {
+      name: "draft-force-pick",
+      ...LIMITS.draftForcePick,
+      managerId: manager.id,
+    });
 
     const room = await getDraftRoomRow(db, id);
     if (!room) {

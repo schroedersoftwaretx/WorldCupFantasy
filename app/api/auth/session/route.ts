@@ -7,7 +7,9 @@
  * httpOnly session cookie, and - on a first-ever sign-in - provisions the
  * manager row.
  */
-import { err, ok } from "@/web/api";
+import { z } from "zod";
+
+import { err, HttpError, ok } from "@/web/api";
 import type { AuthSessionData } from "@/web/api-types";
 import { resolveUserFromCookie } from "@/web/auth/current-user";
 import {
@@ -15,21 +17,37 @@ import {
   serializeClearedSessionCookie,
   serializeSessionCookie,
 } from "@/web/auth/session";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/** Login body: a non-empty Firebase ID token. */
+const SessionSchema = z.object({ idToken: z.string().min(1, "missing idToken") });
+
 export async function POST(request: Request): Promise<Response> {
-  let idToken: unknown;
+  // This route mints a Set-Cookie on success, so it builds Responses directly
+  // rather than via handle(); validation and rate limiting still use the
+  // shared error codes. Login is keyed by client IP (no manager yet).
   try {
-    const body: unknown = await request.json();
-    idToken = (body as { idToken?: unknown }).idToken;
+    await enforceRateLimit(request, { name: "login", ...LIMITS.login });
+  } catch (e) {
+    if (e instanceof HttpError) return err(e.message, e.code, e.status, e.headers);
+    throw e;
+  }
+
+  let raw: unknown;
+  try {
+    raw = await request.json();
   } catch {
-    return err("request body must be JSON", "BAD_REQUEST", 400);
+    return err("invalid JSON body", "INVALID_BODY", 400);
   }
-  if (typeof idToken !== "string" || idToken.length === 0) {
-    return err("missing idToken", "BAD_REQUEST", 400);
+  const parsed = SessionSchema.safeParse(raw);
+  if (!parsed.success) {
+    const message = parsed.error.issues[0]?.message ?? "invalid request";
+    return err(message, "VALIDATION", 400);
   }
+  const { idToken } = parsed.data;
 
   let cookieValue: string;
   try {

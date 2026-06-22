@@ -5,15 +5,31 @@
  * Body: { name: string }
  */
 import { and, eq } from "drizzle-orm";
+import { z } from "zod";
 
 import { handle, HttpError, parseId } from "@/web/api";
 import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { getMembershipRole } from "@/web/queries";
+import { parseBody } from "@/web/validate";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 import { fantasyTeam } from "@/data/db/schema";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/** Rename body: a 1-50 char team name, trimmed before length checks. */
+const RenameTeamSchema = z.object({
+  name: z
+    .string()
+    .transform((v) => v.trim())
+    .pipe(
+      z
+        .string()
+        .min(1, "name must not be empty")
+        .max(50, "name must be 50 characters or fewer"),
+    ),
+});
 
 export function PATCH(
   request: Request,
@@ -29,15 +45,13 @@ export function PATCH(
     if (!role) {
       throw new HttpError(`league ${id} not found`, "LEAGUE_NOT_FOUND", 404);
     }
+    await enforceRateLimit(request, {
+      name: "team-rename",
+      ...LIMITS.teamRename,
+      managerId: manager.id,
+    });
 
-    const body = (await request.json()) as { name?: unknown };
-    const name = typeof body.name === "string" ? body.name.trim() : "";
-    if (!name) {
-      throw new HttpError("name must not be empty", "INVALID_TEAM_NAME", 400);
-    }
-    if (name.length > 50) {
-      throw new HttpError("name must be 50 characters or fewer", "INVALID_TEAM_NAME", 400);
-    }
+    const { name } = await parseBody(request, RenameTeamSchema);
 
     const [updated] = await db
       .update(fantasyTeam)

@@ -38,6 +38,8 @@ export class HttpError extends Error {
     message: string,
     public readonly code: string,
     public readonly status: number,
+    /** Extra response headers to attach (e.g. Retry-After on a 429). */
+    public readonly headers?: HeadersInit,
   ) {
     super(message);
     this.name = "HttpError";
@@ -51,10 +53,16 @@ export function ok<T>(data: T, status = 200, headers?: HeadersInit): Response {
   return Response.json(body, init);
 }
 
-/** Build a failure response. */
-export function err(message: string, code: string, status: number): Response {
+/** Build a failure response, optionally with extra headers (e.g. Retry-After). */
+export function err(
+  message: string,
+  code: string,
+  status: number,
+  headers?: HeadersInit,
+): Response {
   const body: ApiErr = { ok: false, error: { message, code } };
-  return Response.json(body, { status });
+  const init: ResponseInit = headers ? { status, headers } : { status };
+  return Response.json(body, init);
 }
 
 /**
@@ -66,7 +74,7 @@ export async function handle<T>(fn: () => Promise<T> | T): Promise<Response> {
     return ok(await fn());
   } catch (e) {
     if (e instanceof HttpError) {
-      return err(e.message, e.code, e.status);
+      return err(e.message, e.code, e.status, e.headers);
     }
     if (
       e instanceof LeagueError ||

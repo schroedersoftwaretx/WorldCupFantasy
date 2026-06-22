@@ -18,6 +18,7 @@ import type { RecomputeResult } from "@/web/api-types";
 import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { getMembershipRole } from "@/web/queries";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,6 +44,11 @@ export function POST(
         403,
       );
     }
+    await enforceRateLimit(request, {
+      name: "standings-recompute",
+      ...LIMITS.standingsRecompute,
+      managerId: manager.id,
+    });
 
     const [lg] = await db.select().from(league).where(eq(league.id, id));
     if (!lg) {

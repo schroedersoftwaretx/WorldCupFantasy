@@ -9,18 +9,28 @@
  * `src/data/notify/preferences.ts`; returns the full matrix after a change so
  * the settings UI can re-render.
  */
+import { z } from "zod";
+
 import {
   getPreferences,
-  isNotificationCategory,
+  NOTIFICATION_CATEGORIES,
   setPreference,
   type PreferenceMatrix,
 } from "@/data/notify/preferences";
-import { handle, HttpError } from "@/web/api";
+import { handle } from "@/web/api";
 import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
+import { parseBody } from "@/web/validate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/** PUT body: flip one (category, channel) preference. */
+const PreferenceUpdateSchema = z.object({
+  category: z.enum(NOTIFICATION_CATEGORIES),
+  channel: z.enum(["IN_APP", "EMAIL"]),
+  enabled: z.boolean(),
+});
 
 export function GET(request: Request): Promise<Response> {
   return handle(async (): Promise<{ preferences: PreferenceMatrix }> => {
@@ -32,20 +42,7 @@ export function GET(request: Request): Promise<Response> {
 export function PUT(request: Request): Promise<Response> {
   return handle(async (): Promise<{ preferences: PreferenceMatrix }> => {
     const { manager } = await requireUserForRoute(request);
-    const body = (await request.json()) as {
-      category?: unknown;
-      channel?: unknown;
-      enabled?: unknown;
-    };
-    if (typeof body.category !== "string" || !isNotificationCategory(body.category)) {
-      throw new HttpError("unknown notification category", "INVALID_PREF", 400);
-    }
-    if (body.channel !== "IN_APP" && body.channel !== "EMAIL") {
-      throw new HttpError("channel must be IN_APP or EMAIL", "INVALID_PREF", 400);
-    }
-    if (typeof body.enabled !== "boolean") {
-      throw new HttpError("enabled must be a boolean", "INVALID_PREF", 400);
-    }
+    const body = await parseBody(request, PreferenceUpdateSchema);
     const preferences = await setPreference(
       getDb(),
       manager.id,

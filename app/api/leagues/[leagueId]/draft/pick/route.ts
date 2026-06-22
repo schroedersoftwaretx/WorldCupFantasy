@@ -5,6 +5,8 @@
  * that the manager's team is on the clock and that the pick keeps a legal
  * roster, throwing a typed DraftError / RosterError -> 400.
  */
+import { z } from "zod";
+
 import { makePick } from "@/data/draft/service";
 import { handle, HttpError, parseId } from "@/web/api";
 import { requireUserForRoute } from "@/web/auth/current-user";
@@ -12,9 +14,14 @@ import { getDb } from "@/web/db";
 import { findDraftRoom, getManagerTeam } from "@/web/draft-view";
 import { getNotifier } from "@/web/notifier";
 import { getMembershipRole } from "@/web/queries";
+import { parseBody } from "@/web/validate";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/** POST body: the integer id of the player to draft. */
+const PickSchema = z.object({ playerId: z.number().int() });
 
 export function POST(
   request: Request,
@@ -38,17 +45,13 @@ export function POST(
     if (!room) {
       throw new HttpError("no draft room for this league", "DRAFT_NOT_FOUND", 404);
     }
+    await enforceRateLimit(request, {
+      name: "draft-pick",
+      ...LIMITS.draftPick,
+      managerId: manager.id,
+    });
 
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      throw new HttpError("request body must be JSON", "BAD_REQUEST", 400);
-    }
-    const { playerId } = body as { playerId?: unknown };
-    if (typeof playerId !== "number" || !Number.isInteger(playerId)) {
-      throw new HttpError("playerId (a number) is required", "BAD_REQUEST", 400);
-    }
+    const { playerId } = await parseBody(request, PickSchema);
 
     const notifier = getNotifier();
     const result = await makePick(db, {

@@ -12,6 +12,7 @@ import { getDb } from "@/web/db";
 import { findDraftRoom } from "@/web/draft-view";
 import { getNotifier } from "@/web/notifier";
 import { getMembershipRole } from "@/web/queries";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,6 +37,11 @@ export function POST(
         403,
       );
     }
+    await enforceRateLimit(request, {
+      name: "draft-start",
+      ...LIMITS.draftStart,
+      managerId: manager.id,
+    });
     const room = await findDraftRoom(db, id);
     if (!room) {
       throw new HttpError(

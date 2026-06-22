@@ -11,6 +11,7 @@ import { handle, HttpError } from "@/web/api";
 import type { InviteAcceptedData } from "@/web/api-types";
 import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +22,11 @@ export function POST(
 ): Promise<Response> {
   return handle(async () => {
     const { manager } = await requireUserForRoute(request);
+    await enforceRateLimit(request, {
+      name: "invite-accept",
+      ...LIMITS.inviteAccept,
+      managerId: manager.id,
+    });
     const { token } = await ctx.params;
     if (!token) {
       throw new HttpError("missing invite token", "BAD_REQUEST", 400);

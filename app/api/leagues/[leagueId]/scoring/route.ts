@@ -9,6 +9,8 @@
  *
  * Returns the new ruleset version and a recompute summary.
  */
+import { z } from "zod";
+
 import { setLeagueScoringRuleset } from "@/data/league/service";
 import { recomputeAll } from "@/data/scoring/recompute";
 import {
@@ -20,9 +22,16 @@ import { handle, HttpError, parseId } from "@/web/api";
 import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { getMembershipRole } from "@/web/queries";
+import { parseBody } from "@/web/validate";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// The ruleset payload is an object of numeric rule values; the deeper,
+// domain-specific validation (ranges, known keys) stays in
+// `sanitizeRulesetInput`, which keeps its INVALID_RULESET error code.
+const ScoringBodySchema = z.record(z.string(), z.unknown());
 
 export function PUT(
   request: Request,
@@ -45,13 +54,13 @@ export function PUT(
         403,
       );
     }
+    await enforceRateLimit(request, {
+      name: "scoring-edit",
+      ...LIMITS.scoringEdit,
+      managerId: manager.id,
+    });
 
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      throw new HttpError("request body must be JSON", "BAD_REQUEST", 400);
-    }
+    const body = await parseBody(request, ScoringBodySchema);
 
     let values: ReturnType<typeof sanitizeRulesetInput>;
     try {

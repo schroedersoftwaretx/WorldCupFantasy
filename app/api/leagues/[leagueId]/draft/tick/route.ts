@@ -13,6 +13,7 @@ import { getDb } from "@/web/db";
 import { findDraftRoom } from "@/web/draft-view";
 import { getNotifier } from "@/web/notifier";
 import { getMembershipRole } from "@/web/queries";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,6 +35,11 @@ export function POST(
     if (!room) {
       throw new HttpError("no draft room for this league", "DRAFT_NOT_FOUND", 404);
     }
+    await enforceRateLimit(request, {
+      name: "draft-tick",
+      ...LIMITS.draftTick,
+      managerId: manager.id,
+    });
     const notifier = getNotifier();
     const result = await processExpiredPicks(db, {
       draftRoomId: room.id,
