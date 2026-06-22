@@ -5,6 +5,10 @@ One agent implements one phase, on its own branch, and returns a completion
 report. You orchestrate; the planning conversation reviews reports and patches
 downstream phase docs between phases.
 
+**Related plans (outside the phased build):**
+[`../mobile-friendly-plan.md`](../mobile-friendly-plan.md) (complete) ·
+[`../ui-testing-plan.md`](../ui-testing-plan.md) — `app/` React test coverage map + harness conventions.
+
 ---
 
 ## Golden rules
