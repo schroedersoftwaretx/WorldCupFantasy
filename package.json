@@ -16,6 +16,7 @@
     "migrate": "node --env-file=.env --import tsx src/migrate.ts",
     "cli": "node --env-file=.env --import tsx src/cli/index.ts",
     "test": "vitest run",
+    "test:smoke": "vitest run test/unit/smoke-data-path.test.ts",
     "test:watch": "vitest"
   },
   "dependencies": {
