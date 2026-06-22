@@ -10,6 +10,13 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  // Components and tests use JSX without importing React (the Next/automatic
+  // runtime). Tell esbuild to use the automatic runtime so .tsx compiles the
+  // same way Next does. This only affects .tsx/.jsx files; the node/.ts
+  // integration tests are unaffected.
+  esbuild: {
+    jsx: "automatic",
+  },
   test: {
     // Integration tests spin up a Testcontainers Postgres - generous timeout.
     testTimeout: 120_000,
@@ -19,6 +26,11 @@ export default defineConfig({
     poolOptions: {
       forks: { singleFork: false },
     },
-    include: ["test/**/*.test.ts"],
+    // Default environment stays "node" so the Testcontainers integration tests
+    // are untouched. Component tests opt into jsdom per-file with a
+    //   // @vitest-environment jsdom
+    // docblock (see test/component/*). We add *.test.tsx to the glob so those
+    // component tests are collected alongside the existing .test.ts suites.
+    include: ["test/**/*.test.ts", "test/**/*.test.tsx"],
   },
 });
