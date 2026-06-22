@@ -12,6 +12,7 @@ import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { getDraftRoomView } from "@/web/draft-view";
 import { getMembershipRole } from "@/web/queries";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,6 +61,11 @@ export function POST(
         403,
       );
     }
+    await enforceRateLimit(request, {
+      name: "draft-create",
+      ...LIMITS.draftCreate,
+      managerId: manager.id,
+    });
 
     // The body (an optional pick timer) may be absent entirely.
     const raw: unknown = await request.json().catch(() => ({}));

@@ -25,6 +25,7 @@ import { handle, HttpError } from "@/web/api";
 import { requireAdminForRoute } from "@/web/auth/admin";
 import { getDb } from "@/web/db";
 import { parseBody } from "@/web/validate";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,7 +45,12 @@ const StatEditSchema = z.object({
 
 export function POST(request: Request): Promise<Response> {
   return handle(async () => {
-    await requireAdminForRoute(request);
+    const { manager } = await requireAdminForRoute(request);
+    await enforceRateLimit(request, {
+      name: "admin-stat-edit",
+      ...LIMITS.adminStatEdit,
+      managerId: manager.id,
+    });
 
     const body = await parseBody(request, StatEditSchema);
     const fixtureId = body.fixtureId;

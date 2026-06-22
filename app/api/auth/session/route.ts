@@ -9,7 +9,7 @@
  */
 import { z } from "zod";
 
-import { err, ok } from "@/web/api";
+import { err, HttpError, ok } from "@/web/api";
 import type { AuthSessionData } from "@/web/api-types";
 import { resolveUserFromCookie } from "@/web/auth/current-user";
 import {
@@ -17,6 +17,7 @@ import {
   serializeClearedSessionCookie,
   serializeSessionCookie,
 } from "@/web/auth/session";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +27,15 @@ const SessionSchema = z.object({ idToken: z.string().min(1, "missing idToken") }
 
 export async function POST(request: Request): Promise<Response> {
   // This route mints a Set-Cookie on success, so it builds Responses directly
-  // rather than via handle(); validation still uses the shared error codes.
+  // rather than via handle(); validation and rate limiting still use the
+  // shared error codes. Login is keyed by client IP (no manager yet).
+  try {
+    await enforceRateLimit(request, { name: "login", ...LIMITS.login });
+  } catch (e) {
+    if (e instanceof HttpError) return err(e.message, e.code, e.status, e.headers);
+    throw e;
+  }
+
   let raw: unknown;
   try {
     raw = await request.json();

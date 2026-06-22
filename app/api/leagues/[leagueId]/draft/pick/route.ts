@@ -15,6 +15,7 @@ import { findDraftRoom, getManagerTeam } from "@/web/draft-view";
 import { getNotifier } from "@/web/notifier";
 import { getMembershipRole } from "@/web/queries";
 import { parseBody } from "@/web/validate";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,6 +45,11 @@ export function POST(
     if (!room) {
       throw new HttpError("no draft room for this league", "DRAFT_NOT_FOUND", 404);
     }
+    await enforceRateLimit(request, {
+      name: "draft-pick",
+      ...LIMITS.draftPick,
+      managerId: manager.id,
+    });
 
     const { playerId } = await parseBody(request, PickSchema);
 

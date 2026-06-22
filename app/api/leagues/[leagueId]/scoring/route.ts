@@ -23,6 +23,7 @@ import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { getMembershipRole } from "@/web/queries";
 import { parseBody } from "@/web/validate";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,6 +54,11 @@ export function PUT(
         403,
       );
     }
+    await enforceRateLimit(request, {
+      name: "scoring-edit",
+      ...LIMITS.scoringEdit,
+      managerId: manager.id,
+    });
 
     const body = await parseBody(request, ScoringBodySchema);
 

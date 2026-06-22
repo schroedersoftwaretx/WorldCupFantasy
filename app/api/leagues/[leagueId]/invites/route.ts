@@ -10,6 +10,7 @@ import type { InviteCreatedData } from "@/web/api-types";
 import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { getMembershipRole } from "@/web/queries";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,6 +36,11 @@ export function POST(
         403,
       );
     }
+    await enforceRateLimit(request, {
+      name: "invite-create",
+      ...LIMITS.inviteCreate,
+      managerId: manager.id,
+    });
 
     const invite = await inviteManager(db, { leagueId: id });
     const data: InviteCreatedData = {

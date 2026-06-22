@@ -12,6 +12,7 @@ import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
 import { getMembershipRole } from "@/web/queries";
 import { parseBody } from "@/web/validate";
+import { enforceRateLimit, LIMITS } from "@/web/rate-limit";
 import { fantasyTeam } from "@/data/db/schema";
 
 export const runtime = "nodejs";
@@ -44,6 +45,11 @@ export function PATCH(
     if (!role) {
       throw new HttpError(`league ${id} not found`, "LEAGUE_NOT_FOUND", 404);
     }
+    await enforceRateLimit(request, {
+      name: "team-rename",
+      ...LIMITS.teamRename,
+      managerId: manager.id,
+    });
 
     const { name } = await parseBody(request, RenameTeamSchema);
 
