@@ -8,6 +8,10 @@ dist/
 coverage/
 *.tsbuildinfo
 
+# Vitest writes a transpiled config beside vitest.config.ts on each run; these
+# are throwaway build artifacts, never source.
+vitest.config.ts.timestamp-*.mjs
+
 # Local Chromium profile for the SofaScore browser-fetch (Cloudflare clearance,
 # cache, cookies). Machine-specific, large (~1700 files) — never commit.
 .sofa-profile/
