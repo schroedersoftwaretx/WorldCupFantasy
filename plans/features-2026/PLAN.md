@@ -236,6 +236,9 @@ All `db`-first. The public Hub scores against `HUB_RULESET_VERSION` (=
 **Pages/routes:** public `app/stats/**` (no auth) + `GET /api/stats/{team-of-the-
 stage/[stage], leaderboards, records}`. The `stats_hub` flag gates only the
 per-league nav link (`league-tabs.tsx`), not page access.
+
+---
+
 ## Appendix C — Phase 2 as-built APIs (Player Insights)
 
 Phase 2 shipped read-only over existing tables (no migration, no feature flags).
