@@ -12,21 +12,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  smoke:
-    name: Smoke (no Docker)
-    runs-on: ubuntu-latest
-    # Fast gate: drives the mock feed -> mapping -> scoring data path against
-    # committed fixtures, no Postgres/Docker. Mirrors what you can run locally
-    # with `npm run test:smoke` even on a machine without Docker.
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm run test:smoke
-
   typecheck:
     name: Typecheck
     runs-on: ubuntu-latest

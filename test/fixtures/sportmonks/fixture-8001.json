@@ -1,0 +1,88 @@
+{
+  "data": {
+    "id": 8001,
+    "name": "Argentina vs Brazil",
+    "starting_at": "2026-06-11 18:00:00",
+    "starting_at_timestamp": 1781200800,
+    "state": { "id": 5, "state": "FINISHED", "short_name": "FT" },
+    "round": { "id": 1, "name": "1" },
+    "stage": { "id": 1, "name": "Group Stage" },
+    "last_processed_at": "2026-06-11 20:05:00",
+    "participants": [
+      { "id": 26, "name": "Argentina", "meta": { "location": "home" } },
+      { "id": 6, "name": "Brazil", "meta": { "location": "away" } }
+    ],
+    "scores": [
+      { "description": "1ST_HALF", "score": { "participant": "home", "goals": 1 } },
+      { "description": "1ST_HALF", "score": { "participant": "away", "goals": 0 } },
+      { "description": "CURRENT", "score": { "participant": "home", "goals": 2 } },
+      { "description": "CURRENT", "score": { "participant": "away", "goals": 1 } }
+    ],
+    "lineups": [
+      {
+        "player_id": 9001, "team_id": 26, "type_id": 11, "position_id": 24, "player_name": "Emiliano Martinez",
+        "details": [
+          { "type_id": 119, "value": { "total": 90 }, "type": { "id": 119, "code": "minutes-played" } },
+          { "type_id": 57, "value": { "total": 4 }, "type": { "id": 57, "code": "saves" } },
+          { "type_id": 88, "value": { "total": 1 }, "type": { "id": 88, "code": "goals-conceded" } },
+          { "type_id": 116, "value": { "total": 25 }, "type": { "id": 116, "code": "accurate-passes" } }
+        ]
+      },
+      {
+        "player_id": 9002, "team_id": 26, "type_id": 11, "position_id": 25, "player_name": "Cristian Romero",
+        "details": [
+          { "type_id": 119, "value": { "total": 90 }, "type": { "id": 119, "code": "minutes-played" } },
+          { "type_id": 84, "value": { "total": 1 }, "type": { "id": 84, "code": "yellowcards" } },
+          { "type_id": 41, "value": { "total": 1 }, "type": { "id": 41, "code": "shots-off-target" } },
+          { "type_id": 78, "value": { "total": 4 }, "type": { "id": 78, "code": "tackles" } },
+          { "type_id": 98, "value": { "total": 2 }, "type": { "id": 98, "code": "total-crosses" } },
+          { "type_id": 116, "value": { "total": 50 }, "type": { "id": 116, "code": "accurate-passes" } }
+        ]
+      },
+      {
+        "player_id": 9003, "team_id": 26, "type_id": 11, "position_id": 27, "player_name": "Lionel Messi",
+        "details": [
+          { "type_id": 119, "value": { "total": 90 }, "type": { "id": 119, "code": "minutes-played" } },
+          { "type_id": 52, "value": { "total": 2, "goals": 2, "penalties": 0 }, "type": { "id": 52, "code": "goals" } },
+          { "type_id": 86, "value": { "total": 4 }, "type": { "id": 86, "code": "shots-on-target" } },
+          { "type_id": 41, "value": { "total": 1 }, "type": { "id": 41, "code": "shots-off-target" } },
+          { "type_id": 78, "value": { "total": 1 }, "type": { "id": 78, "code": "tackles" } },
+          { "type_id": 98, "value": { "total": 3 }, "type": { "id": 98, "code": "total-crosses" } },
+          { "type_id": 116, "value": { "total": 34 }, "type": { "id": 116, "code": "accurate-passes" } }
+        ]
+      },
+      {
+        "player_id": 9004, "team_id": 6, "type_id": 11, "position_id": 24, "player_name": "Alisson Becker",
+        "details": [
+          { "type_id": 119, "value": { "total": 90 }, "type": { "id": 119, "code": "minutes-played" } },
+          { "type_id": 57, "value": { "total": 3 }, "type": { "id": 57, "code": "saves" } },
+          { "type_id": 88, "value": { "total": 2 }, "type": { "id": 88, "code": "goals-conceded" } },
+          { "type_id": 116, "value": { "total": 20 }, "type": { "id": 116, "code": "accurate-passes" } }
+        ]
+      },
+      {
+        "player_id": 9005, "team_id": 6, "type_id": 11, "position_id": 26, "player_name": "Casemiro",
+        "details": [
+          { "type_id": 119, "value": { "total": 75 }, "type": { "id": 119, "code": "minutes-played" } },
+          { "type_id": 52, "value": { "total": 1, "goals": 1, "penalties": 0 }, "type": { "id": 52, "code": "goals" } },
+          { "type_id": 86, "value": { "total": 2 }, "type": { "id": 86, "code": "shots-on-target" } },
+          { "type_id": 41, "value": { "total": 1 }, "type": { "id": 41, "code": "shots-off-target" } },
+          { "type_id": 78, "value": { "total": 5 }, "type": { "id": 78, "code": "tackles" } },
+          { "type_id": 116, "value": { "total": 40 }, "type": { "id": 116, "code": "accurate-passes" } }
+        ]
+      },
+      {
+        "player_id": 9006, "team_id": 6, "type_id": 11, "position_id": 27, "player_name": "Vinicius Junior",
+        "details": [
+          { "type_id": 119, "value": { "total": 90 }, "type": { "id": 119, "code": "minutes-played" } },
+          { "type_id": 79, "value": { "total": 1 }, "type": { "id": 79, "code": "assists" } },
+          { "type_id": 86, "value": { "total": 1 }, "type": { "id": 86, "code": "shots-on-target" } },
+          { "type_id": 41, "value": { "total": 3 }, "type": { "id": 41, "code": "shots-off-target" } },
+          { "type_id": 78, "value": { "total": 1 }, "type": { "id": 78, "code": "tackles" } },
+          { "type_id": 98, "value": { "total": 5 }, "type": { "id": 98, "code": "total-crosses" } },
+          { "type_id": 116, "value": { "total": 25 }, "type": { "id": 116, "code": "accurate-passes" } }
+        ]
+      }
+    ]
+  }
+}
