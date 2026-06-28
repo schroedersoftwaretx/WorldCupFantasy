@@ -6,6 +6,10 @@
  * status: a create form, a start screen, the live room (player board + roster
  * + order + picks), or a completed summary. All mutations go through the POST
  * routes; the live stream reflects the result.
+ *
+ * This component is the stateful container: it owns all state, effects, timers,
+ * and fetching, and feeds plain data + callbacks to the presentational panels
+ * under ./components.
  */
 "use client";
 
@@ -13,77 +17,23 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { DraftBoardPlayer, DraftStateData } from "@/web/api-types";
 import type { QueueEntry } from "@/data/draft/queue";
+import type { ScoringRuleset } from "@/data/scoring/ruleset";
 
 import PlayerBoard from "./player-board";
 import QueuePanel from "./queue-panel";
-import { BestLineupViz } from "./best-lineup";
 import { ScoringRules } from "./scoring-rules";
-import type { ScoringRuleset } from "@/data/scoring/ruleset";
+import { POLL_MS, type Envelope } from "./types";
 
-const POLL_MS = 5000;
-const POSITIONS = ["GK", "DEF", "MID", "FWD"] as const;
-const POSITION_MAX: Record<(typeof POSITIONS)[number], number> = {
-  GK: 4,
-  DEF: 8,
-  MID: 8,
-  FWD: 8,
-};
-
-/** Render a millisecond duration as a short countdown string. */
-function formatRemaining(ms: number): string {
-  if (ms <= 0) return "overdue";
-  const totalSec = Math.floor(ms / 1000);
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
-}
-
-/** Under two minutes left counts as urgent (drives the timer's styling). */
-const URGENT_MS = 120_000;
-
-/**
- * The single best still-available player per position, for the "best available"
- * hints. Driven primarily by Phase 2 ADP (lower = goes earlier = more coveted),
- * falling back to draft rank then projected points when ADP is absent.
- */
-function bestAvailableByPosition(
-  players: DraftBoardPlayer[],
-): { position: string; player: DraftBoardPlayer }[] {
-  const order = ["GK", "DEF", "MID", "FWD"];
-  const score = (p: DraftBoardPlayer): [number, number, number] => [
-    p.adp ?? Number.POSITIVE_INFINITY,
-    p.draftRank != null && p.draftRank > 0 ? p.draftRank : Number.POSITIVE_INFINITY,
-    -(p.projectedTotalPoints ?? -1),
-  ];
-  const out: { position: string; player: DraftBoardPlayer }[] = [];
-  for (const pos of order) {
-    let best: DraftBoardPlayer | null = null;
-    let bestScore: [number, number, number] | null = null;
-    for (const p of players) {
-      if (p.position !== pos) continue;
-      const s = score(p);
-      if (
-        bestScore === null ||
-        s[0] < bestScore[0] ||
-        (s[0] === bestScore[0] && s[1] < bestScore[1]) ||
-        (s[0] === bestScore[0] && s[1] === bestScore[1] && s[2] < bestScore[2])
-      ) {
-        best = p;
-        bestScore = s;
-      }
-    }
-    if (best) out.push({ position: pos, player: best });
-  }
-  return out;
-}
-
-interface Envelope {
-  data?: unknown;
-  error?: { message?: string };
-}
+import BestAvailableHints from "./components/BestAvailableHints";
+import CreateDraftPanel from "./components/CreateDraftPanel";
+import DraftOrderPanel from "./components/DraftOrderPanel";
+import OnClockBanner from "./components/OnClockBanner";
+import PicksPanel from "./components/PicksPanel";
+import RecentPicksTicker from "./components/RecentPicksTicker";
+import RosterPanel from "./components/RosterPanel";
+import StartDraftPanel from "./components/StartDraftPanel";
+import StatusBanners from "./components/StatusBanners";
+import StuckPanel from "./components/StuckPanel";
 
 async function readBody(res: Response): Promise<Envelope | null> {
   return res.json().catch(() => null);
@@ -322,135 +272,46 @@ export default function DraftRoom({
       queued ? { action: "add", playerId } : { action: "remove", playerId },
     );
   };
-  const errorBar = actionError ? (
-    <p className="error">{actionError}</p>
-  ) : null;
 
   // Owner-only heads-up when email delivery isn't configured, so they know
   // managers won't get "you're on the clock" emails.
-  const emailWarning =
-    viewer.isOwner && !state.emailNotifications ? (
-      <p className="notice">
-        Email notifications are off (Resend not configured) — managers
-        won&apos;t get &ldquo;you&apos;re on the clock&rdquo; emails. Set
-        <code> RESEND_API_KEY</code> to enable them.
-      </p>
-    ) : null;
+  const showEmailWarning = viewer.isOwner && !state.emailNotifications;
 
   // --- no draft room yet ----------------------------------------------------
   if (state.status === "NONE") {
     return (
       <>
         <h1>Draft room</h1>
-        {errorBar}
-        {viewer.isOwner ? (
-          <div className="form-card">
-            <h2>Set up the draft</h2>
-            <p>Create the draft room, then start it once everyone has joined.</p>
-            <div className="field">
-              <label htmlFor="timer">Pick timer</label>
-              <div className="timer-presets">
-                {[
-                  { label: "15 min", hours: 0.25 },
-                  { label: "30 min", hours: 0.5 },
-                  { label: "1 hr",   hours: 1 },
-                  { label: "2 hr",   hours: 2 },
-                  { label: "6 hr",   hours: 6 },
-                  { label: "12 hr",  hours: 12 },
-                  { label: "24 hr",  hours: 24 },
-                  { label: "48 hr",  hours: 48 },
-                ].map(({ label, hours }) => (
-                  <button
-                    key={hours}
-                    type="button"
-                    className={
-                      Number(timerInput) === hours
-                        ? "timer-preset timer-preset-active"
-                        : "timer-preset"
-                    }
-                    onClick={() => setTimerInput(String(hours))}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <input
-                id="timer"
-                type="number"
-                min={0}
-                max={168}
-                step={0.25}
-                value={timerInput}
-                onChange={(e) => setTimerInput(e.target.value)}
-              />
-              <span className="field-hint">
-                Hours per pick — 12 hr is typical for async drafts, 15–30 min
-                for a draft done in one sitting. Set 0 to disable the timer.
-              </span>
-            </div>
-            <button
-              type="button"
-              className="btn"
-              disabled={actionBusy}
-              onClick={() =>
-                void runAction("/draft", {
-                  pickTimerHours: Number(timerInput),
-                })
-              }
-            >
-              {actionBusy ? "Creating..." : "Create draft"}
-            </button>
-          </div>
-        ) : (
-          <p className="notice">
-            The league owner has not set up the draft yet.
-          </p>
-        )}
+        <StatusBanners actionError={actionError} showEmailWarning={false} />
+        <CreateDraftPanel
+          isOwner={viewer.isOwner}
+          actionBusy={actionBusy}
+          timerInput={timerInput}
+          onTimerInputChange={setTimerInput}
+          onCreate={() =>
+            void runAction("/draft", { pickTimerHours: Number(timerInput) })
+          }
+        />
       </>
     );
   }
 
   // --- created, not started -------------------------------------------------
   if (state.status === "PENDING") {
-    const enough = state.teamCount >= 2;
     return (
       <>
         <h1>Draft room</h1>
-        {errorBar}
-        {emailWarning}
-        <p className="subtitle">
-          The draft room is ready &mdash; {state.teamCount}{" "}
-          {state.teamCount === 1 ? "manager has" : "managers have"} joined.
-          Pick timer: {state.pickTimerHours}h.
-        </p>
-        {viewer.isOwner ? (
-          <div className="panel">
-            <h2>Start the draft</h2>
-            {enough ? (
-              <p>
-                Starting freezes a random snake order and puts pick 1 on the
-                clock.
-              </p>
-            ) : (
-              <p className="error">
-                A draft needs at least 2 managers. Invite another from the
-                league page first.
-              </p>
-            )}
-            <button
-              type="button"
-              className="btn"
-              disabled={actionBusy || !enough}
-              onClick={() => void runAction("/draft/start")}
-            >
-              {actionBusy ? "Starting..." : "Start draft"}
-            </button>
-          </div>
-        ) : (
-          <p className="notice">
-            Waiting for the league owner to start the draft.
-          </p>
-        )}
+        <StatusBanners
+          actionError={actionError}
+          showEmailWarning={showEmailWarning}
+        />
+        <StartDraftPanel
+          isOwner={viewer.isOwner}
+          actionBusy={actionBusy}
+          teamCount={state.teamCount}
+          pickTimerHours={state.pickTimerHours}
+          onStart={() => void runAction("/draft/start")}
+        />
       </>
     );
   }
@@ -465,173 +326,30 @@ export default function DraftRoom({
     : null;
   const remaining = deadlineMs !== null ? deadlineMs - now : null;
 
-  const rosterPanel = (
-    <section className="panel">
-      <h2>Your team</h2>
-      <div className="counts-row">
-        {POSITIONS.map((pos) => (
-          <span key={pos} className="count-chip">
-            {pos} {viewer.counts[pos]}/{POSITION_MAX[pos]}
-          </span>
-        ))}
-        <span className="count-chip total">
-          {viewer.roster.length}/{state.rosterSize}
-        </span>
-      </div>
-      {viewer.roster.length === 0 ? (
-        <p className="field-hint">No players drafted yet.</p>
-      ) : (
-        <ul className="roster-list">
-          {viewer.roster.map((p) => (
-            <li key={p.playerId}>
-              <span className="pos-badge">{p.position}</span> {p.fullName}
-            </li>
-          ))}
-        </ul>
-      )}
-      <BestLineupViz roster={viewer.roster} />
-    </section>
-  );
-
-  const orderPanel =
-    state.order.length > 0 ? (
-      <section className="panel">
-        <h2>Draft order</h2>
-        <ol className="order-list">
-          {state.order.map((o) => (
-            <li
-              key={o.slot}
-              className={
-                inProgress && o.fantasyTeamId === state.onClockTeamId
-                  ? "on-clock"
-                  : ""
-              }
-            >
-              {o.teamName}{" "}
-              <span className="field-hint">({o.managerName})</span>
-            </li>
-          ))}
-        </ol>
-      </section>
-    ) : null;
-
-  const recentPicks = [...state.picks].reverse();
-  const picksPanel = (
-    <section className="panel">
-      <h2>Picks</h2>
-      {recentPicks.length === 0 ? (
-        <p className="field-hint">No picks yet.</p>
-      ) : (
-        <ul className="pick-log">
-          {recentPicks.map((p) => (
-            <li key={p.pickNumber}>
-              <span className="field-hint">#{p.pickNumber}</span>{" "}
-              <span className="pos-badge">{p.position}</span> {p.playerName}{" "}
-              <span className="field-hint">
-                &rarr; {p.teamName}
-                {p.isAutopick ? " (auto)" : ""}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-
   return (
     <>
       <h1>Draft room</h1>
-      {errorBar}
-      {emailWarning}
+      <StatusBanners
+        actionError={actionError}
+        showEmailWarning={showEmailWarning}
+      />
 
-      {inProgress ? (
-        <div className={viewer.isOnClock ? "draft-banner you" : "draft-banner"}>
-          <div>
-            <strong>Pick #{state.currentPickNumber}</strong> &middot; Round{" "}
-            {state.currentRound} &middot; {state.picksMade}/{state.totalPicks}{" "}
-            made
-          </div>
-          <div className="draft-banner-clock">
-            <span>
-              {viewer.isOnClock
-                ? "You are on the clock"
-                : `On the clock: ${onClockSlot?.teamName ?? "-"}`}
-            </span>
-            {remaining !== null ? (
-              <span
-                role="timer"
-                aria-live={
-                  remaining <= URGENT_MS && remaining > 0 ? "assertive" : "polite"
-                }
-                aria-label={
-                  remaining <= 0
-                    ? "Pick is overdue"
-                    : `Time remaining: ${formatRemaining(remaining)}`
-                }
-                className={
-                  remaining <= 0
-                    ? "draft-timer overdue"
-                    : remaining <= URGENT_MS
-                      ? "draft-timer urgent"
-                      : "draft-timer"
-                }
-              >
-                {remaining <= 0 ? "overdue" : formatRemaining(remaining)}
-              </span>
-            ) : null}
-          </div>
-        </div>
-      ) : (
-        <div className="draft-banner done">
-          <strong>Draft complete</strong> &mdash; all {state.totalPicks} picks
-          are in.{" "}
-          <a href={`/leagues/${leagueId}/draft/results`}>
-            View draft results &rarr;
-          </a>{" "}
-          &middot;{" "}
-          <a href={`/leagues/${leagueId}/standings`}>View standings &rarr;</a>
-        </div>
-      )}
+      <OnClockBanner
+        inProgress={inProgress}
+        isOnClock={viewer.isOnClock}
+        currentPickNumber={state.currentPickNumber}
+        currentRound={state.currentRound}
+        picksMade={state.picksMade}
+        totalPicks={state.totalPicks}
+        onClockTeamName={onClockSlot?.teamName}
+        remaining={remaining}
+        leagueId={leagueId}
+      />
 
       {inProgress ? (
         <>
-          <div
-            className="picks-ticker"
-            aria-label="Recent picks"
-            aria-live="polite"
-          >
-            <span className="picks-ticker-label">Recent:</span>
-            {state.picks.length === 0 ? (
-              <span className="field-hint">no picks yet</span>
-            ) : (
-              [...state.picks]
-                .reverse()
-                .slice(0, 8)
-                .map((p) => (
-                  <span key={p.pickNumber} className="ticker-pick">
-                    <span className="field-hint">#{p.pickNumber}</span>{" "}
-                    <span className="pos-badge">{p.position}</span> {p.playerName}{" "}
-                    <span className="field-hint">
-                      &rarr; {p.teamName}
-                      {p.isAutopick ? " (auto)" : ""}
-                    </span>
-                  </span>
-                ))
-            )}
-          </div>
-          {board ? (
-            <div className="best-available" aria-label="Best available by position">
-              <span className="best-available-label">Best available:</span>
-              {bestAvailableByPosition(board).map(({ position, player }) => (
-                <span key={position} className="best-available-item">
-                  <span className="pos-badge">{position}</span> {player.fullName}
-                  {player.adp != null ? (
-                    <span className="field-hint"> ADP {player.adp}</span>
-                  ) : null}
-                </span>
-              ))}
-            </div>
-          ) : null}
+          <RecentPicksTicker picks={state.picks} />
+          <BestAvailableHints board={board} />
         </>
       ) : null}
 
@@ -653,11 +371,15 @@ export default function DraftRoom({
               <p className="notice">Loading players...</p>
             )
           ) : (
-            picksPanel
+            <PicksPanel picks={state.picks} />
           )}
         </div>
         <aside className="draft-side">
-          {rosterPanel}
+          <RosterPanel
+            counts={viewer.counts}
+            roster={viewer.roster}
+            rosterSize={state.rosterSize}
+          />
           {inProgress ? (
             <QueuePanel
               queue={queue}
@@ -669,40 +391,19 @@ export default function DraftRoom({
             />
           ) : null}
           <ScoringRules ruleset={ruleset} />
-          {orderPanel}
-          {inProgress ? picksPanel : null}
+          <DraftOrderPanel
+            order={state.order}
+            inProgress={inProgress}
+            onClockTeamId={state.onClockTeamId}
+          />
+          {inProgress ? <PicksPanel picks={state.picks} /> : null}
           {inProgress ? (
-            <section className="panel">
-              <h2>Stuck?</h2>
-              <p className="field-hint">
-                If a pick is past its deadline, process it now instead of
-                waiting for the scheduled tick.
-              </p>
-              <button
-                type="button"
-                className="btn-link"
-                disabled={actionBusy}
-                onClick={() => void runAction("/draft/tick")}
-              >
-                Process timeouts
-              </button>
-              {viewer.isOwner ? (
-                <>
-                  <p className="field-hint" style={{ marginTop: "0.75rem" }}>
-                    Skip the current pick immediately and autopick for them,
-                    even if the timer hasn&apos;t expired.
-                  </p>
-                  <button
-                    type="button"
-                    className="btn-link btn-link-warn"
-                    disabled={actionBusy}
-                    onClick={() => void runAction("/draft/force-pick")}
-                  >
-                    Force autopick now
-                  </button>
-                </>
-              ) : null}
-            </section>
+            <StuckPanel
+              isOwner={viewer.isOwner}
+              actionBusy={actionBusy}
+              onProcessTimeouts={() => void runAction("/draft/tick")}
+              onForcePick={() => void runAction("/draft/force-pick")}
+            />
           ) : null}
         </aside>
       </div>
