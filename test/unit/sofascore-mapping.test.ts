@@ -62,6 +62,18 @@ describe("mapSsStage", () => {
     expect(mapSsStage("FIFA World Cup, Knockout stage", null, { cupRoundType: 4 })).toBe("SF");
     expect(mapSsStage("FIFA World Cup, Knockout stage", null, { cupRoundType: 2 })).toBe("FINAL");
   });
+  it("uses the round name over cupRoundType for the 48-team Round of 32", () => {
+    // Real SofaScore 2026 data: the Round of 32 reports cupRoundType 16 (the
+    // legacy code for "Round of 16"). Name/slug must win so it maps to R32.
+    expect(
+      mapSsStage("FIFA World Cup, Knockout", null, {
+        round: 6,
+        name: "Round of 32",
+        slug: "round-of-32",
+        cupRoundType: 16,
+      }),
+    ).toBe("R32");
+  });
   it("recognises the third-place play-off before the semis", () => {
     expect(
       mapSsStage("FIFA World Cup", null, { name: "Play-off for third place", cupRoundType: 4 }),
