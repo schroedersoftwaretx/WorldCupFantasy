@@ -19,6 +19,7 @@ import { HttpError } from "../api.js";
 import { getDb } from "../db.js";
 import { SESSION_COOKIE } from "./constants.js";
 import { readSessionClaims, type SessionClaims } from "./session.js";
+import { logger } from "../../log.js";
 
 export interface CurrentUser {
   manager: ManagerRow;
@@ -44,7 +45,7 @@ export async function resolveUserFromCookie(
     return { manager, claims };
   } catch (e) {
     // Treat a DB hiccup as "not signed in" rather than crashing every page.
-    console.error("[auth] manager lookup/provisioning failed:", e);
+    logger.error("[auth] manager lookup/provisioning failed", { err: e });
     return null;
   }
 }

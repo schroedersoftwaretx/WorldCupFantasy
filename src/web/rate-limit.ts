@@ -18,6 +18,7 @@
  * their IP and evade per-IP limits — terminate TLS at a trusted proxy.
  */
 import { HttpError } from "./api.js";
+import { logger } from "../log.js";
 
 export interface RateLimitResult {
   /** Request count in the current window, including this hit. */
@@ -126,7 +127,7 @@ export async function rateLimit(opts: RateLimitOptions): Promise<void> {
   try {
     result = await getRateLimitStore().hit(opts.key, opts.windowMs);
   } catch (e) {
-    console.error("[rate-limit] store error, failing open:", e);
+    logger.error("[rate-limit] store error, failing open", { err: e });
     return;
   }
   if (result.count > opts.limit) {

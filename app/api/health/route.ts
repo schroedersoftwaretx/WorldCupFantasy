@@ -9,6 +9,7 @@
  * Returns 200 when the database answers, 503 when it does not.
  */
 import { sql } from "drizzle-orm";
+import { logger } from "@/log";
 
 import { err, ok } from "@/web/api";
 import type { HealthData } from "@/web/api-types";
@@ -24,7 +25,7 @@ export async function GET(): Promise<Response> {
     await getDb().execute(sql`select 1`);
     dbUp = true;
   } catch (e) {
-    console.error("[health] database check failed:", e);
+    logger.error("[health] database check failed", { err: e });
   }
 
   const firebaseAdmin = isAdminConfigured() ? "configured" : "unconfigured";
