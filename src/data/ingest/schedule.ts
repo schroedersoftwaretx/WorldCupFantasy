@@ -12,6 +12,7 @@
  */
 
 import { eq } from "drizzle-orm";
+import { logger } from "../../log.js";
 
 import type { Db } from "../db/client.js";
 import { fixture, nationalTeam, type FixtureRow } from "../db/schema.js";
@@ -99,10 +100,11 @@ async function upsertFixtures(
   }
 
   if (unresolved.length > 0) {
-    console.warn(
-      `schedule: skipped ${unresolved.length} fixture(s) with unresolved teams ` +
-        `(TBD knockout slots or un-ingested squads): ${unresolved.join(", ")}`,
-    );
+    logger.warn("schedule: skipped fixtures with unresolved teams", {
+      count: unresolved.length,
+      reason: "TBD knockout slots or un-ingested squads",
+      fixtures: unresolved,
+    });
   }
 
   return summary;

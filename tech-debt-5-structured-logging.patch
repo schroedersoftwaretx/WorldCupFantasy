@@ -1,0 +1,245 @@
+diff --git a/app/api/auth/session/route.ts b/app/api/auth/session/route.ts
+index 68203a8..2e68cad 100644
+--- a/app/api/auth/session/route.ts
++++ b/app/api/auth/session/route.ts
+@@ -8,6 +8,7 @@
+  * manager row.
+  */
+ import { z } from "zod";
++import { logger } from "@/log";
+ 
+ import { err, HttpError, ok } from "@/web/api";
+ import type { AuthSessionData } from "@/web/api-types";
+@@ -55,7 +56,7 @@ export async function POST(request: Request): Promise<Response> {
+   } catch (e) {
+     // Surface the real cause - Firebase's messages (bad key, project
+     // mismatch, expired token) are diagnostic and contain no secrets.
+-    console.error("[auth] session mint failed:", e);
++    logger.error("[auth] session mint failed", { err: e });
+     const detail = e instanceof Error ? e.message : String(e);
+     return err(`could not verify sign-in: ${detail}`, "AUTH_FAILED", 401);
+   }
+@@ -73,7 +74,7 @@ export async function POST(request: Request): Promise<Response> {
+       };
+     }
+   } catch (e) {
+-    console.error("[auth] manager provisioning failed:", e);
++    logger.error("[auth] manager provisioning failed", { err: e });
+   }
+ 
+   return ok(data, 200, { "Set-Cookie": serializeSessionCookie(cookieValue) });
+diff --git a/app/api/health/route.ts b/app/api/health/route.ts
+index 1844d61..cd354fb 100644
+--- a/app/api/health/route.ts
++++ b/app/api/health/route.ts
+@@ -9,6 +9,7 @@
+  * Returns 200 when the database answers, 503 when it does not.
+  */
+ import { sql } from "drizzle-orm";
++import { logger } from "@/log";
+ 
+ import { err, ok } from "@/web/api";
+ import type { HealthData } from "@/web/api-types";
+@@ -24,7 +25,7 @@ export async function GET(): Promise<Response> {
+     await getDb().execute(sql`select 1`);
+     dbUp = true;
+   } catch (e) {
+-    console.error("[health] database check failed:", e);
++    logger.error("[health] database check failed", { err: e });
+   }
+ 
+   const firebaseAdmin = isAdminConfigured() ? "configured" : "unconfigured";
+diff --git a/src/data/draft/notifier.ts b/src/data/draft/notifier.ts
+index 274d3d8..f0492a4 100644
+--- a/src/data/draft/notifier.ts
++++ b/src/data/draft/notifier.ts
+@@ -24,6 +24,7 @@
+  */
+ 
+ import type { DraftNotificationType } from "../db/schema.js";
++import { logger } from "../../log.js";
+ 
+ /** A message to deliver to one manager. */
+ export interface OutboundNotification {
+@@ -83,10 +84,12 @@ export class RecordingNotifier implements Notifier {
+  */
+ export class ConsoleNotifier implements Notifier {
+   async send(notification: OutboundNotification): Promise<NotifierResult> {
+-    console.log(
+-      `[notify] ${notification.type} -> ${notification.toName} <${notification.to}>: ` +
+-        notification.subject,
+-    );
++    logger.info("[notify] delivered (console notifier)", {
++      type: notification.type,
++      to: notification.to,
++      toName: notification.toName,
++      subject: notification.subject,
++    });
+     return { delivered: true };
+   }
+ }
+diff --git a/src/data/ingest/schedule.ts b/src/data/ingest/schedule.ts
+index 7252a62..78e5bcf 100644
+--- a/src/data/ingest/schedule.ts
++++ b/src/data/ingest/schedule.ts
+@@ -12,6 +12,7 @@
+  */
+ 
+ import { eq } from "drizzle-orm";
++import { logger } from "../../log.js";
+ 
+ import type { Db } from "../db/client.js";
+ import { fixture, nationalTeam, type FixtureRow } from "../db/schema.js";
+@@ -99,10 +100,11 @@ async function upsertFixtures(
+   }
+ 
+   if (unresolved.length > 0) {
+-    console.warn(
+-      `schedule: skipped ${unresolved.length} fixture(s) with unresolved teams ` +
+-        `(TBD knockout slots or un-ingested squads): ${unresolved.join(", ")}`,
+-    );
++    logger.warn("schedule: skipped fixtures with unresolved teams", {
++      count: unresolved.length,
++      reason: "TBD knockout slots or un-ingested squads",
++      fixtures: unresolved,
++    });
+   }
+ 
+   return summary;
+diff --git a/src/log.ts b/src/log.ts
+new file mode 100644
+index 0000000..b822131
+--- /dev/null
++++ b/src/log.ts
+@@ -0,0 +1,68 @@
++/**
++ * Minimal, level-aware structured logger.
++ *
++ * Wraps `console` today but presents a backend-swappable surface: every call is
++ * `logger.<level>(msg, fields?)`, and all output flows through the single `emit`
++ * sink below. To ship logs to a real backend (Pino, Datadog, OTLP, …) later,
++ * replace `emit` — the call sites never change.
++ *
++ * The level threshold is read once from `LOG_LEVEL` (debug|info|warn|error); it
++ * defaults to `info` in production and `debug` elsewhere. This module lives at
++ * `src/log.ts` so the framework-agnostic data layer (`src/data`), the web layer
++ * (`src/web`) and the Next app (`app/`) can all import it without crossing layer
++ * boundaries.
++ */
++
++export type LogLevel = "debug" | "info" | "warn" | "error";
++
++export type LogFields = Record<string, unknown>;
++
++export interface LogRecord {
++  level: LogLevel;
++  msg: string;
++  time: string;
++  fields?: LogFields | undefined;
++}
++
++const RANK: Record<LogLevel, number> = { debug: 10, info: 20, warn: 30, error: 40 };
++
++function resolveThreshold(): LogLevel {
++  const raw =
++    (typeof process !== "undefined" ? process.env.LOG_LEVEL : undefined)?.toLowerCase();
++  if (raw === "debug" || raw === "info" || raw === "warn" || raw === "error") return raw;
++  const nodeEnv = typeof process !== "undefined" ? process.env.NODE_ENV : undefined;
++  return nodeEnv === "production" ? "info" : "debug";
++}
++
++const threshold = resolveThreshold();
++
++const SINK: Record<LogLevel, (...args: unknown[]) => void> = {
++  debug: console.debug.bind(console),
++  info: console.info.bind(console),
++  warn: console.warn.bind(console),
++  error: console.error.bind(console),
++};
++
++/** The single output sink. Swap this to redirect every log line. */
++function emit(record: LogRecord): void {
++  const { level, msg, fields } = record;
++  if (fields && Object.keys(fields).length > 0) {
++    SINK[level](msg, fields);
++  } else {
++    SINK[level](msg);
++  }
++}
++
++function write(level: LogLevel, msg: string, fields?: LogFields): void {
++  if (RANK[level] < RANK[threshold]) return;
++  emit({ level, msg, time: new Date().toISOString(), fields });
++}
++
++export const logger = {
++  debug: (msg: string, fields?: LogFields): void => write("debug", msg, fields),
++  info: (msg: string, fields?: LogFields): void => write("info", msg, fields),
++  warn: (msg: string, fields?: LogFields): void => write("warn", msg, fields),
++  error: (msg: string, fields?: LogFields): void => write("error", msg, fields),
++};
++
++export type Logger = typeof logger;
+diff --git a/src/web/api.ts b/src/web/api.ts
+index aa9dbcf..ddbcde4 100644
+--- a/src/web/api.ts
++++ b/src/web/api.ts
+@@ -16,6 +16,7 @@ import {
+   LeagueError,
+   RosterError,
+ } from "../data/league/errors.js";
++import { logger } from "../log.js";
+ 
+ export interface ApiOk<T> {
+   ok: true;
+@@ -84,7 +85,7 @@ export async function handle<T>(fn: () => Promise<T> | T): Promise<Response> {
+       // Domain rule violations are the caller's fault -> 400.
+       return err(e.message, e.code, 400);
+     }
+-    console.error("[api] unhandled error:", e);
++    logger.error("[api] unhandled error", { err: e });
+     const message = e instanceof Error ? e.message : "internal server error";
+     return err(message, "INTERNAL", 500);
+   }
+diff --git a/src/web/auth/current-user.ts b/src/web/auth/current-user.ts
+index faa2ba6..c24f638 100644
+--- a/src/web/auth/current-user.ts
++++ b/src/web/auth/current-user.ts
+@@ -19,6 +19,7 @@ import { HttpError } from "../api.js";
+ import { getDb } from "../db.js";
+ import { SESSION_COOKIE } from "./constants.js";
+ import { readSessionClaims, type SessionClaims } from "./session.js";
++import { logger } from "../../log.js";
+ 
+ export interface CurrentUser {
+   manager: ManagerRow;
+@@ -44,7 +45,7 @@ export async function resolveUserFromCookie(
+     return { manager, claims };
+   } catch (e) {
+     // Treat a DB hiccup as "not signed in" rather than crashing every page.
+-    console.error("[auth] manager lookup/provisioning failed:", e);
++    logger.error("[auth] manager lookup/provisioning failed", { err: e });
+     return null;
+   }
+ }
+diff --git a/src/web/rate-limit.ts b/src/web/rate-limit.ts
+index 4092822..d47422d 100644
+--- a/src/web/rate-limit.ts
++++ b/src/web/rate-limit.ts
+@@ -18,6 +18,7 @@
+  * their IP and evade per-IP limits — terminate TLS at a trusted proxy.
+  */
+ import { HttpError } from "./api.js";
++import { logger } from "../log.js";
+ 
+ export interface RateLimitResult {
+   /** Request count in the current window, including this hit. */
+@@ -126,7 +127,7 @@ export async function rateLimit(opts: RateLimitOptions): Promise<void> {
+   try {
+     result = await getRateLimitStore().hit(opts.key, opts.windowMs);
+   } catch (e) {
+-    console.error("[rate-limit] store error, failing open:", e);
++    logger.error("[rate-limit] store error, failing open", { err: e });
+     return;
+   }
+   if (result.count > opts.limit) {

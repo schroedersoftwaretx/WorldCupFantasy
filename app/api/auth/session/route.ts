@@ -8,6 +8,7 @@
  * manager row.
  */
 import { z } from "zod";
+import { logger } from "@/log";
 
 import { err, HttpError, ok } from "@/web/api";
 import type { AuthSessionData } from "@/web/api-types";
@@ -55,7 +56,7 @@ export async function POST(request: Request): Promise<Response> {
   } catch (e) {
     // Surface the real cause - Firebase's messages (bad key, project
     // mismatch, expired token) are diagnostic and contain no secrets.
-    console.error("[auth] session mint failed:", e);
+    logger.error("[auth] session mint failed", { err: e });
     const detail = e instanceof Error ? e.message : String(e);
     return err(`could not verify sign-in: ${detail}`, "AUTH_FAILED", 401);
   }
@@ -73,7 +74,7 @@ export async function POST(request: Request): Promise<Response> {
       };
     }
   } catch (e) {
-    console.error("[auth] manager provisioning failed:", e);
+    logger.error("[auth] manager provisioning failed", { err: e });
   }
 
   return ok(data, 200, { "Set-Cookie": serializeSessionCookie(cookieValue) });

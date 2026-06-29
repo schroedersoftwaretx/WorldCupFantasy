@@ -24,6 +24,7 @@
  */
 
 import type { DraftNotificationType } from "../db/schema.js";
+import { logger } from "../../log.js";
 
 /** A message to deliver to one manager. */
 export interface OutboundNotification {
@@ -83,10 +84,12 @@ export class RecordingNotifier implements Notifier {
  */
 export class ConsoleNotifier implements Notifier {
   async send(notification: OutboundNotification): Promise<NotifierResult> {
-    console.log(
-      `[notify] ${notification.type} -> ${notification.toName} <${notification.to}>: ` +
-        notification.subject,
-    );
+    logger.info("[notify] delivered (console notifier)", {
+      type: notification.type,
+      to: notification.to,
+      toName: notification.toName,
+      subject: notification.subject,
+    });
     return { delivered: true };
   }
 }

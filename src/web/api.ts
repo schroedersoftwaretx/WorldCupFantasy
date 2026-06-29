@@ -16,6 +16,7 @@ import {
   LeagueError,
   RosterError,
 } from "../data/league/errors.js";
+import { logger } from "../log.js";
 
 export interface ApiOk<T> {
   ok: true;
@@ -84,7 +85,7 @@ export async function handle<T>(fn: () => Promise<T> | T): Promise<Response> {
       // Domain rule violations are the caller's fault -> 400.
       return err(e.message, e.code, 400);
     }
-    console.error("[api] unhandled error:", e);
+    logger.error("[api] unhandled error", { err: e });
     const message = e instanceof Error ? e.message : "internal server error";
     return err(message, "INTERNAL", 500);
   }
