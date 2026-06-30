@@ -95,7 +95,15 @@ export interface SsStatus {
 export interface SsRoundInfo {
   round?: number;
   name?: string;
-  /** SofaScore cup-round code: 2=final, 4=SF, 8=QF, 16=R16, 32=R32, 64=R64. */
+  /** Round slug, e.g. "round-of-32". Authoritative for stage; see mapSsStage. */
+  slug?: string;
+  /**
+   * SofaScore cup-round code. UNRELIABLE across formats: in the 48-team World
+   * Cup the Round of 32 is reported as cupRoundType 16 (the code that meant
+   * "Round of 16" in the old 32-team bracket), so it must NOT be trusted to
+   * pick the stage. mapSsStage prefers name/slug and uses this only as a
+   * last-resort fallback for name-less events.
+   */
   cupRoundType?: number;
 }
 
@@ -205,10 +213,22 @@ export function mapSsStage(
     }
   }
 
-  // Knockout. Check name for third place first (it can otherwise look like SF).
-  const hay = `${tName} ${norm(round?.name)}`;
+  // Knockout. The round NAME/SLUG is authoritative — SofaScore's numeric
+  // `cupRoundType` is unreliable for the 48-team format (the Round of 32 is
+  // reported as cupRoundType 16, the old code for "Round of 16"). So match on
+  // the human-readable round first and only fall back to cupRoundType when no
+  // name/slug is present. Check third place first (it can look like a semi).
+  const hay = `${tName} ${norm(round?.name)} ${norm(round?.slug)}`;
   if (hay.includes("third") || hay.includes("3rd")) return "THIRD_PLACE";
+  if (hay.includes("round of 32") || hay.includes("round-of-32") || hay.includes("1/16")) return "R32";
+  if (hay.includes("round of 16") || hay.includes("round-of-16") || hay.includes("1/8")) return "R16";
+  if (hay.includes("quarter")) return "QF";
+  if (hay.includes("semi")) return "SF";
+  if (hay.includes("final")) return "FINAL";
 
+  // Last-resort fallback when the round carries no usable name/slug. These
+  // codes follow the legacy 32-team semantics and are ambiguous in the 48-team
+  // format (see SsRoundInfo) — kept only so a name-less event still resolves.
   switch (round?.cupRoundType) {
     case 32:
       return "R32";
@@ -223,13 +243,6 @@ export function mapSsStage(
     default:
       break;
   }
-
-  // Name fallback when cupRoundType is absent.
-  if (hay.includes("round of 32") || hay.includes("1/16")) return "R32";
-  if (hay.includes("round of 16") || hay.includes("1/8")) return "R16";
-  if (hay.includes("quarter")) return "QF";
-  if (hay.includes("semi")) return "SF";
-  if (hay.includes("final")) return "FINAL";
 
   throw new ProviderMappingError(
     `unknown SofaScore stage: tournament=${JSON.stringify(tournamentName)} round=${JSON.stringify(round)}`,
@@ -263,11 +276,23 @@ export function mapSsStatus(status: SsStatus | null | undefined): "SCHEDULED" | 
  * puts the running 90'+ET total in `overtime` (when ET is played) or
  * `normaltime` otherwise; the shootout lives in the separate `penalties`
  * field, so we never pick it up. Returns null when the score is absent.
+ *
+ * We take the MAX of `normaltime` and `overtime` rather than blindly preferring
+ * `overtime`. The reg+ET total can only stay equal to or rise above the
+ * end-of-90' total, so it is never below `normaltime`. SofaScore has been
+ * observed to report `overtime: 0` on a draw that went to extra time but saw no
+ * ET goals (e.g. a 1-1 decided on penalties) — there the real total sits in
+ * `normaltime: 1`. Preferring `overtime` there returned 0, which zeroed the
+ * conceding team's goals-against and handed every eligible defender/keeper a
+ * phantom clean sheet. Clamping to `max` keeps the genuine ET-goal case
+ * (overtime > normaltime) correct while ignoring a spurious low `overtime`.
  */
 export function ssRegEt(score: SsScore | null | undefined): number | null {
   if (!score) return null;
-  if (typeof score.overtime === "number") return score.overtime;
-  if (typeof score.normaltime === "number") return score.normaltime;
+  const regEt: number[] = [];
+  if (typeof score.normaltime === "number") regEt.push(score.normaltime);
+  if (typeof score.overtime === "number") regEt.push(score.overtime);
+  if (regEt.length > 0) return Math.max(...regEt);
   if (typeof score.current === "number") return score.current;
   if (typeof score.display === "number") return score.display;
   return null;
