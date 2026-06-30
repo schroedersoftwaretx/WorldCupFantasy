@@ -6,9 +6,15 @@
  *   # recompute scores -> snapshot standings
  *   node --env-file=.env --import tsx scripts/ingest-sofascore.ts
  *
- *   # force a single fixture even if it already has stat lines (use the
- *   # SofaScore event id, i.e. the post-remap source_fixture_id)
+ *   # re-pull a single fixture (use the SofaScore event id, i.e. the
+ *   # post-remap source_fixture_id)
  *   node --env-file=.env --import tsx scripts/ingest-sofascore.ts <eventId>
+ *
+ *   # add --force to OVERWRITE existing rows whose provider source_revision is
+ *   # unchanged. Needed when re-ingesting after a mapping fix (the data on
+ *   # SofaScore did not change, so the revision is identical and a plain re-run
+ *   # skips every row). Manual /admin/stats edits are still never clobbered.
+ *   node --env-file=.env --import tsx scripts/ingest-sofascore.ts <eventId> --force
  *
  * Prereqs: run scripts/remap-to-sofascore.ts --apply first so the DB carries
  * SofaScore source ids, and set STATS_PROVIDER=sofascore.
@@ -21,7 +27,9 @@ import { recomputeAllRulesets } from "../src/data/scoring/recompute.js";
 import { captureAllStandingsSnapshots } from "../src/data/standings/snapshot.js";
 import { createBrowserFetch, makeSofaProvider } from "./sofascore-browser-fetch.js";
 
-const ONE_FIXTURE = process.argv[2]; // optional SofaScore event id
+const ARGS = process.argv.slice(2);
+const FORCE = ARGS.includes("--force"); // overwrite rows even on an unchanged revision
+const ONE_FIXTURE = ARGS.find((a) => !a.startsWith("--")); // optional SofaScore event id
 
 async function main() {
   const url = process.env["DIRECT_DATABASE_URL"] || process.env["DATABASE_URL"];
@@ -35,7 +43,7 @@ async function main() {
 
     // Our DB holds only the draft pool, so SofaScore returns stat lines for
     // players we don't track (undrafted). Skip them instead of aborting.
-    const ingestOpts = { skipUnknownPlayers: true };
+    const ingestOpts = { skipUnknownPlayers: true, force: FORCE };
 
     if (ONE_FIXTURE) {
       const s = await ingestFixtureStats(db, provider, ONE_FIXTURE, ingestOpts);

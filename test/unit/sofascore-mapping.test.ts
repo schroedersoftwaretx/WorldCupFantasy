@@ -143,6 +143,8 @@ describe("penalty-shootout draw does not award a phantom clean sheet", () => {
 
   it("records the conceded goal so the clean sheet is not awarded", () => {
     const [fixture] = mapSsFixtures([event]);
+    expect(fixture).toBeDefined();
+    if (!fixture) throw new Error("expected a mapped fixture");
     expect(fixture.homeScore).toBe(1);
     expect(fixture.awayScore).toBe(1);
 
