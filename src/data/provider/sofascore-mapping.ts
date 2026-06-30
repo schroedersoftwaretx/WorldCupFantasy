@@ -276,11 +276,23 @@ export function mapSsStatus(status: SsStatus | null | undefined): "SCHEDULED" | 
  * puts the running 90'+ET total in `overtime` (when ET is played) or
  * `normaltime` otherwise; the shootout lives in the separate `penalties`
  * field, so we never pick it up. Returns null when the score is absent.
+ *
+ * We take the MAX of `normaltime` and `overtime` rather than blindly preferring
+ * `overtime`. The reg+ET total can only stay equal to or rise above the
+ * end-of-90' total, so it is never below `normaltime`. SofaScore has been
+ * observed to report `overtime: 0` on a draw that went to extra time but saw no
+ * ET goals (e.g. a 1-1 decided on penalties) — there the real total sits in
+ * `normaltime: 1`. Preferring `overtime` there returned 0, which zeroed the
+ * conceding team's goals-against and handed every eligible defender/keeper a
+ * phantom clean sheet. Clamping to `max` keeps the genuine ET-goal case
+ * (overtime > normaltime) correct while ignoring a spurious low `overtime`.
  */
 export function ssRegEt(score: SsScore | null | undefined): number | null {
   if (!score) return null;
-  if (typeof score.overtime === "number") return score.overtime;
-  if (typeof score.normaltime === "number") return score.normaltime;
+  const regEt: number[] = [];
+  if (typeof score.normaltime === "number") regEt.push(score.normaltime);
+  if (typeof score.overtime === "number") regEt.push(score.overtime);
+  if (regEt.length > 0) return Math.max(...regEt);
   if (typeof score.current === "number") return score.current;
   if (typeof score.display === "number") return score.display;
   return null;

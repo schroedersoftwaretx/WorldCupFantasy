@@ -102,6 +102,62 @@ describe("mapSsStatus + ssRegEt", () => {
     expect(ssRegEt({ normaltime: 1, overtime: 2, current: 2, penalties: 4 })).toBe(2);
     expect(ssRegEt(undefined)).toBeNull();
   });
+  it("never reports reg+ET below normaltime when the shootout-game overtime field is 0", () => {
+    // Regression: Germany 1-1 Paraguay, both goals in regulation, goalless ET,
+    // decided on penalties. SofaScore reports overtime: 0 (no goals scored IN
+    // the ET period), with the real running total still in normaltime: 1.
+    // ssRegEt must NOT return 0 here — that zeroes the conceded count and hands
+    // every defender a phantom clean sheet (the Jonathan Tah bug).
+    expect(ssRegEt({ normaltime: 1, overtime: 0, current: 1, penalties: 4 })).toBe(1);
+  });
+});
+
+describe("penalty-shootout draw does not award a phantom clean sheet", () => {
+  // Germany (home) 1-1 Paraguay (away), goalless extra time, Germany win on
+  // penalties. The score block carries overtime: 0 because no goal was scored
+  // during extra time; the regulation goals live in normaltime: 1.
+  const event: SsEvent = {
+    id: 9999001,
+    startTimestamp: Math.floor(Date.parse("2026-06-29T18:00:00Z") / 1000),
+    status: { type: "finished" },
+    homeTeam: { id: 1, name: "Germany" },
+    awayTeam: { id: 2, name: "Paraguay" },
+    homeScore: { normaltime: 1, overtime: 0, current: 1, penalties: 4 },
+    awayScore: { normaltime: 1, overtime: 0, current: 1, penalties: 2 },
+    roundInfo: { name: "Round of 16", slug: "round-of-16" },
+    tournament: { name: "World Cup" },
+  };
+
+  const lineups: SsLineups = {
+    home: {
+      players: [
+        {
+          player: { id: 1001, name: "Jonathan Tah", position: "D" },
+          position: "D",
+          statistics: { minutesPlayed: 120 },
+        },
+      ],
+    },
+    away: { players: [] },
+  };
+
+  it("records the conceded goal so the clean sheet is not awarded", () => {
+    const [fixture] = mapSsFixtures([event]);
+    expect(fixture.homeScore).toBe(1);
+    expect(fixture.awayScore).toBe(1);
+
+    const lines = mapSsFixtureStats(lineups, [], fixture, "rev-1");
+    const tah = lines.find((l) => l.sourcePlayerId === "1001")!;
+    // Germany conceded Paraguay's 1 goal in regulation.
+    expect(tah.teamConcededInRegulationAndEt).toBe(1);
+
+    const scored = scoreStatLine(
+      tah as unknown as ScorableStatLine,
+      "DEF",
+      DEFAULT_RULESET,
+    );
+    expect(scored.breakdown.cleanSheet).toBe(0);
+  });
 });
 
 describe("indexSsStandings + mapSsSquads", () => {
