@@ -25,10 +25,12 @@ import {
 
 import {
   inviteStatusEnum,
+  leagueFormatEnum,
   leagueRoleEnum,
   leagueStatusEnum,
   positionEnum,
 } from "./enums.js";
+import { competition } from "./competition.js";
 import { player } from "./football.js";
 
 // --- manager ----------------------------------------------------------------
@@ -61,6 +63,14 @@ export const league = pgTable("league", {
     .notNull()
     .references(() => manager.id, { onDelete: "restrict" }),
   scoringRuleset: jsonb("scoring_ruleset").notNull(),
+  /** The real-world competition-season this league plays (Phase 9). Nullable
+   * for pre-migration rows; a null league falls back to the stage enum
+   * periods, which is exactly the seeded World Cup. */
+  competitionId: integer("competition_id").references(() => competition.id, {
+    onDelete: "restrict",
+  }),
+  /** How a period score is produced. BEST_BALL = retroactive optimal XI. */
+  format: leagueFormatEnum("format").notNull().default("BEST_BALL"),
   maxManagers: integer("max_managers").notNull().default(24),
   rosterSize: integer("roster_size").notNull().default(23),
   status: leagueStatusEnum("status").notNull().default("SETUP"),

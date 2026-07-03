@@ -31,6 +31,7 @@ import {
   stageEnum,
   teamStatusEnum,
 } from "./enums.js";
+import { scoringPeriod } from "./competition.js";
 
 // --- national_team ----------------------------------------------------------
 
@@ -95,6 +96,12 @@ export const fixture = pgTable(
     id: serial("id").primaryKey(),
     sourceFixtureId: text("source_fixture_id").notNull(),
     stage: stageEnum("stage").notNull(),
+    /** Generic period link (Phase 9). Nullable during transition; standings
+     * fall back to stage-code matching when null. */
+    scoringPeriodId: integer("scoring_period_id").references(
+      () => scoringPeriod.id,
+      { onDelete: "restrict" },
+    ),
     homeTeamId: integer("home_team_id")
       .notNull()
       .references(() => nationalTeam.id, { onDelete: "restrict" }),
