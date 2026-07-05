@@ -1,7 +1,7 @@
 # Phase 9 — Multi-Competition Foundation (design note)
 
-Status: **enabling refactor DONE; Priority 1 (SET_LINEUP + captain/VC) DONE**
-(branch `phase-09-multi-competition`).
+Status: **enabling refactor DONE; Priority 1 (SET_LINEUP + captain/VC) DONE;
+Priority 2 (head-to-head) DONE** (branch `phase-09-multi-competition`).
 
 ## What shipped
 
@@ -114,8 +114,44 @@ Status: **enabling refactor DONE; Priority 1 (SET_LINEUP + captain/VC) DONE**
 - Bench order / auto-subs (FPL-style) - out of scope; roll-forward + vice
   promotion is the only automatic behavior.
 
+## Priority 2 as-built (head-to-head)
+
+Reconciled `phase-04-head-to-head.md` (written pre-Phase-9, stage-based)
+with the multi-competition model: the schedule keys on `scoring_period_id`,
+not the stage enum, and the table is named `matchup` per the Phase 9
+hand-off.
+
+- `drizzle/0014_head_to_head.sql`: `matchup` (league, scoring_period, home/
+  away fantasy team; unique per team per period). ONLY the schedule is
+  stored - results are always derived, so stat corrections self-heal every
+  record (same philosophy as standings).
+- `src/data/h2h/schedule.ts`: `generateRoundRobin` - deterministic circle
+  method; odd counts get one bye per round; more periods than rounds wraps
+  balanced; fewer truncates to a balanced partial. `generateSchedule`
+  requires the `head_to_head` flag ON and `league.competition_id` set
+  (H2H_REQUIRES_COMPETITION); regeneration allowed until any SCHEDULED
+  period FINALIZES (all its fixtures FINISHED) -> H2H_SCHEDULE_LOCKED.
+  Enabling H2H mid-tournament works: earlier periods score retroactively.
+- `src/data/h2h/results.ts`: pure builders + `computeH2h`. One
+  `computeStandings` call feeds everything, so period totals respect the
+  league's base format (BEST_BALL or SET_LINEUP). Win 3 / draw 1 / loss 0;
+  table ranked by H2H points then season total, shared ranks; pairwise
+  `rivalries` records; unfinalized matchups returned with live points and
+  `outcome: null`.
+- Routes: `GET /api/leagues/[leagueId]/h2h` (member-gated, flag-gated,
+  echoes flag config e.g. `{ primaryStandings }`),
+  `POST .../h2h/schedule` (owner-only). `H2hError` -> 400.
+- Tests: `test/unit/h2h.test.ts` (10: round-robin coverage/byes/balance/
+  determinism, results, table, rivalries),
+  `test/integration/h2h.test.ts` (4: flag gate + 9-period schedule,
+  derived results/table/rivalries, regen lock, competition requirement).
+- NOT built (deliberate): matchups UI, `bracket`/playoffs (own flag,
+  later), `config.primaryStandings` rendering choice (config is stored and
+  echoed; view work), activity events (Phase 3 social is deferred).
+
 ## Next (per the Phase 9 hand-off, section 4)
 
-Priority 2: head-to-head (`matchup` table, `head_to_head` flag,
-`phase-04-head-to-head.md`) - period totals come from whatever base format
-the league uses, which now includes SET_LINEUP.
+Priority 3: chips (`chips` flag, `phase-06-chips-strategy.md`) -
+`chip_usage` table, one-shot enforcement; meaningful mainly for SET_LINEUP
+leagues (wildcard/free-hit need transfers, so scope to bench boost +
+triple captain first).
