@@ -7,8 +7,9 @@
  * means they are always current: that is the "live updates" story without
  * any caching or websocket machinery.
  *
- * A team's total (section 5) is cumulative: for each of the nine scoring
- * periods (the tournament stages) the best-ball optimizer picks the
+ * A team's total (section 5) is cumulative: for each scoring period of the
+ * league's competition (WC stages; PL gameweeks once seeded - Phase 9, read
+ * from scoring_period) the best-ball optimizer picks the
  * highest-scoring legal XI from the 23-man roster, and the period points
  * are summed across all periods.
  *
@@ -26,7 +27,15 @@
 
 import { eq, inArray } from "drizzle-orm";
 
+import {
+  assignFixturesToPeriods,
+  getScoringPeriods,
+} from "../competition/periods.js";
 import type { Db } from "../db/client.js";
+import {
+  effectiveLineupForOrdinal,
+  getLineupsForTeams,
+} from "../lineup/service.js";
 import {
   fantasyTeam,
   fixture,
@@ -45,8 +54,17 @@ import {
   optimizeBestBall,
   type ScoredPlayer,
 } from "./lineup.js";
+import {
+  scoreSetLineupPeriod,
+  type SetLineupSlotInput,
+} from "./set-lineup.js";
 
-/** The nine scoring periods, in tournament order. */
+/**
+ * The nine World Cup stages, in tournament order. Since Phase 9 the standings
+ * loop reads a league's periods from scoring_period (getScoringPeriods); this
+ * constant remains as the stage-typed fallback ordering and for the
+ * stage-keyed snapshot/view helpers, which are WC-specific.
+ */
 export const SCORING_PERIODS: readonly Stage[] = stageEnum.enumValues;
 
 export interface XiSlot {
@@ -97,6 +115,10 @@ export async function computeStandings(
   if (!lg) throw new Error(`league ${leagueId} does not exist`);
   const rulesetVersion = (lg.scoringRuleset as ScoringRuleset).version;
 
+  // Scoring periods are data since Phase 9: the league's competition's
+  // scoring_period rows, or the stage-enum fallback (identical for the WC).
+  const periodRefs = await getScoringPeriods(db, lg.competitionId);
+
   // --- bulk load -----------------------------------------------------------
   const teams = await db
     .select()
@@ -117,9 +139,8 @@ export async function computeStandings(
   const playerById = new Map(players.map((p) => [p.id, p]));
 
   const fixtures = await db.select().from(fixture);
-  const stageByFixtureId = new Map<number, Stage>(
-    fixtures.map((f) => [f.id, f.stage]),
-  );
+  // fixtureId -> period ordinal (scoring_period_id first, stage fallback).
+  const ordinalByFixtureId = assignFixturesToPeriods(periodRefs, fixtures);
   const finalFixtureIds = new Set(
     fixtures.filter((f) => f.stage === "FINAL").map((f) => f.id),
   );
@@ -144,6 +165,34 @@ export async function computeStandings(
           .where(inArray(statLine.playerId, rosteredPlayerIds))
       : [];
 
+  // --- SET_LINEUP inputs (loaded ONLY for that format; best-ball leagues
+  // never touch the lineup table) --------------------------------------------
+  const isSetLineup = lg.format === "SET_LINEUP";
+  const lineupsByTeam = new Map<number, Awaited<ReturnType<typeof getLineupsForTeams>>>();
+  const ordinalByPeriodId = new Map<number, number>();
+  const featuredByOrdinal = new Map<number, Set<number>>();
+  if (isSetLineup) {
+    for (const p of periodRefs) {
+      if (p.id !== null) ordinalByPeriodId.set(p.id, p.ordinal);
+    }
+    const rows = await getLineupsForTeams(db, teams.map((t) => t.id));
+    for (const row of rows) {
+      const list = lineupsByTeam.get(row.fantasyTeamId) ?? [];
+      list.push(row);
+      lineupsByTeam.set(row.fantasyTeamId, list);
+    }
+    // "Featured" = played minutes in a fixture of the period (drives the
+    // captain -> vice promotion).
+    for (const st of stats) {
+      if (st.minutesPlayed <= 0) continue;
+      const ord = ordinalByFixtureId.get(st.fixtureId);
+      if (ord === undefined) continue;
+      const set = featuredByOrdinal.get(ord) ?? new Set<number>();
+      set.add(st.playerId);
+      featuredByOrdinal.set(ord, set);
+    }
+  }
+
   // --- per-team computation ------------------------------------------------
   const slotsByTeam = new Map<number, number[]>();
   for (const s of slots) {
@@ -159,14 +208,47 @@ export async function computeStandings(
     // Per-period best-ball XI.
     const periods: PeriodResult[] = [];
     let total = 0;
-    for (const stage of SCORING_PERIODS) {
+    for (const period of periodRefs) {
+      const stage = (period.stageCode ?? period.label) as Stage;
+
+      if (isSetLineup) {
+        // Submitted XI (rolled forward), captain doubled, vice promoted.
+        const effective = effectiveLineupForOrdinal(
+          lineupsByTeam.get(team.id) ?? [],
+          ordinalByPeriodId,
+          period.ordinal,
+        );
+        const slotByPlayerId = new Map<number, SetLineupSlotInput>();
+        for (const pid of (effective?.playerIds as number[] | undefined) ?? []) {
+          const p = playerById.get(pid);
+          slotByPlayerId.set(pid, {
+            position: (p?.position ?? "MID") as Position,
+            fullName: p?.fullName ?? `#${pid}`,
+            points: sumPlayerPointsInPeriod(pid, period.ordinal, scoreByKey, ordinalByFixtureId),
+          });
+        }
+        const result = scoreSetLineupPeriod(
+          effective,
+          slotByPlayerId,
+          featuredByOrdinal.get(period.ordinal) ?? new Set<number>(),
+        );
+        total += result.points;
+        periods.push({
+          stage,
+          formation: result.formation,
+          points: result.points,
+          xi: result.xi,
+        });
+        continue;
+      }
+
       const scored: ScoredPlayer[] = rosterPlayerIds.map((pid) => {
         const p = playerById.get(pid);
-        const points = sumPlayerPointsInStage(
+        const points = sumPlayerPointsInPeriod(
           pid,
-          stage,
+          period.ordinal,
           scoreByKey,
-          stageByFixtureId,
+          ordinalByFixtureId,
         );
         return {
           playerId: pid,
@@ -225,15 +307,15 @@ export async function computeStandings(
 /** Placeholder formation for an empty period (no XI fielded). */
 const LEGAL_NONE = { GK: 1 as const, DEF: 0, MID: 0, FWD: 0 };
 
-function sumPlayerPointsInStage(
+function sumPlayerPointsInPeriod(
   playerId: number,
-  stage: Stage,
+  ordinal: number,
   scoreByKey: Map<string, number>,
-  stageByFixtureId: Map<number, Stage>,
+  ordinalByFixtureId: Map<number, number>,
 ): number {
   let sum = 0;
-  for (const [fixtureId, fxStage] of stageByFixtureId) {
-    if (fxStage !== stage) continue;
+  for (const [fixtureId, fxOrdinal] of ordinalByFixtureId) {
+    if (fxOrdinal !== ordinal) continue;
     sum += scoreByKey.get(`${playerId}:${fixtureId}`) ?? 0;
   }
   return sum;

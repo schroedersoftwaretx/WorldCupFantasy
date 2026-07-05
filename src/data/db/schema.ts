@@ -5,6 +5,9 @@
  * symbol so existing imports of "db/schema" keep working unchanged:
  *   - enums.ts         all pgEnum declarations + their value-type aliases
  *   - football.ts      national_team, player, fixture, stat_line, score_entry
+ *   - competition.ts   competition, scoring_period
+ *   - lineups.ts       lineup
+ *   - h2h.ts           matchup
  *   - leagues.ts       manager, league, league_membership, league_invite,
  *                      fantasy_team, roster_slot
  *   - draft.ts         draft_room, draft_order, draft_pick, draft_notification,
@@ -24,7 +27,10 @@
 
 export * from "./schema/enums.js";
 export * from "./schema/football.js";
+export * from "./schema/competition.js";
 export * from "./schema/leagues.js";
 export * from "./schema/draft.js";
+export * from "./schema/lineups.js";
+export * from "./schema/h2h.js";
 export * from "./schema/odds.js";
 export * from "./schema/notifications.js";

@@ -24,6 +24,18 @@ export const stageEnum = pgEnum("stage", [
   "THIRD_PLACE",
   "FINAL",
 ]);
+export const competitionKindEnum = pgEnum("competition_kind", [
+  "WORLD_CUP",
+  "LEAGUE",
+  "CONTINENTAL_CUP",
+]);
+/** How a league's period score is produced. Rollup (e.g. head-to-head) is a
+ * feature flag layered on top, not a format. */
+export const leagueFormatEnum = pgEnum("league_format", [
+  "BEST_BALL",
+  "SET_LINEUP",
+  "HEAD_TO_HEAD",
+]);
 export const fixtureStatusEnum = pgEnum("fixture_status", [
   "SCHEDULED",
   "LIVE",
@@ -91,6 +103,8 @@ export const appNotificationStatusEnum = pgEnum("app_notification_status", [
 
 // --- Enum-derived value types -----------------------------------------------
 
+export type CompetitionKind = (typeof competitionKindEnum.enumValues)[number];
+export type LeagueFormat = (typeof leagueFormatEnum.enumValues)[number];
 export type Stage = (typeof stageEnum.enumValues)[number];
 export type Position = (typeof positionEnum.enumValues)[number];
 export type FixtureStatus = (typeof fixtureStatusEnum.enumValues)[number];
