@@ -16,6 +16,7 @@ import {
   LeagueError,
   RosterError,
 } from "../data/league/errors.js";
+import { LineupError } from "@/data/lineup/errors";
 import { logger } from "../log.js";
 
 export interface ApiOk<T> {
@@ -80,7 +81,8 @@ export async function handle<T>(fn: () => Promise<T> | T): Promise<Response> {
     if (
       e instanceof LeagueError ||
       e instanceof RosterError ||
-      e instanceof DraftError
+      e instanceof DraftError ||
+      e instanceof LineupError
     ) {
       // Domain rule violations are the caller's fault -> 400.
       return err(e.message, e.code, 400);

@@ -26,6 +26,8 @@ export const dynamic = "force-dynamic";
 const CreateLeagueSchema = z.object({
   name: z.string().refine((v) => v.trim().length > 0, "league name is required"),
   maxManagers: z.number().optional().catch(undefined),
+  format: z.enum(["BEST_BALL", "SET_LINEUP"]).optional(),
+  competitionId: z.number().int().positive().optional(),
 });
 
 export function GET(request: Request): Promise<Response> {
@@ -47,10 +49,14 @@ export function POST(request: Request): Promise<Response> {
       ownerManagerId: number;
       name: string;
       maxManagers?: number;
+      format?: "BEST_BALL" | "SET_LINEUP";
+      competitionId?: number;
     } = { ownerManagerId: manager.id, name: body.name.trim() };
     if (typeof body.maxManagers === "number") {
       input.maxManagers = body.maxManagers;
     }
+    if (body.format !== undefined) input.format = body.format;
+    if (body.competitionId !== undefined) input.competitionId = body.competitionId;
 
     const result = await createLeague(getDb(), input);
     const data: LeagueCreatedData = {

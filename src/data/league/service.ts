@@ -19,12 +19,15 @@ import { randomBytes } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 
 import type { Db } from "../db/client.js";
+import { count } from "drizzle-orm";
 import {
   fantasyTeam,
   league,
   leagueInvite,
   leagueMembership,
   manager,
+  scoringPeriod,
+  type LeagueFormat,
   type FantasyTeamRow,
   type LeagueInviteRow,
   type LeagueMembershipRow,
@@ -104,6 +107,12 @@ export interface CreateLeagueInput {
   scoringRuleset?: ScoringRuleset;
   /** Owner's team name; defaults to "<displayName>'s Team". */
   ownerTeamName?: string;
+  /** How period scores are produced (Phase 9). Defaults to BEST_BALL. */
+  format?: LeagueFormat;
+  /** The competition-season this league plays. Required for SET_LINEUP
+   * (lineups key on its scoring_period rows); optional for BEST_BALL,
+   * where null falls back to the World Cup stage periods. */
+  competitionId?: number;
 }
 
 export interface CreateLeagueResult {
@@ -136,7 +145,30 @@ export async function createLeague(
     throw new LeagueError("league name must not be empty", "INVALID_LEAGUE_NAME");
   }
 
+  const format: LeagueFormat = input.format ?? "BEST_BALL";
+
   return db.transaction(async (tx) => {
+    // SET_LINEUP lineups are keyed by scoring_period id, so the league must
+    // point at a competition that actually has seeded periods.
+    if (format === "SET_LINEUP") {
+      if (input.competitionId === undefined) {
+        throw new LeagueError(
+          "a SET_LINEUP league requires a competitionId",
+          "FORMAT_REQUIRES_COMPETITION",
+        );
+      }
+      const [periods] = await tx
+        .select({ n: count() })
+        .from(scoringPeriod)
+        .where(eq(scoringPeriod.competitionId, input.competitionId));
+      if (!periods || periods.n === 0) {
+        throw new LeagueError(
+          `competition ${input.competitionId} has no scoring periods`,
+          "COMPETITION_HAS_NO_PERIODS",
+        );
+      }
+    }
+
     const [owner] = await tx
       .select()
       .from(manager)
@@ -156,6 +188,8 @@ export async function createLeague(
         createdByManagerId: owner.id,
         scoringRuleset: ruleset,
         maxManagers,
+        format,
+        competitionId: input.competitionId ?? null,
       })
       .returning();
     if (!createdLeague) throw new LeagueError("league insert failed", "LEAGUE_INSERT_FAILED");

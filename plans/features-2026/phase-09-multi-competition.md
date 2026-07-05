@@ -1,7 +1,7 @@
 # Phase 9 — Multi-Competition Foundation (design note)
 
-Status: **enabling refactor DONE** (branch `phase-09-multi-competition`).
-Priority 1 (set-lineup + captain) not started.
+Status: **enabling refactor DONE; Priority 1 (SET_LINEUP + captain/VC) DONE**
+(branch `phase-09-multi-competition`).
 
 ## What shipped
 
@@ -69,8 +69,53 @@ Priority 1 (set-lineup + captain) not started.
   end-to-end against a migrated DB with no error and no duplicates).
 - Component: 66/66.
 
-## Next (per the Phase 9 hand-off, section 4 Priority 1)
+## Priority 1 as-built (SET_LINEUP + captain/VC)
 
-`lineup` table (fantasy_team_id, scoring_period_id, XI + captain/VC, lock
-at period first kickoff), `format = SET_LINEUP` read path, captain/VC
-doubling. Best-ball leagues must never touch the table.
+- `drizzle/0013_set_lineup.sql`: `lineup` table, PK (fantasy_team_id,
+  scoring_period_id), `player_ids` jsonb (exactly 11), captain + optional
+  vice FKs. Additive; only `format = 'SET_LINEUP'` leagues touch it.
+- `src/data/lineup/service.ts`: `submitLineup` (format guard, period must
+  belong to the league's competition, LOCK at the period's first kickoff -
+  fixtures matched the same way scoring matches them, `now` injectable for
+  tests), `validateLineupSelection` (11 distinct rostered players forming
+  one of the four legal formations - reuses `LEGAL_FORMATIONS`; captain and
+  vice in the XI), `effectiveLineupForOrdinal` (ROLL-FORWARD: a period with
+  no row uses the most recent earlier submission, FPL-style),
+  `getLineups`/`getLineupsForTeams`. Errors: `LineupError` (mapped to 400
+  in `src/web/api.ts` like the other domain errors).
+- `src/data/standings/set-lineup.ts` (pure): `scoreSetLineupPeriod` -
+  submitted XI scored per period; CAPTAIN DOUBLES if they FEATURED
+  (minutes > 0 in a period fixture, from stat_line); otherwise the VICE is
+  promoted and doubled (if they featured); neither featured -> no double.
+  Doubling shows in the captain's XI slot, so period total == sum of slots.
+  No lineup (and nothing to roll forward) -> 0 points, "-" formation.
+- `computeStandings` branches per league: `format === 'SET_LINEUP'` loads
+  lineups/appearance ONLY then; the best-ball block is untouched
+  (regression-proven: a best-ball league with lineup rows force-inserted
+  computes byte-identical standings).
+- `createLeague` gained optional `format` + `competitionId`; SET_LINEUP
+  REQUIRES a competition with seeded periods (`FORMAT_REQUIRES_COMPETITION`
+  / `COMPETITION_HAS_NO_PERIODS`). POST /api/leagues accepts both fields.
+- New route `app/api/leagues/[leagueId]/lineup`: GET (team's lineups + all
+  periods with `locksAtUtc`), PUT (own-team-only submission).
+- Tests: `test/unit/lineup.test.ts` (validation / roll-forward / captain
+  scoring, 17 cases), `test/integration/set-lineup.test.ts` (7 cases:
+  create-guard, submit/replace/lock/illegal, format guard, captain double
+  vs best-ball, vice promotion, roll-forward, best-ball unaffected).
+- Verified 2026-07-03: tsc clean; 254 unit; touched integration suites
+  (set-lineup, golden, standings, leagues, league-scoring, scoring, awards,
+  team-of-the-stage) all green on embedded PG 18.
+
+## Deliberately NOT in Priority 1 (next steps)
+
+- No lineup-setting UI yet - the API is ready; build the page next session.
+- League creation UI does not expose format/competition yet.
+- Period-lock reminder notifications (extend the Phase 0 hub).
+- Bench order / auto-subs (FPL-style) - out of scope; roll-forward + vice
+  promotion is the only automatic behavior.
+
+## Next (per the Phase 9 hand-off, section 4)
+
+Priority 2: head-to-head (`matchup` table, `head_to_head` flag,
+`phase-04-head-to-head.md`) - period totals come from whatever base format
+the league uses, which now includes SET_LINEUP.

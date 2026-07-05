@@ -33,6 +33,10 @@ import {
 } from "../competition/periods.js";
 import type { Db } from "../db/client.js";
 import {
+  effectiveLineupForOrdinal,
+  getLineupsForTeams,
+} from "../lineup/service.js";
+import {
   fantasyTeam,
   fixture,
   league,
@@ -50,6 +54,10 @@ import {
   optimizeBestBall,
   type ScoredPlayer,
 } from "./lineup.js";
+import {
+  scoreSetLineupPeriod,
+  type SetLineupSlotInput,
+} from "./set-lineup.js";
 
 /**
  * The nine World Cup stages, in tournament order. Since Phase 9 the standings
@@ -157,6 +165,34 @@ export async function computeStandings(
           .where(inArray(statLine.playerId, rosteredPlayerIds))
       : [];
 
+  // --- SET_LINEUP inputs (loaded ONLY for that format; best-ball leagues
+  // never touch the lineup table) --------------------------------------------
+  const isSetLineup = lg.format === "SET_LINEUP";
+  const lineupsByTeam = new Map<number, Awaited<ReturnType<typeof getLineupsForTeams>>>();
+  const ordinalByPeriodId = new Map<number, number>();
+  const featuredByOrdinal = new Map<number, Set<number>>();
+  if (isSetLineup) {
+    for (const p of periodRefs) {
+      if (p.id !== null) ordinalByPeriodId.set(p.id, p.ordinal);
+    }
+    const rows = await getLineupsForTeams(db, teams.map((t) => t.id));
+    for (const row of rows) {
+      const list = lineupsByTeam.get(row.fantasyTeamId) ?? [];
+      list.push(row);
+      lineupsByTeam.set(row.fantasyTeamId, list);
+    }
+    // "Featured" = played minutes in a fixture of the period (drives the
+    // captain -> vice promotion).
+    for (const st of stats) {
+      if (st.minutesPlayed <= 0) continue;
+      const ord = ordinalByFixtureId.get(st.fixtureId);
+      if (ord === undefined) continue;
+      const set = featuredByOrdinal.get(ord) ?? new Set<number>();
+      set.add(st.playerId);
+      featuredByOrdinal.set(ord, set);
+    }
+  }
+
   // --- per-team computation ------------------------------------------------
   const slotsByTeam = new Map<number, number[]>();
   for (const s of slots) {
@@ -174,6 +210,38 @@ export async function computeStandings(
     let total = 0;
     for (const period of periodRefs) {
       const stage = (period.stageCode ?? period.label) as Stage;
+
+      if (isSetLineup) {
+        // Submitted XI (rolled forward), captain doubled, vice promoted.
+        const effective = effectiveLineupForOrdinal(
+          lineupsByTeam.get(team.id) ?? [],
+          ordinalByPeriodId,
+          period.ordinal,
+        );
+        const slotByPlayerId = new Map<number, SetLineupSlotInput>();
+        for (const pid of (effective?.playerIds as number[] | undefined) ?? []) {
+          const p = playerById.get(pid);
+          slotByPlayerId.set(pid, {
+            position: (p?.position ?? "MID") as Position,
+            fullName: p?.fullName ?? `#${pid}`,
+            points: sumPlayerPointsInPeriod(pid, period.ordinal, scoreByKey, ordinalByFixtureId),
+          });
+        }
+        const result = scoreSetLineupPeriod(
+          effective,
+          slotByPlayerId,
+          featuredByOrdinal.get(period.ordinal) ?? new Set<number>(),
+        );
+        total += result.points;
+        periods.push({
+          stage,
+          formation: result.formation,
+          points: result.points,
+          xi: result.xi,
+        });
+        continue;
+      }
+
       const scored: ScoredPlayer[] = rosterPlayerIds.map((pid) => {
         const p = playerById.get(pid);
         const points = sumPlayerPointsInPeriod(
