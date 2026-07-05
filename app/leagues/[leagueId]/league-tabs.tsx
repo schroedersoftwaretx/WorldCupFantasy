@@ -11,6 +11,9 @@
  */
 import Link from "next/link";
 
+import { eq } from "drizzle-orm";
+
+import { league } from "@/data/db/schema";
 import { getFlags, type FeatureFlag } from "@/data/league/feature-flags";
 import { getDb } from "@/web/db";
 
@@ -21,6 +24,9 @@ type CurrentTab =
   | "draft"
   | "stats"
   | "awards"
+  | "matchups"
+  | "lineup"
+  | "chips"
   | "settings";
 
 interface LeagueTabsProps {
@@ -32,7 +38,6 @@ interface LeagueTabsProps {
 /** Future-phase flags and the label each will surface in the tab strip. */
 const FUTURE_TABS: ReadonlyArray<{ flag: FeatureFlag; label: string }> = [
   { flag: "chat", label: "Chat" },
-  { flag: "head_to_head", label: "Head-to-head" },
   { flag: "bracket", label: "Bracket" },
   { flag: "survivor", label: "Survivor" },
 ];
@@ -43,8 +48,15 @@ export default async function LeagueTabs({
   current,
 }: LeagueTabsProps) {
   let flags;
+  let format: string | null = null;
   try {
-    flags = await getFlags(getDb(), leagueId);
+    const db = getDb();
+    flags = await getFlags(db, leagueId);
+    const [lg] = await db
+      .select({ format: league.format })
+      .from(league)
+      .where(eq(league.id, leagueId));
+    format = lg?.format ?? null;
   } catch {
     flags = null;
   }
@@ -75,6 +87,33 @@ export default async function LeagueTabs({
       >
         Draft
       </Link>
+      {format === "SET_LINEUP" ? (
+        <Link
+          href={`/leagues/${leagueId}/lineup`}
+          className={tabClass("lineup")}
+          aria-current={current === "lineup" ? "page" : undefined}
+        >
+          Lineup
+        </Link>
+      ) : null}
+      {flags && flags.head_to_head ? (
+        <Link
+          href={`/leagues/${leagueId}/matchups`}
+          className={tabClass("matchups")}
+          aria-current={current === "matchups" ? "page" : undefined}
+        >
+          Matchups
+        </Link>
+      ) : null}
+      {flags && flags.chips ? (
+        <Link
+          href={`/leagues/${leagueId}/chips`}
+          className={tabClass("chips")}
+          aria-current={current === "chips" ? "page" : undefined}
+        >
+          Chips
+        </Link>
+      ) : null}
       {flags && flags.stats_hub ? (
         <Link href="/stats" className={tabClass("stats")}>
           Stats Hub

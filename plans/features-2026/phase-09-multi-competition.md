@@ -192,9 +192,26 @@ the chip set is TRIPLE_CAPTAIN, BENCH_BOOST, STAGE_BOOST.
   per-league chip config (which chips enabled, multiplier values) - flag
   `config` is stored but not yet consulted.
 
+## UI as-built (closes the Priority 1-3 deferred UI)
+
+- `app/leagues/[leagueId]/lineup/` - SET_LINEUP XI picker (period select
+  with lock times, formation legality gating, captain/vice, roll-forward
+  notice; PUT to the lineup API). Best-ball leagues get a notice.
+- `app/leagues/[leagueId]/matchups/` - H2H table, per-period fixtures
+  (Final/Live tags, trophy on the winner), rivalries; owner
+  generate/regenerate button. Flag-gated.
+- `app/leagues/[leagueId]/chips/` - captain nomination (best-ball only;
+  SET_LINEUP points to the Lineup page) + chip plays with remaining/played
+  state. Flag-gated.
+- `league-tabs.tsx`: head_to_head is now a real "Matchups" tab (removed
+  from FUTURE_TABS); "Lineup" tab appears for SET_LINEUP leagues; "Chips"
+  tab when the flag is on.
+- Component tests: `lineup-editor.test.tsx` (4), `chips-panel.test.tsx`
+  (4), in the existing jsdom style.
+
 ## Next (per the Phase 9 hand-off, section 4)
 
 Priority 4 (engagement/social: chat, recaps, awards extensions, side
 games) or Priority 5 (transactions: waivers/FAAB or FPL-style transfers,
-`league_format`-gated) - plus the deferred UI work (lineups, matchups,
-chips panel) which is now the biggest gap between data layer and product.
+`league_format`-gated). Remaining UI polish: create-league format picker,
+projected chip impact, lock reminders via the notification hub.
