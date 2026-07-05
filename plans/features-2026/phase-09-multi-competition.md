@@ -1,7 +1,8 @@
 # Phase 9 — Multi-Competition Foundation (design note)
 
 Status: **enabling refactor DONE; Priority 1 (SET_LINEUP + captain/VC) DONE;
-Priority 2 (head-to-head) DONE** (branch `phase-09-multi-competition`).
+Priority 2 (head-to-head) DONE; Priority 3 (chips) DONE**
+(branch `phase-09-multi-competition`).
 
 ## What shipped
 
@@ -149,9 +150,51 @@ hand-off.
   later), `config.primaryStandings` rendering choice (config is stored and
   echoed; view work), activity events (Phase 3 social is deferred).
 
+## Priority 3 as-built (chips + best-ball period captain)
+
+Reconciled `phase-06-chips-strategy.md` (stage-based, best-ball-only) with
+Phase 9: tables key on `scoring_period_id` and the overlay works for BOTH
+formats. Wildcard/free-hit are excluded (they need transfers - Priority 5);
+the chip set is TRIPLE_CAPTAIN, BENCH_BOOST, STAGE_BOOST.
+
+- `drizzle/0015_chips.sql`: `period_captain` (PK team+period -> player;
+  the phase-06 "stage_captain", renamed) and `chip_play` (unique
+  (league, team, chip) = one use each; unique (league, team, period) = no
+  stacking). Both are INTENT rows; score_entry is never written.
+- `src/data/chips/service.ts`: `setPeriodCaptain` (BEST_BALL only -
+  SET_LINEUP captains live on the lineup, error CAPTAIN_VIA_LINEUP;
+  rostered check), `playChip` (one-use, no-stack, TRIPLE_CAPTAIN requires
+  a captain: a period_captain row for best-ball, any effective lineup for
+  set-lineup), `getChipState`. All selections lock at the period's first
+  kickoff (same rule + fixture matching as lineups); everything behind the
+  `chips` flag (CHIPS_FLAG_DISABLED). `ChipsError` -> 400.
+- Overlay in `computeStandings`, applied ONLY when the flag is on (flag
+  off = byte-identical standings, spec-verified):
+  - Best-ball captain: the captain's period points are scaled (x2, x3
+    under TRIPLE_CAPTAIN) BEFORE the optimizer runs, so the optimizer can
+    prefer fielding the captain.
+  - Set-lineup TRIPLE_CAPTAIN: the lineup captain's doubling becomes x3
+    (a promoted vice inherits the x3).
+  - BENCH_BOOST: the whole 23-man roster scores (formation label "ALL",
+    23 XI slots, slot sum == total). Captain multipliers still apply.
+  - STAGE_BOOST: the period total is doubled AFTER captain/bench effects.
+    NOTE: XI slots stay raw for this chip, so slot sum != total - the
+    only such case; documented choice.
+  - H2H inherits all of this automatically (it reads computeStandings).
+- Routes: `GET/POST /api/leagues/[leagueId]/chips` (state / play, own team
+  only), `PUT .../chips/captain`.
+- Tests: `test/unit/chips-overlay.test.ts` (4), `test/integration/
+  chips.test.ts` (6: flag gate, captain x2/x3 + one-use + no-stack, bench
+  boost 23 + stage boost double, locks + roster validation, flag-off
+  byte-identity, set-lineup TC via lineup captain).
+- NOT built (deliberate): chips UI panel, projected-impact display, lock
+  reminders + post-lock reveal (needs Phase 3 social / notification work),
+  per-league chip config (which chips enabled, multiplier values) - flag
+  `config` is stored but not yet consulted.
+
 ## Next (per the Phase 9 hand-off, section 4)
 
-Priority 3: chips (`chips` flag, `phase-06-chips-strategy.md`) -
-`chip_usage` table, one-shot enforcement; meaningful mainly for SET_LINEUP
-leagues (wildcard/free-hit need transfers, so scope to bench boost +
-triple captain first).
+Priority 4 (engagement/social: chat, recaps, awards extensions, side
+games) or Priority 5 (transactions: waivers/FAAB or FPL-style transfers,
+`league_format`-gated) - plus the deferred UI work (lineups, matchups,
+chips panel) which is now the biggest gap between data layer and product.

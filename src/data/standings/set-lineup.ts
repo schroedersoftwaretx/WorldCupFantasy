@@ -24,6 +24,15 @@ export interface SetLineupSlotInput {
   fullName: string;
 }
 
+export interface ScoreSetLineupOpts {
+  /** Captain (or promoted vice) multiplier: 2 by default, 3 under the
+   * TRIPLE_CAPTAIN chip. */
+  captainMultiplier?: number;
+  /** BENCH_BOOST chip: bench players appended as raw slots; the formation
+   * label becomes "ALL". */
+  benchSlots?: ReadonlyMap<number, SetLineupSlotInput>;
+}
+
 export interface SetLineupPeriodResult {
   /** "-" when no lineup applies. */
   formation: string;
@@ -54,7 +63,9 @@ export function scoreSetLineupPeriod(
   effective: LineupRow | null,
   slotByPlayerId: ReadonlyMap<number, SetLineupSlotInput>,
   featured: ReadonlySet<number>,
+  opts: ScoreSetLineupOpts = {},
 ): SetLineupPeriodResult {
+  const captainMultiplier = opts.captainMultiplier ?? 2;
   if (effective === null) {
     return { formation: "-", points: 0, xi: [] };
   }
@@ -78,7 +89,7 @@ export function scoreSetLineupPeriod(
     const slot = slotByPlayerId.get(pid);
     const position = slot?.position ?? ("MID" as Position);
     const base = slot?.points ?? 0;
-    const points = round2(pid === doubled ? base * 2 : base);
+    const points = round2(pid === doubled ? base * captainMultiplier : base);
     counts[position] += 1;
     total += points;
     return {
@@ -88,6 +99,15 @@ export function scoreSetLineupPeriod(
       points,
     };
   });
+
+  if (opts.benchSlots) {
+    for (const [pid, slot] of opts.benchSlots) {
+      const points = round2(slot.points);
+      total += points;
+      xi.push({ playerId: pid, fullName: slot.fullName, position: slot.position, points });
+    }
+    return { formation: "ALL", points: round2(total), xi };
+  }
 
   return { formation: labelFromCounts(counts), points: round2(total), xi };
 }
