@@ -209,9 +209,32 @@ the chip set is TRIPLE_CAPTAIN, BENCH_BOOST, STAGE_BOOST.
 - Component tests: `lineup-editor.test.tsx` (4), `chips-panel.test.tsx`
   (4), in the existing jsdom style.
 
+## Priority 4 progress: chat SHIPPED (phase-03 subset 3.1)
+
+- `drizzle/0016_social_chat.sql`: `chat_message` (soft delete) +
+  `chat_reaction` (PK message+manager+emoji).
+- `src/data/social/chat.ts`: post / edit (author) / soft-delete (author or
+  owner) / newest-first paginated list with reactions / toggle reaction;
+  every entry point membership-gated and behind the `chat` flag. New
+  messages fan out IN_APP notifications via the Phase 0 hub, deduped to
+  one per member/league/10-minute burst window (`dedupeKey` bucket);
+  the new CHAT_MESSAGE preference category is the mute switch (surfaces
+  automatically in the existing notification-settings UI).
+- Routes: GET/POST `.../chat`, PATCH/DELETE `.../chat/[messageId]`,
+  POST `.../chat/[messageId]/reactions`, SSE `.../chat/stream` (Phase 0
+  streamSnapshots, 2.5s poll). ChatError -> 400.
+- UI: `app/leagues/[leagueId]/chat/` - live panel (EventSource), optimistic
+  post, quick-emoji reactions, edit/delete own (owner moderation delete),
+  bare image/GIF URLs render inline. Chat is now a real tab.
+- Tests: integration `social-chat.test.ts` (4: gates, list/paginate/react,
+  edit/delete/redact, burst-dedupe + mute), component `chat-panel.test.tssx`
+  (4). notify-preferences unit test updated for the new category.
+- Phase-03 remainder NOT built: activity feed (3.2), recaps/power rankings
+  (3.3) - next up within Priority 4.
+
 ## Next (per the Phase 9 hand-off, section 4)
 
-Priority 4 (engagement/social: chat, recaps, awards extensions, side
-games) or Priority 5 (transactions: waivers/FAAB or FPL-style transfers,
-`league_format`-gated). Remaining UI polish: create-league format picker,
-projected chip impact, lock reminders via the notification hub.
+Rest of Priority 4: activity feed + auto recaps/power rankings
+(phase-03 3.2/3.3), awards extensions (phase-07), side games (phase-05);
+then Priority 5 (transactions). Remaining UI polish: create-league format
+picker, projected chip impact, lock reminders via the notification hub.

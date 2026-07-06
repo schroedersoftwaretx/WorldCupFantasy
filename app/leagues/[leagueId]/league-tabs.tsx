@@ -27,6 +27,7 @@ type CurrentTab =
   | "matchups"
   | "lineup"
   | "chips"
+  | "chat"
   | "settings";
 
 interface LeagueTabsProps {
@@ -37,7 +38,6 @@ interface LeagueTabsProps {
 
 /** Future-phase flags and the label each will surface in the tab strip. */
 const FUTURE_TABS: ReadonlyArray<{ flag: FeatureFlag; label: string }> = [
-  { flag: "chat", label: "Chat" },
   { flag: "bracket", label: "Bracket" },
   { flag: "survivor", label: "Survivor" },
 ];
@@ -103,6 +103,15 @@ export default async function LeagueTabs({
           aria-current={current === "matchups" ? "page" : undefined}
         >
           Matchups
+        </Link>
+      ) : null}
+      {flags && flags.chat ? (
+        <Link
+          href={`/leagues/${leagueId}/chat`}
+          className={tabClass("chat")}
+          aria-current={current === "chat" ? "page" : undefined}
+        >
+          Chat
         </Link>
       ) : null}
       {flags && flags.chips ? (

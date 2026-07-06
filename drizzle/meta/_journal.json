@@ -113,6 +113,13 @@
       "when": 1783300000000,
       "tag": "0015_chips",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1783400000000,
+      "tag": "0016_social_chat",
+      "breakpoints": true
     }
   ]
 }
