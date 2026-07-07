@@ -16,6 +16,7 @@ import { sql } from "drizzle-orm";
 import {
   index,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   serial,
@@ -73,9 +74,42 @@ export const chatReaction = pgTable(
   }),
 );
 
+// --- activity_event -------------------------------------------------------------
+
+/**
+ * Append-only league activity feed (phase-03 3.2). New features WRITE events
+ * (chips played, H2H schedule generated, stage recaps); events already
+ * logged elsewhere (draft picks) can be projected on read instead. STAGE_RECAP
+ * is unique per (league, payload stage) via a partial expression index in
+ * migration 0017 - recap generation is idempotent under cron reruns.
+ */
+export const activityEvent = pgTable(
+  "activity_event",
+  {
+    id: serial("id").primaryKey(),
+    leagueId: integer("league_id")
+      .notNull()
+      .references(() => league.id, { onDelete: "restrict" }),
+    /** e.g. "CHIP_PLAYED", "H2H_SCHEDULE_GENERATED", "STAGE_RECAP". */
+    type: text("type").notNull(),
+    payload: jsonb("payload").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (t) => ({
+    leagueCreatedIdx: index("activity_event_league_id_created_at_idx").on(
+      t.leagueId,
+      t.createdAt,
+    ),
+  }),
+);
+
 // --- Type helpers ------------------------------------------------------------------
 
 export type ChatMessageRow = typeof chatMessage.$inferSelect;
 export type ChatMessageInsert = typeof chatMessage.$inferInsert;
 export type ChatReactionRow = typeof chatReaction.$inferSelect;
 export type ChatReactionInsert = typeof chatReaction.$inferInsert;
+export type ActivityEventRow = typeof activityEvent.$inferSelect;
+export type ActivityEventInsert = typeof activityEvent.$inferInsert;

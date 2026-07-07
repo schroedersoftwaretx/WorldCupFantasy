@@ -9,7 +9,7 @@
  *   - lineups.ts       lineup
  *   - h2h.ts           matchup
  *   - chips.ts         period_captain, chip_play
- *   - social.ts        chat_message, chat_reaction
+ *   - social.ts        chat_message, chat_reaction, activity_event
  *   - leagues.ts       manager, league, league_membership, league_invite,
  *                      fantasy_team, roster_slot
  *   - draft.ts         draft_room, draft_order, draft_pick, draft_notification,

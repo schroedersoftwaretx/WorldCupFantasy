@@ -216,3 +216,106 @@ describe("league chat (integration)", () => {
     expect(await inAppChatNotifications(memberId)).toHaveLength(2);
   });
 });
+
+// --- activity feed + recaps (phase-03 3.2/3.3) --------------------------------
+
+import { listActivity } from "../../src/data/social/activity.js";
+import { generateStageRecapsForLeague } from "../../src/data/social/recap.js";
+import type { StageRecap } from "../../src/data/social/recap.js";
+import {
+  fixture,
+  nationalTeam,
+  player,
+  scoreEntry,
+} from "../../src/data/db/schema.js";
+import { addPlayerToRoster } from "../../src/data/roster/service.js";
+import { DEFAULT_RULESET } from "../../src/data/scoring/ruleset.js";
+import { sql } from "drizzle-orm";
+
+describe("activity feed + stage recaps (integration)", () => {
+  beforeEach(async () => {
+    await ctx.resetDb();
+  });
+
+  it("generates one idempotent recap per scored stage for chat leagues", async () => {
+    const { leagueId, ownerId } = await buildLeague(); // chat flag ON
+    // Minimal scoring setup: one team with a legal roster + one scored stage.
+    const [nt] = await ctx.db
+      .insert(nationalTeam)
+      .values({ name: "NT", sourceTeamId: `nt-${Math.random()}` })
+      .returning();
+    if (!nt) throw new Error("nt seed failed");
+    const spec: Array<["GK" | "DEF" | "MID" | "FWD", number]> = [
+      ["GK", 2],
+      ["DEF", 6],
+      ["MID", 5],
+      ["FWD", 4],
+    ];
+    const rosterIds: number[] = [];
+    for (const [position, n] of spec) {
+      for (let i = 0; i < n; i += 1) {
+        const [row] = await ctx.db
+          .insert(player)
+          .values({
+            fullName: `${position}${i}`,
+            position,
+            nationalTeamId: nt.id,
+            sourcePlayerId: `p-${position}-${i}-${Math.random()}`,
+          })
+          .returning();
+        if (row) rosterIds.push(row.id);
+      }
+    }
+    const teams = await ctx.db.execute(
+      sql`SELECT id FROM fantasy_team WHERE league_id = ${leagueId} ORDER BY id LIMIT 1`,
+    );
+    const teamId = (teams.rows[0] as { id: number }).id;
+    for (const pid of rosterIds) {
+      await addPlayerToRoster(ctx.db, { fantasyTeamId: teamId, playerId: pid });
+    }
+    const [fx] = await ctx.db
+      .insert(fixture)
+      .values({
+        sourceFixtureId: `fx-${Math.random()}`,
+        stage: "GROUP_1",
+        homeTeamId: nt.id,
+        awayTeamId: nt.id,
+        kickoffUtc: new Date("2026-06-11T18:00:00Z"),
+        status: "FINISHED",
+      })
+      .returning();
+    if (!fx) throw new Error("fixture seed failed");
+    // A legal 5-3-2: roster order is 2 GK, 6 DEF, 5 MID, 4 FWD.
+    const xi = [
+      rosterIds[0], // GK
+      ...rosterIds.slice(2, 7), // 5 DEF
+      ...rosterIds.slice(8, 11), // 3 MID
+      ...rosterIds.slice(13, 15), // 2 FWD
+    ];
+    for (const pid of xi) {
+      await ctx.db.insert(scoreEntry).values({
+        playerId: pid as number,
+        fixtureId: fx.id,
+        rulesetVersion: DEFAULT_RULESET.version,
+        points: 10,
+        breakdown: {},
+      });
+    }
+
+    expect(await generateStageRecapsForLeague(ctx.db, leagueId)).toBe(1);
+    // Idempotent: nothing new on a rerun.
+    expect(await generateStageRecapsForLeague(ctx.db, leagueId)).toBe(0);
+
+    const events = await listActivity(ctx.db, leagueId);
+    const recapEvent = events.find((e) => e.type === "STAGE_RECAP");
+    expect(recapEvent).toBeDefined();
+    const recap = recapEvent?.payload as StageRecap;
+    expect(recap.stage).toBe("GROUP_1");
+    expect(recap.managerOfStage?.points).toBe(110);
+    expect(recap.powerRankings.length).toBeGreaterThan(0);
+
+    // Muting the flag turns generation off entirely.
+    await setFlag(ctx.db, leagueId, "chat", { enabled: false });
+    expect(await generateStageRecapsForLeague(ctx.db, leagueId)).toBe(0);
+  });
+});

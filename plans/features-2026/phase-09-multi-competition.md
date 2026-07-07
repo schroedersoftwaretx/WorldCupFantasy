@@ -229,8 +229,20 @@ the chip set is TRIPLE_CAPTAIN, BENCH_BOOST, STAGE_BOOST.
 - Tests: integration `social-chat.test.ts` (4: gates, list/paginate/react,
   edit/delete/redact, burst-dedupe + mute), component `chat-panel.test.tssx`
   (4). notify-preferences unit test updated for the new category.
-- Phase-03 remainder NOT built: activity feed (3.2), recaps/power rankings
-  (3.3) - next up within Priority 4.
+- Activity feed (3.2) + auto recaps/power rankings (3.3) SHIPPED too:
+  `activity_event` table (0017, partial unique index makes STAGE_RECAP
+  idempotent per league+stage); producers: CHIP_PLAYED (playChip),
+  H2H_SCHEDULE_GENERATED (generateSchedule), STAGE_RECAP.
+  `src/data/social/recap.ts`: deterministic `buildStageRecap` (manager of
+  the stage, biggest blowout - widest finalized H2H margin, else
+  best-vs-worst stage totals -, top haul from XI slots) +
+  `buildPowerRankings` (order = season total + stage form; MOVEMENT = diff
+  of consecutive standings_snapshot ranks, per the acceptance criterion).
+  `generateAllStageRecaps` hooked after `captureAllStandingsSnapshots` in
+  both cron routes + scripts/ingest-sofascore.ts; gated by the chat flag.
+  GET .../activity route; templated activity list on the chat page (recap
+  auto-posts appear there rather than as chat messages - chat_message
+  requires a human author; documented deviation from "post into chat").
 
 ## Next (per the Phase 9 hand-off, section 4)
 
