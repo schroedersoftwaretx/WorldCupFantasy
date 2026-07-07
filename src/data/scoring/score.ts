@@ -29,10 +29,14 @@
  * later in the UI without re-running the function on a different machine.
  */
 
-import type { Position, StatLineRow } from "../db/schema.js";
+import type { Position, Stage, StatLineRow } from "../db/schema.js";
 import type { ScoringRuleset } from "./ruleset.js";
 
 export interface ScoreBreakdown {
+  /** Present only for rulesets with a `bonuses` block (phase-07 7.2). */
+  bonus?: number;
+  /** Present only when a stage multiplier other than 1 applied. */
+  stageMultiplier?: number;
   appearance: number;
   played60Plus: number;
   goals: number;
@@ -132,10 +136,23 @@ export function effectivePlaymakingCounts(
   return { keyPasses, bigChancesCreated };
 }
 
+/**
+ * Per-fixture context the phase-07 bonus rules need. Optional: rulesets
+ * without a `bonuses` block ignore it entirely, so every existing caller
+ * and every existing score is untouched.
+ */
+export interface BonusContext {
+  /** The fixture's stage, for stage multipliers. */
+  stage?: Stage | null;
+  /** True when this match extends a qualifying scoring streak. */
+  streakQualified?: boolean;
+}
+
 export function scoreStatLine(
   stat: ScorableStatLine,
   position: Position,
   ruleset: ScoringRuleset,
+  bonusCtx?: BonusContext,
 ): ScoredResult {
   const breakdown: ScoreBreakdown = {
     appearance: 0,
@@ -229,6 +246,23 @@ export function scoreStatLine(
     }
   }
 
+  // --- Phase-07 opt-in bonuses (only when the ruleset carries a block; the
+  // breakdown gains its optional keys ONLY then, so default-ruleset rows stay
+  // byte-identical). Flat bonuses first, then the stage multiplier over the
+  // whole score.
+  let bonusPoints = 0;
+  let stageMultiplier = 1;
+  if (ruleset.bonuses) {
+    const b = ruleset.bonuses;
+    if (stat.goals >= 3) bonusPoints += b.hatTrick;
+    else if (stat.goals === 2) bonusPoints += b.brace;
+    if (bonusCtx?.streakQualified) bonusPoints += b.scoringStreak.bonus;
+    breakdown.bonus = round2(bonusPoints);
+    const stage = bonusCtx?.stage ?? null;
+    stageMultiplier = stage !== null ? (b.stageMultipliers[stage] ?? 1) : 1;
+    if (stageMultiplier !== 1) breakdown.stageMultiplier = stageMultiplier;
+  }
+
   const points = round2(
     breakdown.appearance +
       breakdown.played60Plus +
@@ -252,5 +286,8 @@ export function scoreStatLine(
       breakdown.gameWon,
   );
 
+  if (ruleset.bonuses) {
+    return { points: round2((points + round2(bonusPoints)) * stageMultiplier), breakdown };
+  }
   return { points, breakdown };
 }

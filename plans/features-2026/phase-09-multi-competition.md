@@ -244,9 +244,37 @@ the chip set is TRIPLE_CAPTAIN, BENCH_BOOST, STAGE_BOOST.
   auto-posts appear there rather than as chat messages - chat_message
   requires a human author; documented deviation from "post into chat").
 
+## Phase-07 7.2 SHIPPED: opt-in bonus / streak / stage-multiplier scoring
+
+The only Phase 9-era change that touches real scoring - done exactly as an
+additive, versioned ruleset extension:
+
+- `ScoringRuleset.bonuses?` (`RulesetBonuses`): `brace`, `hatTrick` (3+
+  replaces brace, no stacking), `stageMultipliers` (whole-score multiplier
+  per stage, applied AFTER flat bonuses), `scoringStreak {length, bonus}`
+  (each PLAYED match extending a goal-in-N-consecutive-played-matches run;
+  bench matches skipped, scoreless played match resets).
+- ABSENT by default: an absent optional key contributes nothing to the
+  content hash, so the default version (`wcf-v1-a00a7fcf`, set by the
+  user's 94ca8e3 "rule schema" commit - NOT the older 5c4f7b33) and every
+  existing score_entry row are unchanged (spec-pinned + goldens).
+- `scoreStatLine` gained an optional `BonusContext {stage,
+  streakQualified}`; breakdown gains `bonus`/`stageMultiplier` keys ONLY
+  for bonus rulesets, so old breakdowns stay byte-identical and
+  `breakdownEquals` causes no churn.
+- `recompute.ts` selects now join fixture (stage + kickoff); pure
+  `computeStreakSet` pre-pass; the single-fixture path loads affected
+  players' history for streaks. `sanitizeRulesetInput` accepts/validates
+  the block, so the existing scoring PUT + repoint flow enables bonuses
+  for a league (new version, league-scoped recompute) with no new route.
+- 12 unit tests (hash invariants, brace/hat-trick/streak/multiplier,
+  streak walk, input validation); scoring goldens + integration green.
+- NOT built: scoring-editor UI fields for bonuses (the API accepts them);
+  award lead-change notifications (7.3 optional).
+
 ## Next (per the Phase 9 hand-off, section 4)
 
-Rest of Priority 4: activity feed + auto recaps/power rankings
-(phase-03 3.2/3.3), awards extensions (phase-07), side games (phase-05);
-then Priority 5 (transactions). Remaining UI polish: create-league format
-picker, projected chip impact, lock reminders via the notification hub.
+Remaining Priority 4: side games (phase-05: survivor/pick'em/confidence,
+`survivor` flag); matchup previews. Then Priority 5 (transactions).
+Remaining UI polish: create-league format picker, bonuses editor fields,
+projected chip impact, lock reminders via the notification hub.
