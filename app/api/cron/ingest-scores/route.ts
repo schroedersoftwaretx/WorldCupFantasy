@@ -20,6 +20,7 @@ import { eq } from "drizzle-orm";
 import { league } from "@/data/db/schema";
 import { recomputeAll } from "@/data/scoring/recompute";
 import type { ScoringRuleset } from "@/data/scoring/ruleset";
+import { generateAllStageRecaps } from "@/data/social/recap";
 import { captureAllStandingsSnapshots } from "@/data/standings/snapshot";
 import { handle, HttpError } from "@/web/api";
 import { getDb } from "@/web/db";
@@ -59,6 +60,7 @@ export function GET(request: Request): Promise<Response> {
 
     // Persist per-stage standings snapshots (rank-movement arrows, B2).
     const snapshots = await captureAllStandingsSnapshots(db);
+    const recaps = await generateAllStageRecaps(db);
 
     return {
       leaguesProcessed: leagues.length,
@@ -67,6 +69,7 @@ export function GET(request: Request): Promise<Response> {
       updated,
       skipped,
       snapshots,
+      recaps,
     };
   });
 }

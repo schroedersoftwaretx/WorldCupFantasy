@@ -9,6 +9,7 @@
  *   - lineups.ts       lineup
  *   - h2h.ts           matchup
  *   - chips.ts         period_captain, chip_play
+ *   - social.ts        chat_message, chat_reaction, activity_event
  *   - leagues.ts       manager, league, league_membership, league_invite,
  *                      fantasy_team, roster_slot
  *   - draft.ts         draft_room, draft_order, draft_pick, draft_notification,
@@ -34,5 +35,6 @@ export * from "./schema/draft.js";
 export * from "./schema/lineups.js";
 export * from "./schema/h2h.js";
 export * from "./schema/chips.js";
+export * from "./schema/social.js";
 export * from "./schema/odds.js";
 export * from "./schema/notifications.js";

@@ -192,9 +192,61 @@ the chip set is TRIPLE_CAPTAIN, BENCH_BOOST, STAGE_BOOST.
   per-league chip config (which chips enabled, multiplier values) - flag
   `config` is stored but not yet consulted.
 
+## UI as-built (closes the Priority 1-3 deferred UI)
+
+- `app/leagues/[leagueId]/lineup/` - SET_LINEUP XI picker (period select
+  with lock times, formation legality gating, captain/vice, roll-forward
+  notice; PUT to the lineup API). Best-ball leagues get a notice.
+- `app/leagues/[leagueId]/matchups/` - H2H table, per-period fixtures
+  (Final/Live tags, trophy on the winner), rivalries; owner
+  generate/regenerate button. Flag-gated.
+- `app/leagues/[leagueId]/chips/` - captain nomination (best-ball only;
+  SET_LINEUP points to the Lineup page) + chip plays with remaining/played
+  state. Flag-gated.
+- `league-tabs.tsx`: head_to_head is now a real "Matchups" tab (removed
+  from FUTURE_TABS); "Lineup" tab appears for SET_LINEUP leagues; "Chips"
+  tab when the flag is on.
+- Component tests: `lineup-editor.test.tsx` (4), `chips-panel.test.tsx`
+  (4), in the existing jsdom style.
+
+## Priority 4 progress: chat SHIPPED (phase-03 subset 3.1)
+
+- `drizzle/0016_social_chat.sql`: `chat_message` (soft delete) +
+  `chat_reaction` (PK message+manager+emoji).
+- `src/data/social/chat.ts`: post / edit (author) / soft-delete (author or
+  owner) / newest-first paginated list with reactions / toggle reaction;
+  every entry point membership-gated and behind the `chat` flag. New
+  messages fan out IN_APP notifications via the Phase 0 hub, deduped to
+  one per member/league/10-minute burst window (`dedupeKey` bucket);
+  the new CHAT_MESSAGE preference category is the mute switch (surfaces
+  automatically in the existing notification-settings UI).
+- Routes: GET/POST `.../chat`, PATCH/DELETE `.../chat/[messageId]`,
+  POST `.../chat/[messageId]/reactions`, SSE `.../chat/stream` (Phase 0
+  streamSnapshots, 2.5s poll). ChatError -> 400.
+- UI: `app/leagues/[leagueId]/chat/` - live panel (EventSource), optimistic
+  post, quick-emoji reactions, edit/delete own (owner moderation delete),
+  bare image/GIF URLs render inline. Chat is now a real tab.
+- Tests: integration `social-chat.test.ts` (4: gates, list/paginate/react,
+  edit/delete/redact, burst-dedupe + mute), component `chat-panel.test.tssx`
+  (4). notify-preferences unit test updated for the new category.
+- Activity feed (3.2) + auto recaps/power rankings (3.3) SHIPPED too:
+  `activity_event` table (0017, partial unique index makes STAGE_RECAP
+  idempotent per league+stage); producers: CHIP_PLAYED (playChip),
+  H2H_SCHEDULE_GENERATED (generateSchedule), STAGE_RECAP.
+  `src/data/social/recap.ts`: deterministic `buildStageRecap` (manager of
+  the stage, biggest blowout - widest finalized H2H margin, else
+  best-vs-worst stage totals -, top haul from XI slots) +
+  `buildPowerRankings` (order = season total + stage form; MOVEMENT = diff
+  of consecutive standings_snapshot ranks, per the acceptance criterion).
+  `generateAllStageRecaps` hooked after `captureAllStandingsSnapshots` in
+  both cron routes + scripts/ingest-sofascore.ts; gated by the chat flag.
+  GET .../activity route; templated activity list on the chat page (recap
+  auto-posts appear there rather than as chat messages - chat_message
+  requires a human author; documented deviation from "post into chat").
+
 ## Next (per the Phase 9 hand-off, section 4)
 
-Priority 4 (engagement/social: chat, recaps, awards extensions, side
-games) or Priority 5 (transactions: waivers/FAAB or FPL-style transfers,
-`league_format`-gated) - plus the deferred UI work (lineups, matchups,
-chips panel) which is now the biggest gap between data layer and product.
+Rest of Priority 4: activity feed + auto recaps/power rankings
+(phase-03 3.2/3.3), awards extensions (phase-07), side games (phase-05);
+then Priority 5 (transactions). Remaining UI polish: create-league format
+picker, projected chip impact, lock reminders via the notification hub.
