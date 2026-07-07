@@ -32,19 +32,23 @@ import {
   getScoringPeriods,
 } from "../competition/periods.js";
 import type { Db } from "../db/client.js";
+import { isFlagEnabled } from "../league/feature-flags.js";
 import {
   effectiveLineupForOrdinal,
   getLineupsForTeams,
 } from "../lineup/service.js";
 import {
+  chipPlay,
   fantasyTeam,
   fixture,
   league,
+  periodCaptain,
   player,
   rosterSlot,
   scoreEntry,
   statLine,
   stageEnum,
+  type ChipType,
   type Position,
   type Stage,
 } from "../db/schema.js";
@@ -193,6 +197,41 @@ export async function computeStandings(
     }
   }
 
+  // --- chips overlay inputs (loaded ONLY when the chips flag is on; a
+  // league without the flag computes the exact pre-chips numbers) ------------
+  const chipsEnabled = await isFlagEnabled(db, leagueId, "chips");
+  const chipByTeamOrdinal = new Map<number, Map<number, ChipType>>();
+  const captainByTeamOrdinal = new Map<number, Map<number, number>>();
+  if (chipsEnabled) {
+    for (const p of periodRefs) {
+      if (p.id !== null) ordinalByPeriodId.set(p.id, p.ordinal);
+    }
+    const plays = await db
+      .select()
+      .from(chipPlay)
+      .where(eq(chipPlay.leagueId, leagueId));
+    for (const c of plays) {
+      const ord = ordinalByPeriodId.get(c.scoringPeriodId);
+      if (ord === undefined) continue;
+      const m = chipByTeamOrdinal.get(c.fantasyTeamId) ?? new Map<number, ChipType>();
+      m.set(ord, c.chip);
+      chipByTeamOrdinal.set(c.fantasyTeamId, m);
+    }
+    if (!isSetLineup) {
+      const caps = await db
+        .select()
+        .from(periodCaptain)
+        .where(inArray(periodCaptain.fantasyTeamId, teams.map((t) => t.id)));
+      for (const c of caps) {
+        const ord = ordinalByPeriodId.get(c.scoringPeriodId);
+        if (ord === undefined) continue;
+        const m = captainByTeamOrdinal.get(c.fantasyTeamId) ?? new Map<number, number>();
+        m.set(ord, c.playerId);
+        captainByTeamOrdinal.set(c.fantasyTeamId, m);
+      }
+    }
+  }
+
   // --- per-team computation ------------------------------------------------
   const slotsByTeam = new Map<number, number[]>();
   for (const s of slots) {
@@ -227,29 +266,62 @@ export async function computeStandings(
             points: sumPlayerPointsInPeriod(pid, period.ordinal, scoreByKey, ordinalByFixtureId),
           });
         }
+        const chip = chipsEnabled
+          ? (chipByTeamOrdinal.get(team.id)?.get(period.ordinal) ?? null)
+          : null;
+        let benchSlots: Map<number, SetLineupSlotInput> | undefined;
+        if (chip === "BENCH_BOOST" && effective) {
+          const xiSet = new Set(effective.playerIds as number[]);
+          benchSlots = new Map();
+          for (const pid of rosterPlayerIds) {
+            if (xiSet.has(pid)) continue;
+            const p = playerById.get(pid);
+            benchSlots.set(pid, {
+              position: (p?.position ?? "MID") as Position,
+              fullName: p?.fullName ?? `#${pid}`,
+              points: sumPlayerPointsInPeriod(pid, period.ordinal, scoreByKey, ordinalByFixtureId),
+            });
+          }
+        }
         const result = scoreSetLineupPeriod(
           effective,
           slotByPlayerId,
           featuredByOrdinal.get(period.ordinal) ?? new Set<number>(),
+          {
+            captainMultiplier: chip === "TRIPLE_CAPTAIN" ? 3 : 2,
+            ...(benchSlots ? { benchSlots } : {}),
+          },
         );
-        total += result.points;
+        const periodPoints =
+          chip === "STAGE_BOOST" ? round2(result.points * 2) : result.points;
+        total += periodPoints;
         periods.push({
           stage,
           formation: result.formation,
-          points: result.points,
+          points: periodPoints,
           xi: result.xi,
         });
         continue;
       }
 
+      const chip = chipsEnabled
+        ? (chipByTeamOrdinal.get(team.id)?.get(period.ordinal) ?? null)
+        : null;
+      const captainId = chipsEnabled
+        ? (captainByTeamOrdinal.get(team.id)?.get(period.ordinal) ?? null)
+        : null;
+      const captainMult = chip === "TRIPLE_CAPTAIN" ? 3 : 2;
       const scored: ScoredPlayer[] = rosterPlayerIds.map((pid) => {
         const p = playerById.get(pid);
-        const points = sumPlayerPointsInPeriod(
+        const raw = sumPlayerPointsInPeriod(
           pid,
           period.ordinal,
           scoreByKey,
           ordinalByFixtureId,
         );
+        // Captain overlay (chips flag only): scale BEFORE optimizing so the
+        // optimizer can prefer fielding the captain.
+        const points = pid === captainId ? round2(raw * captainMult) : raw;
         return {
           playerId: pid,
           position: (p?.position ?? "MID") as Position,
@@ -258,14 +330,25 @@ export async function computeStandings(
       });
       // Best-ball needs a complete legal roster; skip the optimizer for an
       // incomplete one (period contributes 0) rather than throwing.
-      const result = canFieldXi(scored)
-        ? optimizeBestBall(scored)
-        : { formation: LEGAL_NONE, xi: [], points: 0 };
-      total += result.points;
+      // BENCH_BOOST scores the whole roster instead of the optimal XI.
+      const result =
+        chip === "BENCH_BOOST"
+          ? allRosterResult(scored)
+          : canFieldXi(scored)
+            ? optimizeBestBall(scored)
+            : { formation: LEGAL_NONE, xi: [], points: 0 };
+      const periodPoints =
+        chip === "STAGE_BOOST" ? round2(result.points * 2) : result.points;
+      total += periodPoints;
       periods.push({
         stage,
-        formation: result.xi.length > 0 ? formationLabel(result.formation) : "-",
-        points: result.points,
+        formation:
+          chip === "BENCH_BOOST"
+            ? "ALL"
+            : result.xi.length > 0
+              ? formationLabel(result.formation)
+              : "-",
+        points: periodPoints,
         xi: result.xi.map((sp) => ({
           playerId: sp.playerId,
           fullName: playerById.get(sp.playerId)?.fullName ?? `#${sp.playerId}`,
@@ -306,6 +389,27 @@ export async function computeStandings(
 
 /** Placeholder formation for an empty period (no XI fielded). */
 const LEGAL_NONE = { GK: 1 as const, DEF: 0, MID: 0, FWD: 0 };
+
+/** Round to 2dp - keeps overlay totals consistent with the scoring engine. */
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+/** BENCH_BOOST: every rostered player scores (points-desc for display). */
+function allRosterResult(scored: readonly ScoredPlayer[]): {
+  formation: typeof LEGAL_NONE;
+  xi: ScoredPlayer[];
+  points: number;
+} {
+  const xi = [...scored].sort(
+    (a, b) => b.points - a.points || a.playerId - b.playerId,
+  );
+  return {
+    formation: LEGAL_NONE,
+    xi,
+    points: round2(xi.reduce((sum, p) => sum + p.points, 0)),
+  };
+}
 
 function sumPlayerPointsInPeriod(
   playerId: number,

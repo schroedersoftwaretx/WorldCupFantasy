@@ -32,6 +32,7 @@ import {
   type MatchupRow,
 } from "../db/schema.js";
 import { isFlagEnabled } from "../league/feature-flags.js";
+import { recordEvent } from "../social/activity.js";
 import { finalizedOrdinals } from "./results.js";
 import { H2hError } from "./errors.js";
 
@@ -175,12 +176,18 @@ export async function generateSchedule(
         written += 1;
       }
     }
-    return {
+    const summary = {
       leagueId,
       periods: realPeriods.length,
       matchups: written,
       regenerated: existing.length > 0,
     };
+    try {
+      await recordEvent(tx, leagueId, "H2H_SCHEDULE_GENERATED", summary);
+    } catch {
+      /* best-effort */
+    }
+    return summary;
   });
 }
 

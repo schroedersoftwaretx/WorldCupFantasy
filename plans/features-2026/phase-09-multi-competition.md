@@ -1,7 +1,8 @@
 # Phase 9 — Multi-Competition Foundation (design note)
 
 Status: **enabling refactor DONE; Priority 1 (SET_LINEUP + captain/VC) DONE;
-Priority 2 (head-to-head) DONE** (branch `phase-09-multi-competition`).
+Priority 2 (head-to-head) DONE; Priority 3 (chips) DONE**
+(branch `phase-09-multi-competition`).
 
 ## What shipped
 
@@ -149,9 +150,103 @@ hand-off.
   later), `config.primaryStandings` rendering choice (config is stored and
   echoed; view work), activity events (Phase 3 social is deferred).
 
+## Priority 3 as-built (chips + best-ball period captain)
+
+Reconciled `phase-06-chips-strategy.md` (stage-based, best-ball-only) with
+Phase 9: tables key on `scoring_period_id` and the overlay works for BOTH
+formats. Wildcard/free-hit are excluded (they need transfers - Priority 5);
+the chip set is TRIPLE_CAPTAIN, BENCH_BOOST, STAGE_BOOST.
+
+- `drizzle/0015_chips.sql`: `period_captain` (PK team+period -> player;
+  the phase-06 "stage_captain", renamed) and `chip_play` (unique
+  (league, team, chip) = one use each; unique (league, team, period) = no
+  stacking). Both are INTENT rows; score_entry is never written.
+- `src/data/chips/service.ts`: `setPeriodCaptain` (BEST_BALL only -
+  SET_LINEUP captains live on the lineup, error CAPTAIN_VIA_LINEUP;
+  rostered check), `playChip` (one-use, no-stack, TRIPLE_CAPTAIN requires
+  a captain: a period_captain row for best-ball, any effective lineup for
+  set-lineup), `getChipState`. All selections lock at the period's first
+  kickoff (same rule + fixture matching as lineups); everything behind the
+  `chips` flag (CHIPS_FLAG_DISABLED). `ChipsError` -> 400.
+- Overlay in `computeStandings`, applied ONLY when the flag is on (flag
+  off = byte-identical standings, spec-verified):
+  - Best-ball captain: the captain's period points are scaled (x2, x3
+    under TRIPLE_CAPTAIN) BEFORE the optimizer runs, so the optimizer can
+    prefer fielding the captain.
+  - Set-lineup TRIPLE_CAPTAIN: the lineup captain's doubling becomes x3
+    (a promoted vice inherits the x3).
+  - BENCH_BOOST: the whole 23-man roster scores (formation label "ALL",
+    23 XI slots, slot sum == total). Captain multipliers still apply.
+  - STAGE_BOOST: the period total is doubled AFTER captain/bench effects.
+    NOTE: XI slots stay raw for this chip, so slot sum != total - the
+    only such case; documented choice.
+  - H2H inherits all of this automatically (it reads computeStandings).
+- Routes: `GET/POST /api/leagues/[leagueId]/chips` (state / play, own team
+  only), `PUT .../chips/captain`.
+- Tests: `test/unit/chips-overlay.test.ts` (4), `test/integration/
+  chips.test.ts` (6: flag gate, captain x2/x3 + one-use + no-stack, bench
+  boost 23 + stage boost double, locks + roster validation, flag-off
+  byte-identity, set-lineup TC via lineup captain).
+- NOT built (deliberate): chips UI panel, projected-impact display, lock
+  reminders + post-lock reveal (needs Phase 3 social / notification work),
+  per-league chip config (which chips enabled, multiplier values) - flag
+  `config` is stored but not yet consulted.
+
+## UI as-built (closes the Priority 1-3 deferred UI)
+
+- `app/leagues/[leagueId]/lineup/` - SET_LINEUP XI picker (period select
+  with lock times, formation legality gating, captain/vice, roll-forward
+  notice; PUT to the lineup API). Best-ball leagues get a notice.
+- `app/leagues/[leagueId]/matchups/` - H2H table, per-period fixtures
+  (Final/Live tags, trophy on the winner), rivalries; owner
+  generate/regenerate button. Flag-gated.
+- `app/leagues/[leagueId]/chips/` - captain nomination (best-ball only;
+  SET_LINEUP points to the Lineup page) + chip plays with remaining/played
+  state. Flag-gated.
+- `league-tabs.tsx`: head_to_head is now a real "Matchups" tab (removed
+  from FUTURE_TABS); "Lineup" tab appears for SET_LINEUP leagues; "Chips"
+  tab when the flag is on.
+- Component tests: `lineup-editor.test.tsx` (4), `chips-panel.test.tsx`
+  (4), in the existing jsdom style.
+
+## Priority 4 progress: chat SHIPPED (phase-03 subset 3.1)
+
+- `drizzle/0016_social_chat.sql`: `chat_message` (soft delete) +
+  `chat_reaction` (PK message+manager+emoji).
+- `src/data/social/chat.ts`: post / edit (author) / soft-delete (author or
+  owner) / newest-first paginated list with reactions / toggle reaction;
+  every entry point membership-gated and behind the `chat` flag. New
+  messages fan out IN_APP notifications via the Phase 0 hub, deduped to
+  one per member/league/10-minute burst window (`dedupeKey` bucket);
+  the new CHAT_MESSAGE preference category is the mute switch (surfaces
+  automatically in the existing notification-settings UI).
+- Routes: GET/POST `.../chat`, PATCH/DELETE `.../chat/[messageId]`,
+  POST `.../chat/[messageId]/reactions`, SSE `.../chat/stream` (Phase 0
+  streamSnapshots, 2.5s poll). ChatError -> 400.
+- UI: `app/leagues/[leagueId]/chat/` - live panel (EventSource), optimistic
+  post, quick-emoji reactions, edit/delete own (owner moderation delete),
+  bare image/GIF URLs render inline. Chat is now a real tab.
+- Tests: integration `social-chat.test.ts` (4: gates, list/paginate/react,
+  edit/delete/redact, burst-dedupe + mute), component `chat-panel.test.tssx`
+  (4). notify-preferences unit test updated for the new category.
+- Activity feed (3.2) + auto recaps/power rankings (3.3) SHIPPED too:
+  `activity_event` table (0017, partial unique index makes STAGE_RECAP
+  idempotent per league+stage); producers: CHIP_PLAYED (playChip),
+  H2H_SCHEDULE_GENERATED (generateSchedule), STAGE_RECAP.
+  `src/data/social/recap.ts`: deterministic `buildStageRecap` (manager of
+  the stage, biggest blowout - widest finalized H2H margin, else
+  best-vs-worst stage totals -, top haul from XI slots) +
+  `buildPowerRankings` (order = season total + stage form; MOVEMENT = diff
+  of consecutive standings_snapshot ranks, per the acceptance criterion).
+  `generateAllStageRecaps` hooked after `captureAllStandingsSnapshots` in
+  both cron routes + scripts/ingest-sofascore.ts; gated by the chat flag.
+  GET .../activity route; templated activity list on the chat page (recap
+  auto-posts appear there rather than as chat messages - chat_message
+  requires a human author; documented deviation from "post into chat").
+
 ## Next (per the Phase 9 hand-off, section 4)
 
-Priority 3: chips (`chips` flag, `phase-06-chips-strategy.md`) -
-`chip_usage` table, one-shot enforcement; meaningful mainly for SET_LINEUP
-leagues (wildcard/free-hit need transfers, so scope to bench boost +
-triple captain first).
+Rest of Priority 4: activity feed + auto recaps/power rankings
+(phase-03 3.2/3.3), awards extensions (phase-07), side games (phase-05);
+then Priority 5 (transactions). Remaining UI polish: create-league format
+picker, projected chip impact, lock reminders via the notification hub.

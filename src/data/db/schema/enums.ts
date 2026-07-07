@@ -24,6 +24,13 @@ export const stageEnum = pgEnum("stage", [
   "THIRD_PLACE",
   "FINAL",
 ]);
+/** One-shot strategy chips (Phase 9 Priority 3). Applied at standings-read
+ * time as an overlay; score_entry is never touched. */
+export const chipTypeEnum = pgEnum("chip_type", [
+  "TRIPLE_CAPTAIN",
+  "BENCH_BOOST",
+  "STAGE_BOOST",
+]);
 export const competitionKindEnum = pgEnum("competition_kind", [
   "WORLD_CUP",
   "LEAGUE",
@@ -103,6 +110,7 @@ export const appNotificationStatusEnum = pgEnum("app_notification_status", [
 
 // --- Enum-derived value types -----------------------------------------------
 
+export type ChipType = (typeof chipTypeEnum.enumValues)[number];
 export type CompetitionKind = (typeof competitionKindEnum.enumValues)[number];
 export type LeagueFormat = (typeof leagueFormatEnum.enumValues)[number];
 export type Stage = (typeof stageEnum.enumValues)[number];
