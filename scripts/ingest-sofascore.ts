@@ -24,7 +24,6 @@ import { ingestFixtureStats } from "../src/data/ingest/fixture-stats.js";
 import { getUningestedFinishedFixtures } from "../src/data/ingest/pending.js";
 import { ingestSchedule } from "../src/data/ingest/schedule.js";
 import { recomputeAllRulesets } from "../src/data/scoring/recompute.js";
-import { generateAllStageRecaps } from "../src/data/social/recap.js";
 import { captureAllStandingsSnapshots } from "../src/data/standings/snapshot.js";
 import { createBrowserFetch, makeSofaProvider } from "./sofascore-browser-fetch.js";
 
@@ -66,8 +65,6 @@ async function main() {
     console.log(`scores: ${score.rulesets} ruleset(s) — inserted=${score.total.inserted} updated=${score.total.updated} skipped=${score.total.skipped}`);
 
     const snaps = await captureAllStandingsSnapshots(db);
-    const recaps = await generateAllStageRecaps(db);
-    console.log(`recaps: ${recaps.generated} generated (${recaps.errors} errors)`);
     console.log(`snapshots: ${JSON.stringify(snaps)}`);
     console.log("done.");
   } finally {

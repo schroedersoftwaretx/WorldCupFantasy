@@ -25,8 +25,7 @@ import {
 /**
  * The notification categories a manager can toggle. These mirror the draft
  * notification `type`s that the app emits today; do NOT add categories for
- * features that are not built (goal alerts, chips deadline reminders,
- * survivor, ...). CHAT_MESSAGE landed with the Phase 3 chat subset.
+ * features that are not built (goal alerts, chips, survivor, chat, ...).
  */
 export const NOTIFICATION_CATEGORIES = [
   "DRAFT_STARTED",
@@ -34,7 +33,6 @@ export const NOTIFICATION_CATEGORIES = [
   "PICK_MADE",
   "AUTOPICK_MADE",
   "DRAFT_COMPLETE",
-  "CHAT_MESSAGE",
 ] as const;
 
 export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number];
@@ -63,10 +61,6 @@ export const CATEGORY_LABELS: Record<
   DRAFT_COMPLETE: {
     label: "Draft complete",
     description: "When a league's draft finishes.",
-  },
-  CHAT_MESSAGE: {
-    label: "League chat",
-    description: "When someone posts in one of your leagues (mute here).",
   },
 };
 

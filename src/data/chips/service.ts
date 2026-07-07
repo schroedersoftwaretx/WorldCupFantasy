@@ -39,7 +39,6 @@ import {
 } from "../db/schema.js";
 import { isFlagEnabled } from "../league/feature-flags.js";
 import { periodFirstKickoff } from "../lineup/service.js";
-import { recordEvent } from "../social/activity.js";
 import { ChipsError } from "./errors.js";
 
 export const ALL_CHIPS: readonly ChipType[] = chipTypeEnum.enumValues;
@@ -233,18 +232,6 @@ export async function playChip(db: Db, input: PlayChipInput): Promise<ChipPlayRo
     })
     .returning();
   if (!row) throw new ChipsError("chip insert failed", "CHIP_INSERT_FAILED");
-  // Feed entry is best-effort: a feed hiccup must not fail the chip play.
-  try {
-    await recordEvent(db, lg.id, "CHIP_PLAYED", {
-      fantasyTeamId: team.id,
-      teamName: team.name,
-      chip: row.chip,
-      scoringPeriodId: row.scoringPeriodId,
-      periodLabel: period.label,
-    });
-  } catch {
-    /* best-effort */
-  }
   return row;
 }
 

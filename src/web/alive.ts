@@ -14,11 +14,10 @@
  *   - the whole group stage is finished, at least one knockout fixture
  *     exists, and the team appears in no knockout fixture (did not advance).
  *
- * A knockout match level after extra time (decided on penalties) cannot
- * name its loser from the fixture alone, but the NEXT round can: once any
- * later knockout round has been ingested, the shootout winner appears in it
- * and the loser does not. Until that ingest both sides err ALIVE. Before
- * the first match finishes, everyone is alive.
+ * Anything undecidable from fixtures alone (e.g. a knockout match level
+ * after extra time, decided on penalties, with the next round's fixture not
+ * yet ingested) errs on the side of ALIVE - the next schedule ingest
+ * resolves it. Before the first match finishes, everyone is alive.
  */
 import type { Db } from "../data/db/client.js";
 import {
@@ -26,7 +25,6 @@ import {
   nationalTeam,
   player,
   rosterSlot,
-  stageEnum,
   type Stage,
 } from "../data/db/schema.js";
 import { eq, inArray } from "drizzle-orm";
@@ -151,9 +149,7 @@ function isTeamAlive(
     const againstGoals = (isHome ? last.awayScore : last.homeScore) ?? 0;
     if (forGoals > againstGoals) return true; // won, next round not ingested yet
     if (forGoals < againstGoals) return last.stage === "SF"; // SF loser -> 3rd-place game
-    // Level after ET (penalties): the loser is whichever side appears in no
-    // later ingested round. Until a later round exists, err alive.
-    return isAliveAfterDrawnKnockout(teamId, last.stage, ctx.fixtures);
+    return true; // level after ET (pens) - undecidable, err alive
   }
 
   // Group-stage games only: out once the group stage is fully finished,
@@ -162,28 +158,6 @@ function isTeamAlive(
     return ctx.knockoutTeamIds.has(teamId);
   }
   return true;
-}
-
-/** Tournament order of the stage enum, for "is this round later?". */
-const STAGE_ORDER: readonly Stage[] = stageEnum.enumValues;
-
-/**
- * After a drawn (penalties) knockout match at `stage`: alive only while no
- * later knockout round has been ingested, or once one has, only if the team
- * appears in it (the shootout winner advances; SF losers surface in the
- * third-place playoff, so they resolve here too).
- */
-function isAliveAfterDrawnKnockout(
-  teamId: number,
-  stage: Stage,
-  fixtures: readonly AliveFixture[],
-): boolean {
-  const stageIdx = STAGE_ORDER.indexOf(stage);
-  const later = fixtures.filter(
-    (f) => isKnockout(f.stage) && STAGE_ORDER.indexOf(f.stage) > stageIdx,
-  );
-  if (later.length === 0) return true; // next round not ingested yet
-  return later.some((f) => f.homeTeamId === teamId || f.awayTeamId === teamId);
 }
 
 export interface TeamAliveCount {

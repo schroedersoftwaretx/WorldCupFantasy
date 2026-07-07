@@ -24,14 +24,13 @@ describe("isNotificationCategory", () => {
     expect(isNotificationCategory("CHAT_MENTION")).toBe(false);
   });
 
-  it("covers the five draft lifecycle types plus chat", () => {
+  it("covers exactly the five draft lifecycle types", () => {
     expect([...NOTIFICATION_CATEGORIES]).toEqual([
       "DRAFT_STARTED",
       "ON_THE_CLOCK",
       "PICK_MADE",
       "AUTOPICK_MADE",
       "DRAFT_COMPLETE",
-      "CHAT_MESSAGE",
     ]);
   });
 });

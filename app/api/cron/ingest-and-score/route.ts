@@ -32,7 +32,6 @@ import { ingestSchedule } from "@/data/ingest/schedule";
 import { getUningestedFinishedFixtures } from "@/data/ingest/pending";
 import { recomputeAllRulesets } from "@/data/scoring/recompute";
 import { DEFAULT_RULESET } from "@/data/scoring/ruleset";
-import { generateAllStageRecaps } from "@/data/social/recap";
 import { captureAllStandingsSnapshots } from "@/data/standings/snapshot";
 import { oddsProviderFromEnv } from "@/data/odds/odds-provider";
 import { stageOddsProviderFromEnv } from "@/data/odds/stage-odds-provider";
@@ -93,7 +92,6 @@ export function GET(request: Request): Promise<Response> {
     // Step 3b: persist per-stage standings snapshots (rank movement, B2).
     // Internally per-league fault-tolerant; never blocks the pipeline.
     const snapshotSummary = await captureAllStandingsSnapshots(db);
-    const recapSummary = await generateAllStageRecaps(db);
 
     // Steps 4-5: odds + projections (only when ODDS_API_KEY is set).
     let oddsSummary: object | null = null;
@@ -126,7 +124,6 @@ export function GET(request: Request): Promise<Response> {
       stats: statsSummaries,
       scores: scoreSummary,
       snapshots: snapshotSummary,
-      recaps: recapSummary,
       odds: oddsSummary,
       projections: projectionSummary,
       stageOdds: stageOddsSummary,

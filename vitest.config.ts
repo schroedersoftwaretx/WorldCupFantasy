@@ -24,12 +24,7 @@ export default defineConfig({
     // Run integration tests serially: one shared container per file.
     pool: "forks",
     poolOptions: {
-      // Cap parallel workers: the default (one fork per logical CPU) runs up
-      // to ~18 Node processes AND ~18 Testcontainers Postgres containers at
-      // once, which exhausted Windows commit memory ("Committing semi space
-      // failed" OOM, 2026-07). Four forks keeps runs fast without blowing
-      // the memory budget alongside Docker Desktop.
-      forks: { singleFork: false, maxForks: 4 },
+      forks: { singleFork: false },
     },
     // Default environment stays "node" so the Testcontainers integration tests
     // are untouched. Component tests opt into jsdom per-file with a
