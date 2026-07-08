@@ -17,6 +17,7 @@ export const ACTIVITY_TYPES = [
   "CHIP_PLAYED",
   "H2H_SCHEDULE_GENERATED",
   "STAGE_RECAP",
+  "SURVIVOR_ELIMINATED",
 ] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
 

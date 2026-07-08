@@ -32,6 +32,7 @@ import { ingestSchedule } from "@/data/ingest/schedule";
 import { getUningestedFinishedFixtures } from "@/data/ingest/pending";
 import { recomputeAllRulesets } from "@/data/scoring/recompute";
 import { DEFAULT_RULESET } from "@/data/scoring/ruleset";
+import { resolveAllSurvivor } from "@/data/sidegames/survivor";
 import { generateAllStageRecaps } from "@/data/social/recap";
 import { captureAllStandingsSnapshots } from "@/data/standings/snapshot";
 import { oddsProviderFromEnv } from "@/data/odds/odds-provider";
@@ -94,6 +95,7 @@ export function GET(request: Request): Promise<Response> {
     // Internally per-league fault-tolerant; never blocks the pipeline.
     const snapshotSummary = await captureAllStandingsSnapshots(db);
     const recapSummary = await generateAllStageRecaps(db);
+    const survivorSummary = await resolveAllSurvivor(db);
 
     // Steps 4-5: odds + projections (only when ODDS_API_KEY is set).
     let oddsSummary: object | null = null;
@@ -127,6 +129,7 @@ export function GET(request: Request): Promise<Response> {
       scores: scoreSummary,
       snapshots: snapshotSummary,
       recaps: recapSummary,
+      survivor: survivorSummary,
       odds: oddsSummary,
       projections: projectionSummary,
       stageOdds: stageOddsSummary,
