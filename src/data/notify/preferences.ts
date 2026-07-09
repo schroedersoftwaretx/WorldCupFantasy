@@ -38,6 +38,7 @@ export const NOTIFICATION_CATEGORIES = [
   "TRADE_OFFER",
   "TRADE_RESULT",
   "WAIVER_RESULT",
+  "LOCK_REMINDER",
 ] as const;
 
 export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number];
@@ -82,6 +83,11 @@ export const CATEGORY_LABELS: Record<
   WAIVER_RESULT: {
     label: "Waiver results",
     description: "When one of your waiver claims is processed.",
+  },
+  LOCK_REMINDER: {
+    label: "Lock reminders",
+    description:
+      "Before a period locks: unsubmitted lineups and survivor picks.",
   },
 };
 
