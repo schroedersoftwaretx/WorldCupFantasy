@@ -23,7 +23,7 @@
  * is per-ruleset, so what-if rulesets can coexist with the canonical one.
  */
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 import type { Db } from "../db/client.js";
 import {
@@ -77,10 +77,15 @@ export async function recomputeAll(
       bigChancesCreated: statLine.bigChancesCreated,
       goalsConceded: statLine.goalsConceded,
       teamScoredInRegulationAndEt: statLine.teamScoredInRegulationAndEt,
+      teamShootoutScored: statLine.teamShootoutScored,
+      teamShootoutConceded: statLine.teamShootoutConceded,
       position: player.position,
+      stage: fixture.stage,
+      kickoffUtc: fixture.kickoffUtc,
     })
     .from(statLine)
-    .innerJoin(player, eq(player.id, statLine.playerId));
+    .innerJoin(player, eq(player.id, statLine.playerId))
+    .innerJoin(fixture, eq(fixture.id, statLine.fixtureId));
 
   // Existing rows for this ruleset, keyed (playerId, fixtureId).
   const existing = await db
@@ -91,10 +96,15 @@ export async function recomputeAll(
     existing.map((r) => [`${r.playerId}:${r.fixtureId}`, r]),
   );
 
+  const streakSet = streakSetForRuleset(ruleset, rows);
+
   const summary = emptySummary();
   for (const r of rows) {
-    const result = scoreStatLine(r, r.position, ruleset);
     const key = `${r.playerId}:${r.fixtureId}`;
+    const result = scoreStatLine(r, r.position, ruleset, {
+      stage: r.stage,
+      streakQualified: streakSet.has(key),
+    });
     const prev = existingByKey.get(key);
 
     // Unchanged row: skip the write entirely to avoid churn.
@@ -215,10 +225,15 @@ export async function recomputeForFixture(
       bigChancesCreated: statLine.bigChancesCreated,
       goalsConceded: statLine.goalsConceded,
       teamScoredInRegulationAndEt: statLine.teamScoredInRegulationAndEt,
+      teamShootoutScored: statLine.teamShootoutScored,
+      teamShootoutConceded: statLine.teamShootoutConceded,
       position: player.position,
+      stage: fixture.stage,
+      kickoffUtc: fixture.kickoffUtc,
     })
     .from(statLine)
     .innerJoin(player, eq(player.id, statLine.playerId))
+    .innerJoin(fixture, eq(fixture.id, statLine.fixtureId))
     .where(eq(statLine.fixtureId, fxRow.id));
 
   const existing = await db
@@ -234,10 +249,35 @@ export async function recomputeForFixture(
     existing.map((r) => [`${r.playerId}:${r.fixtureId}`, r]),
   );
 
+  // Streaks need the affected players' OTHER fixtures too.
+  let streakSet = new Set<string>();
+  if (ruleset.bonuses !== undefined && rows.length > 0) {
+    const history = await db
+      .select({
+        playerId: statLine.playerId,
+        fixtureId: statLine.fixtureId,
+        goals: statLine.goals,
+        minutesPlayed: statLine.minutesPlayed,
+        kickoffUtc: fixture.kickoffUtc,
+      })
+      .from(statLine)
+      .innerJoin(fixture, eq(fixture.id, statLine.fixtureId))
+      .where(
+        inArray(
+          statLine.playerId,
+          rows.map((r) => r.playerId),
+        ),
+      );
+    streakSet = computeStreakSet(history, ruleset.bonuses.scoringStreak.length);
+  }
+
   const summary = emptySummary();
   for (const r of rows) {
-    const result = scoreStatLine(r, r.position, ruleset);
     const key = `${r.playerId}:${r.fixtureId}`;
+    const result = scoreStatLine(r, r.position, ruleset, {
+      stage: r.stage,
+      streakQualified: streakSet.has(key),
+    });
     const prev = existingByKey.get(key);
 
     // Unchanged row: skip the write entirely to avoid churn.
@@ -284,8 +324,60 @@ export async function recomputeForFixture(
 }
 
 /** Cheap structural equality for ScoreBreakdown JSON. */
+/** One row of scoring-streak input (pure core below). */
+export interface StreakInputRow {
+  playerId: number;
+  fixtureId: number;
+  goals: number;
+  minutesPlayed: number;
+  kickoffUtc: Date;
+}
+
+/**
+ * Phase-07 scoring streaks - pure. Per player, walk PLAYED matches in
+ * kickoff order; a goal extends the run, a scoreless played match resets
+ * it, bench matches are skipped. Every match where the run length reaches
+ * `length` earns the bonus (i.e. the Nth match onward while it survives).
+ * Returns the qualifying "playerId:fixtureId" keys.
+ */
+export function computeStreakSet(
+  rows: readonly StreakInputRow[],
+  length: number,
+): Set<string> {
+  const byPlayer = new Map<number, StreakInputRow[]>();
+  for (const r of rows) {
+    if (r.minutesPlayed <= 0) continue;
+    const list = byPlayer.get(r.playerId) ?? [];
+    list.push(r);
+    byPlayer.set(r.playerId, list);
+  }
+  const out = new Set<string>();
+  for (const list of byPlayer.values()) {
+    list.sort(
+      (a, b) => a.kickoffUtc.getTime() - b.kickoffUtc.getTime() || a.fixtureId - b.fixtureId,
+    );
+    let run = 0;
+    for (const r of list) {
+      run = r.goals >= 1 ? run + 1 : 0;
+      if (run >= length) out.add(`${r.playerId}:${r.fixtureId}`);
+    }
+  }
+  return out;
+}
+
+/** Streak keys for a full-rows recompute; empty unless bonuses are on. */
+function streakSetForRuleset(
+  ruleset: ScoringRuleset,
+  rows: readonly StreakInputRow[],
+): Set<string> {
+  if (ruleset.bonuses === undefined) return new Set();
+  return computeStreakSet(rows, ruleset.bonuses.scoringStreak.length);
+}
+
 function breakdownEquals(a: ScoreBreakdown, b: ScoreBreakdown): boolean {
   return (
+    a.bonus === b.bonus &&
+    a.stageMultiplier === b.stageMultiplier &&
     a.appearance === b.appearance &&
     a.played60Plus === b.played60Plus &&
     a.goals === b.goals &&

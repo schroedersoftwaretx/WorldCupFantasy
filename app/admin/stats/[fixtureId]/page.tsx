@@ -88,6 +88,8 @@ export default async function AdminFixtureStats({
           ownGoals: l?.ownGoals ?? 0,
           teamConcededInRegulationAndEt: l?.teamConcededInRegulationAndEt ?? 0,
           teamScoredInRegulationAndEt: l?.teamScoredInRegulationAndEt ?? 0,
+          teamShootoutScored: l?.teamShootoutScored ?? 0,
+          teamShootoutConceded: l?.teamShootoutConceded ?? 0,
           shotsOnTarget: l?.shotsOnTarget ?? 0,
           shotsOffTarget: l?.shotsOffTarget ?? 0,
           tacklesSuccessful: l?.tacklesSuccessful ?? 0,

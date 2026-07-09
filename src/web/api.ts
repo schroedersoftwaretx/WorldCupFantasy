@@ -20,6 +20,7 @@ import { LineupError } from "@/data/lineup/errors";
 import { H2hError } from "@/data/h2h/errors";
 import { ChipsError } from "@/data/chips/errors";
 import { ChatError } from "@/data/social/chat";
+import { SurvivorError } from "@/data/sidegames/survivor";
 import { logger } from "../log.js";
 
 export interface ApiOk<T> {
@@ -88,7 +89,8 @@ export async function handle<T>(fn: () => Promise<T> | T): Promise<Response> {
       e instanceof LineupError ||
       e instanceof H2hError ||
       e instanceof ChipsError ||
-      e instanceof ChatError
+      e instanceof ChatError ||
+      e instanceof SurvivorError
     ) {
       // Domain rule violations are the caller's fault -> 400.
       return err(e.message, e.code, 400);

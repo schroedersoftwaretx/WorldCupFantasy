@@ -158,6 +158,14 @@ export const statLine = pgTable(
     teamScoredInRegulationAndEt: integer("team_scored_in_regulation_and_et")
       .notNull()
       .default(0),
+    /** Penalty-shootout kicks the player's team SCORED / CONCEDED. Only ever
+     * non-zero on a knockout match that went to a shootout (reg+ET level).
+     * Powers the keeper "game won" bonus on a shootout win: with reg+ET level,
+     * shootoutScored > shootoutConceded means the team advanced. Kept separate
+     * from the reg+ET goal counters so those stay shootout-free (goals, clean
+     * sheets, etc. are unaffected). */
+    teamShootoutScored: integer("team_shootout_scored").notNull().default(0),
+    teamShootoutConceded: integer("team_shootout_conceded").notNull().default(0),
 
     // --- Detailed-action counts (v2) ----------------------------------------
     // Populated by richer providers (Sportmonks / Opta) or by hand. Default 0

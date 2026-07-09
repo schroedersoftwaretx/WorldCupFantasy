@@ -21,7 +21,7 @@
 
 import { createHash } from "node:crypto";
 
-import type { Position } from "../db/schema.js";
+import { stageEnum, type Position, type Stage } from "../db/schema.js";
 
 export interface ScoringRuleset {
   /**
@@ -92,11 +92,41 @@ export interface ScoringRuleset {
    */
   readonly goalConcededByKeeper: number;
   /**
-   * Flat bonus when the player's team WON in regulation + extra time,
-   * awarded to the GOALKEEPER only. Shootout-only wins are not counted here
-   * (edit the stat line manually for those rare cases).
+   * Flat bonus when the player's team WON, awarded to the GOALKEEPER only.
+   * A win is either scoring more than conceded in regulation + extra time, or
+   * — when level after ET — winning the penalty shootout. Both are derived
+   * from the stat line (teamScored/Conceded and teamShootoutScored/Conceded).
    */
   readonly gameWonKeeper: number;
+
+  /**
+   * Phase-07 7.2 opt-in bonus block. ABSENT by default - and it must stay
+   * absent in the default ruleset, because the version is a content hash:
+   * an absent optional key serializes to nothing, keeping every existing
+   * league's version (and its score_entry rows) byte-identical. A league
+   * that adopts bonuses gets a NEW version and a league-scoped recompute,
+   * exactly like any other ruleset edit.
+   */
+  readonly bonuses?: RulesetBonuses;
+}
+
+/** Opt-in milestone / stage / streak bonuses (phase-07 7.2). */
+export interface RulesetBonuses {
+  /** Bonus for scoring exactly 2 goals in one match. */
+  readonly brace: number;
+  /** Bonus for 3+ goals in one match (replaces brace; not stacked). */
+  readonly hatTrick: number;
+  /**
+   * Whole-score multiplier per stage (e.g. { SF: 1.5, FINAL: 2 }). A stage
+   * missing from the map multiplies by 1. Applied AFTER all flat bonuses.
+   */
+  readonly stageMultipliers: Readonly<Partial<Record<Stage, number>>>;
+  /**
+   * Bonus for each match that extends a scoring streak to `length` or more
+   * consecutive PLAYED matches with a goal (bench matches are skipped, a
+   * played match without a goal resets the run).
+   */
+  readonly scoringStreak: Readonly<{ length: number; bonus: number }>;
 }
 
 /**
@@ -271,5 +301,48 @@ export function sanitizeRulesetInput(
     bigChanceCreated: pointValue(o["bigChanceCreated"], "bigChanceCreated"),
     goalConcededByKeeper: pointValue(o["goalConcededByKeeper"], "goalConcededByKeeper"),
     gameWonKeeper: pointValue(o["gameWonKeeper"], "gameWonKeeper"),
+    ...(o["bonuses"] !== undefined && o["bonuses"] !== null
+      ? { bonuses: sanitizeBonuses(o["bonuses"]) }
+      : {}),
+  };
+}
+
+/** Coerce a multiplier: finite, 0..10, 2dp. */
+function multiplierValue(value: unknown, label: string): number {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) {
+    throw new RulesetValidationError(`${label} must be a finite number`);
+  }
+  if (n < 0 || n > 10) {
+    throw new RulesetValidationError(`${label} must be between 0 and 10`);
+  }
+  return Math.round(n * 100) / 100;
+}
+
+/** Validate the optional phase-07 bonuses block. */
+function sanitizeBonuses(input: unknown): RulesetBonuses {
+  const o = asObject(input, "bonuses");
+  const streak = asObject(o["scoringStreak"], "bonuses.scoringStreak");
+  const multsIn = asObject(o["stageMultipliers"] ?? {}, "bonuses.stageMultipliers");
+  const stageMultipliers: Partial<Record<Stage, number>> = {};
+  for (const key of Object.keys(multsIn)) {
+    if (!(stageEnum.enumValues as readonly string[]).includes(key)) {
+      throw new RulesetValidationError(
+        `bonuses.stageMultipliers.${key} is not a stage`,
+      );
+    }
+    stageMultipliers[key as Stage] = multiplierValue(
+      multsIn[key],
+      `bonuses.stageMultipliers.${key}`,
+    );
+  }
+  return {
+    brace: pointValue(o["brace"], "bonuses.brace"),
+    hatTrick: pointValue(o["hatTrick"], "bonuses.hatTrick"),
+    stageMultipliers,
+    scoringStreak: {
+      length: intValue(streak["length"], "bonuses.scoringStreak.length", 2, 10),
+      bonus: pointValue(streak["bonus"], "bonuses.scoringStreak.bonus"),
+    },
   };
 }

@@ -28,6 +28,7 @@ type CurrentTab =
   | "lineup"
   | "chips"
   | "chat"
+  | "survivor"
   | "settings";
 
 interface LeagueTabsProps {
@@ -39,7 +40,6 @@ interface LeagueTabsProps {
 /** Future-phase flags and the label each will surface in the tab strip. */
 const FUTURE_TABS: ReadonlyArray<{ flag: FeatureFlag; label: string }> = [
   { flag: "bracket", label: "Bracket" },
-  { flag: "survivor", label: "Survivor" },
 ];
 
 export default async function LeagueTabs({
@@ -121,6 +121,15 @@ export default async function LeagueTabs({
           aria-current={current === "chips" ? "page" : undefined}
         >
           Chips
+        </Link>
+      ) : null}
+      {flags && flags.survivor ? (
+        <Link
+          href={`/leagues/${leagueId}/survivor`}
+          className={tabClass("survivor")}
+          aria-current={current === "survivor" ? "page" : undefined}
+        >
+          Survivor
         </Link>
       ) : null}
       {flags && flags.stats_hub ? (

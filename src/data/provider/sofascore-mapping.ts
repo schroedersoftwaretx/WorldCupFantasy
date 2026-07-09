@@ -298,6 +298,16 @@ export function ssRegEt(score: SsScore | null | undefined): number | null {
   return null;
 }
 
+/**
+ * Penalty-shootout kicks converted by one side, from the score block's
+ * separate `penalties` field. 0 when there was no shootout (or the field is
+ * absent). Used to award the keeper win bonus on a shootout win: with reg+ET
+ * level, the side with more converted kicks advanced.
+ */
+export function ssShootout(score: SsScore | null | undefined): number {
+  return score && typeof score.penalties === "number" ? score.penalties : 0;
+}
+
 // ---------------------------------------------------------------------------
 // Squads + schedule
 // ---------------------------------------------------------------------------
@@ -433,12 +443,16 @@ export function aggregateSsIncidents(incidents: SsIncident[]): Map<string, Incid
  * @param incidents /event/{id}/incidents payload (`incidents` array).
  * @param fixture   The same fixture from mapSsFixtures (reg+ET score + team ids).
  * @param sourceRevision Free-form per-fixture revision tag for idempotent upserts.
+ * @param shootout  Penalty-shootout kicks converted by each side (0/0 when the
+ *                  match did not go to a shootout). Powers the keeper win bonus
+ *                  on a shootout win; see ssShootout.
  */
 export function mapSsFixtureStats(
   lineups: SsLineups,
   incidents: SsIncident[],
   fixture: ProviderFixture,
   sourceRevision: string,
+  shootout: { home: number; away: number } = { home: 0, away: 0 },
 ): ProviderStatLine[] {
   const homeGoals = fixture.homeScore ?? 0;
   const awayGoals = fixture.awayScore ?? 0;
@@ -453,6 +467,8 @@ export function mapSsFixtureStats(
   for (const { side, isHome } of sides) {
     const teamConceded = isHome ? awayGoals : homeGoals;
     const teamScored = isHome ? homeGoals : awayGoals;
+    const teamShootoutScored = isHome ? shootout.home : shootout.away;
+    const teamShootoutConceded = isHome ? shootout.away : shootout.home;
 
     for (const lp of side?.players ?? []) {
       const pid = lp.player?.id;
@@ -493,6 +509,8 @@ export function mapSsFixtureStats(
         ownGoals: playerInc?.ownGoals ?? 0,
         teamConcededInRegulationAndEt: teamConceded,
         teamScoredInRegulationAndEt: teamScored,
+        teamShootoutScored,
+        teamShootoutConceded,
         shotsOnTarget: statNum(s, "onTargetScoringAttempt"),
         shotsOffTarget,
         // SofaScore "totalTackle" is the per-match tackle count (Opta tackles =

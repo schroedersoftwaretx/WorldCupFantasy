@@ -75,6 +75,14 @@ export interface ProviderStatLine {
   teamConcededInRegulationAndEt: number;
   /** Goals the player's team SCORED in regulation + ET (excludes shootout). */
   teamScoredInRegulationAndEt: number;
+  /**
+   * Penalty-shootout kicks the player's team SCORED / CONCEDED. Non-zero only
+   * on a knockout match decided on penalties (reg+ET level). Powers the keeper
+   * "game won" bonus on a shootout win. Optional: providers that can't supply
+   * shootout detail omit them and the ingest defaults both to 0.
+   */
+  teamShootoutScored?: number;
+  teamShootoutConceded?: number;
   // --- Detailed-action counts (v2). 0 when the provider can't supply them. ---
   shotsOnTarget: number;
   shotsOffTarget: number;

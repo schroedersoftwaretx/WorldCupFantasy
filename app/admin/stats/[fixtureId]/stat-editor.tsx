@@ -20,6 +20,8 @@ export interface EditorStat {
   ownGoals: number;
   teamConcededInRegulationAndEt: number;
   teamScoredInRegulationAndEt: number;
+  teamShootoutScored: number;
+  teamShootoutConceded: number;
   shotsOnTarget: number;
   shotsOffTarget: number;
   tacklesSuccessful: number;
@@ -66,6 +68,8 @@ const COLS: Array<{ key: keyof EditorStat; label: string; title: string }> = [
   { key: "ownGoals", label: "OG", title: "Own goals" },
   { key: "teamScoredInRegulationAndEt", label: "TmF", title: "Team goals for (reg+ET)" },
   { key: "teamConcededInRegulationAndEt", label: "TmA", title: "Team goals against (reg+ET)" },
+  { key: "teamShootoutScored", label: "SoF", title: "Shootout kicks scored (win bonus on a shootout win)" },
+  { key: "teamShootoutConceded", label: "SoA", title: "Shootout kicks conceded" },
 ];
 
 interface RowStatus {

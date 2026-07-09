@@ -23,6 +23,7 @@ import {
   mapSsStage,
   mapSsStatus,
   ssRegEt,
+  ssShootout,
   type SsEvent,
   type SsIncident,
   type SsLineups,
@@ -159,6 +160,68 @@ describe("penalty-shootout draw does not award a phantom clean sheet", () => {
       DEFAULT_RULESET,
     );
     expect(scored.breakdown.cleanSheet).toBe(0);
+  });
+});
+
+describe("ssShootout + keeper win bonus on a shootout win", () => {
+  it("reads the shootout kick count from the score block", () => {
+    expect(ssShootout({ normaltime: 1, overtime: 0, current: 1, penalties: 4 })).toBe(4);
+    expect(ssShootout({ normaltime: 2, current: 2 })).toBe(0); // no shootout
+    expect(ssShootout(undefined)).toBe(0);
+  });
+
+  it("awards the keeper the win bonus after a penalty shootout win", () => {
+    // Germany (home) 1-1 Paraguay (away), Germany win 4-2 on penalties.
+    const event: SsEvent = {
+      id: 9999002,
+      startTimestamp: Math.floor(Date.parse("2026-06-29T18:00:00Z") / 1000),
+      status: { type: "finished" },
+      homeTeam: { id: 1, name: "Germany" },
+      awayTeam: { id: 2, name: "Paraguay" },
+      homeScore: { normaltime: 1, overtime: 0, current: 1, penalties: 4 },
+      awayScore: { normaltime: 1, overtime: 0, current: 1, penalties: 2 },
+      roundInfo: { name: "Round of 16", slug: "round-of-16" },
+      tournament: { name: "World Cup" },
+    };
+    const lineups: SsLineups = {
+      home: {
+        players: [
+          {
+            player: { id: 2001, name: "Manuel Neuer", position: "G" },
+            position: "G",
+            statistics: { minutesPlayed: 120, saves: 3 },
+          },
+        ],
+      },
+      away: {
+        players: [
+          {
+            player: { id: 2002, name: "Paraguay Keeper", position: "G" },
+            position: "G",
+            statistics: { minutesPlayed: 120, saves: 4 },
+          },
+        ],
+      },
+    };
+
+    const [fixture] = mapSsFixtures([event]);
+    if (!fixture) throw new Error("expected a mapped fixture");
+    const lines = mapSsFixtureStats(lineups, [], fixture, "rev-1", {
+      home: ssShootout(event.homeScore),
+      away: ssShootout(event.awayScore),
+    });
+
+    const neuer = lines.find((l) => l.sourcePlayerId === "2001")!;
+    expect(neuer.teamShootoutScored).toBe(4);
+    expect(neuer.teamShootoutConceded).toBe(2);
+    const winner = scoreStatLine(neuer as unknown as ScorableStatLine, "GK", DEFAULT_RULESET);
+    expect(winner.breakdown.gameWon).toBe(5);
+
+    const loserKeeper = lines.find((l) => l.sourcePlayerId === "2002")!;
+    expect(loserKeeper.teamShootoutScored).toBe(2);
+    expect(loserKeeper.teamShootoutConceded).toBe(4);
+    const loser = scoreStatLine(loserKeeper as unknown as ScorableStatLine, "GK", DEFAULT_RULESET);
+    expect(loser.breakdown.gameWon).toBe(0);
   });
 });
 

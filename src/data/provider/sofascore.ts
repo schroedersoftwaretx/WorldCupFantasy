@@ -24,6 +24,7 @@ import {
   mapSsFixtures,
   mapSsFixtureStats,
   mapSsSquads,
+  ssShootout,
   type SsEvent,
   type SsIncident,
   type SsLineups,
@@ -198,7 +199,10 @@ export class SofascoreProvider implements StatsProvider {
           ? String(ev.startTimestamp)
           : `ingest-${new Date().toISOString()}`;
 
-    return mapSsFixtureStats(lineups, incidentsResp.incidents ?? [], fixture, revision);
+    return mapSsFixtureStats(lineups, incidentsResp.incidents ?? [], fixture, revision, {
+      home: ssShootout(ev.homeScore),
+      away: ssShootout(ev.awayScore),
+    });
   }
 
   // --- HTTP plumbing --------------------------------------------------------

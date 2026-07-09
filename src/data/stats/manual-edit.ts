@@ -35,6 +35,8 @@ export const EDITABLE_STAT_FIELDS = [
   "ownGoals",
   "teamConcededInRegulationAndEt",
   "teamScoredInRegulationAndEt",
+  "teamShootoutScored",
+  "teamShootoutConceded",
   "shotsOnTarget",
   "shotsOffTarget",
   "tacklesSuccessful",
