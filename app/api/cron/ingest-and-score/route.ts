@@ -33,6 +33,7 @@ import { getUningestedFinishedFixtures } from "@/data/ingest/pending";
 import { recomputeAllRulesets } from "@/data/scoring/recompute";
 import { DEFAULT_RULESET } from "@/data/scoring/ruleset";
 import { resolveAllSurvivor } from "@/data/sidegames/survivor";
+import { processDueWaivers } from "@/data/transactions/service";
 import { generateAllStageRecaps } from "@/data/social/recap";
 import { captureAllStandingsSnapshots } from "@/data/standings/snapshot";
 import { oddsProviderFromEnv } from "@/data/odds/odds-provider";
@@ -96,6 +97,8 @@ export function GET(request: Request): Promise<Response> {
     const snapshotSummary = await captureAllStandingsSnapshots(db);
     const recapSummary = await generateAllStageRecaps(db);
     const survivorSummary = await resolveAllSurvivor(db);
+    // Waiver claims whose window has expired (transactions flag leagues only).
+    const waiverSummary = await processDueWaivers(db);
 
     // Steps 4-5: odds + projections (only when ODDS_API_KEY is set).
     let oddsSummary: object | null = null;
@@ -130,6 +133,7 @@ export function GET(request: Request): Promise<Response> {
       snapshots: snapshotSummary,
       recaps: recapSummary,
       survivor: survivorSummary,
+      waivers: waiverSummary,
       odds: oddsSummary,
       projections: projectionSummary,
       stageOdds: stageOddsSummary,

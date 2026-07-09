@@ -162,6 +162,103 @@ export default async function MatchupsPage({
             </table>
           </div>
 
+          {view.previews.length > 0 ? (
+            <>
+              <h2>
+                This week: {view.previews[0]?.label}{" "}
+                <span className="tag tag-projected">Preview</span>
+              </h2>
+              <div className="preview-cards">
+                {view.previews.map((pv) => (
+                  <section key={pv.matchupId} className="preview-card">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th />
+                          <th>{pv.home.teamName}</th>
+                          <th>{pv.away.teamName}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Rank</td>
+                          <td className="num">#{pv.home.rank}</td>
+                          <td className="num">#{pv.away.rank}</td>
+                        </tr>
+                        <tr>
+                          <td>Record</td>
+                          <td className="num">
+                            {pv.home.wins}-{pv.home.draws}-{pv.home.losses}
+                          </td>
+                          <td className="num">
+                            {pv.away.wins}-{pv.away.draws}-{pv.away.losses}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Form</td>
+                          <td className="num">
+                            {pv.home.recentForm.length > 0
+                              ? pv.home.recentForm.map(formatPoints).join(" / ")
+                              : "–"}
+                          </td>
+                          <td className="num">
+                            {pv.away.recentForm.length > 0
+                              ? pv.away.recentForm.map(formatPoints).join(" / ")
+                              : "–"}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Season pts</td>
+                          <td className="num">{formatPoints(pv.home.seasonTotal)}</td>
+                          <td className="num">{formatPoints(pv.away.seasonTotal)}</td>
+                        </tr>
+                        {pv.home.projected !== null || pv.away.projected !== null ? (
+                          <tr>
+                            <td>Projected</td>
+                            <td className="num">
+                              {pv.home.projected !== null
+                                ? formatPoints(pv.home.projected)
+                                : "–"}
+                            </td>
+                            <td className="num">
+                              {pv.away.projected !== null
+                                ? formatPoints(pv.away.projected)
+                                : "–"}
+                            </td>
+                          </tr>
+                        ) : null}
+                        <tr>
+                          <td>Key players</td>
+                          <td>
+                            {pv.home.keyPlayers
+                              .map((k) => `${k.fullName} (${formatPoints(k.points)})`)
+                              .join(", ") || "–"}
+                          </td>
+                          <td>
+                            {pv.away.keyPlayers
+                              .map((k) => `${k.fullName} (${formatPoints(k.points)})`)
+                              .join(", ") || "–"}
+                          </td>
+                        </tr>
+                        {pv.rivalry ? (
+                          <tr>
+                            <td>Head-to-head</td>
+                            <td className="num" colSpan={2}>
+                              {pv.rivalry.homeWins}&ndash;{pv.rivalry.awayWins}
+                              {pv.rivalry.draws > 0
+                                ? ` (${pv.rivalry.draws} drawn)`
+                                : ""}
+                            </td>
+                          </tr>
+                        ) : null}
+                      </tbody>
+                    </table>
+                  </section>
+                ))}
+              </div>
+            </>
+          ) : null}
+
           <h2>Fixtures</h2>
           {view.periods
             .filter((p) => (byOrdinal.get(p.ordinal) ?? []).length > 0)

@@ -33,6 +33,7 @@ import {
 } from "../competition/periods.js";
 import type { Db } from "../db/client.js";
 import { isFlagEnabled } from "../league/feature-flags.js";
+import { getLedger, rosterAtOrdinal } from "../transactions/effective-roster.js";
 import {
   effectiveLineupForOrdinal,
   getLineupsForTeams,
@@ -135,7 +136,19 @@ export async function computeStandings(
     .from(rosterSlot)
     .where(eq(rosterSlot.leagueId, leagueId));
 
-  const rosteredPlayerIds = Array.from(new Set(slots.map((s) => s.playerId)));
+  // Transactions overlay (Priority 5): when the flag is on, per-period
+  // rosters are reconstructed from the movement ledger. When off (the
+  // default) the ledger is never read and everything below is byte-identical
+  // to the pre-transactions computation.
+  const txnsEnabled = await isFlagEnabled(db, leagueId, "transactions");
+  const ledger = txnsEnabled ? await getLedger(db, leagueId) : [];
+
+  const rosteredPlayerIds = Array.from(
+    new Set([
+      ...slots.map((s) => s.playerId),
+      ...ledger.map((l) => l.playerId),
+    ]),
+  );
   const players =
     rosteredPlayerIds.length > 0
       ? await db.select().from(player).where(inArray(player.id, rosteredPlayerIds))
@@ -250,6 +263,12 @@ export async function computeStandings(
     for (const period of periodRefs) {
       const stage = (period.stageCode ?? period.label) as Stage;
 
+      // The roster the team actually had during this period (identical to
+      // the current roster when the transactions flag is off).
+      const periodRosterIds = txnsEnabled
+        ? rosterAtOrdinal(rosterPlayerIds, team.id, ledger, period.ordinal)
+        : rosterPlayerIds;
+
       if (isSetLineup) {
         // Submitted XI (rolled forward), captain doubled, vice promoted.
         const effective = effectiveLineupForOrdinal(
@@ -257,13 +276,19 @@ export async function computeStandings(
           ordinalByPeriodId,
           period.ordinal,
         );
+        const periodRosterSet = new Set(periodRosterIds);
         const slotByPlayerId = new Map<number, SetLineupSlotInput>();
         for (const pid of (effective?.playerIds as number[] | undefined) ?? []) {
           const p = playerById.get(pid);
+          // A player who left the roster before this period (transactions
+          // flag) scores 0 even if a stale lineup still names him.
+          const pts = periodRosterSet.has(pid)
+            ? sumPlayerPointsInPeriod(pid, period.ordinal, scoreByKey, ordinalByFixtureId)
+            : 0;
           slotByPlayerId.set(pid, {
             position: (p?.position ?? "MID") as Position,
             fullName: p?.fullName ?? `#${pid}`,
-            points: sumPlayerPointsInPeriod(pid, period.ordinal, scoreByKey, ordinalByFixtureId),
+            points: pts,
           });
         }
         const chip = chipsEnabled
@@ -273,7 +298,7 @@ export async function computeStandings(
         if (chip === "BENCH_BOOST" && effective) {
           const xiSet = new Set(effective.playerIds as number[]);
           benchSlots = new Map();
-          for (const pid of rosterPlayerIds) {
+          for (const pid of periodRosterIds) {
             if (xiSet.has(pid)) continue;
             const p = playerById.get(pid);
             benchSlots.set(pid, {
@@ -311,7 +336,7 @@ export async function computeStandings(
         ? (captainByTeamOrdinal.get(team.id)?.get(period.ordinal) ?? null)
         : null;
       const captainMult = chip === "TRIPLE_CAPTAIN" ? 3 : 2;
-      const scored: ScoredPlayer[] = rosterPlayerIds.map((pid) => {
+      const scored: ScoredPlayer[] = periodRosterIds.map((pid) => {
         const p = playerById.get(pid);
         const raw = sumPlayerPointsInPeriod(
           pid,

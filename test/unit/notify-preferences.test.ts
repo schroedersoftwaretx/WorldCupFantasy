@@ -24,7 +24,7 @@ describe("isNotificationCategory", () => {
     expect(isNotificationCategory("CHAT_MENTION")).toBe(false);
   });
 
-  it("covers the five draft lifecycle types plus chat", () => {
+  it("covers the draft lifecycle, chat, and transaction types", () => {
     expect([...NOTIFICATION_CATEGORIES]).toEqual([
       "DRAFT_STARTED",
       "ON_THE_CLOCK",
@@ -32,6 +32,9 @@ describe("isNotificationCategory", () => {
       "AUTOPICK_MADE",
       "DRAFT_COMPLETE",
       "CHAT_MESSAGE",
+      "TRADE_OFFER",
+      "TRADE_RESULT",
+      "WAIVER_RESULT",
     ]);
   });
 });

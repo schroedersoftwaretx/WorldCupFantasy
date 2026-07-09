@@ -9,6 +9,82 @@ import { useState } from "react";
 
 import type { ScoringRuleset } from "@/data/scoring/ruleset";
 
+/** Stages that can carry a whole-score multiplier, in tournament order. */
+const STAGES = [
+  "GROUP_1",
+  "GROUP_2",
+  "GROUP_3",
+  "R32",
+  "R16",
+  "QF",
+  "SF",
+  "THIRD_PLACE",
+  "FINAL",
+] as const;
+type StageKey = (typeof STAGES)[number];
+
+const STAGE_LABELS: Record<StageKey, string> = {
+  GROUP_1: "Group MD1",
+  GROUP_2: "Group MD2",
+  GROUP_3: "Group MD3",
+  R32: "Round of 32",
+  R16: "Round of 16",
+  QF: "Quarter-final",
+  SF: "Semi-final",
+  THIRD_PLACE: "Third place",
+  FINAL: "Final",
+};
+
+/** Editable state for the opt-in phase-07 bonuses block. */
+interface BonusesState {
+  enabled: boolean;
+  brace: number;
+  hatTrick: number;
+  streakLength: number;
+  streakBonus: number;
+  /** Multiplier per stage; 1 = no boost (omitted from the saved ruleset). */
+  stageMultipliers: Record<StageKey, number>;
+}
+
+function defaultBonuses(): BonusesState {
+  return {
+    enabled: false,
+    brace: 2,
+    hatTrick: 5,
+    streakLength: 3,
+    streakBonus: 2,
+    stageMultipliers: {
+      GROUP_1: 1,
+      GROUP_2: 1,
+      GROUP_3: 1,
+      R32: 1,
+      R16: 1,
+      QF: 1,
+      SF: 1,
+      THIRD_PLACE: 1,
+      FINAL: 1,
+    },
+  };
+}
+
+function bonusesFromRuleset(r: ScoringRuleset): BonusesState {
+  const base = defaultBonuses();
+  if (!r.bonuses) return base;
+  const mults = { ...base.stageMultipliers };
+  for (const stage of STAGES) {
+    const v = r.bonuses.stageMultipliers[stage];
+    if (typeof v === "number") mults[stage] = v;
+  }
+  return {
+    enabled: true,
+    brace: r.bonuses.brace,
+    hatTrick: r.bonuses.hatTrick,
+    streakLength: r.bonuses.scoringStreak.length,
+    streakBonus: r.bonuses.scoringStreak.bonus,
+    stageMultipliers: mults,
+  };
+}
+
 interface Props {
   leagueId: number;
   ruleset: ScoringRuleset;
@@ -141,7 +217,7 @@ function toForm(r: ScoringRuleset): FormState {
 }
 
 /** Assemble the structured request body the API's sanitizer expects. */
-function toBody(s: FormState) {
+function toBody(s: FormState, b: BonusesState) {
   return {
     appearance: s.appearance,
     played60Plus: s.played60Plus,
@@ -164,12 +240,33 @@ function toBody(s: FormState) {
     bigChanceCreated: s.bigChanceCreated,
     goalConcededByKeeper: s.goalConcededByKeeper,
     gameWonKeeper: s.gameWonKeeper,
+    // The bonuses block is only sent when enabled; multipliers equal to 1
+    // are omitted so the stored ruleset (and its version hash) stays
+    // minimal. Disabled = key absent = default-identical hash.
+    ...(b.enabled
+      ? {
+          bonuses: {
+            brace: b.brace,
+            hatTrick: b.hatTrick,
+            stageMultipliers: Object.fromEntries(
+              STAGES.filter((st) => b.stageMultipliers[st] !== 1).map((st) => [
+                st,
+                b.stageMultipliers[st],
+              ]),
+            ),
+            scoringStreak: { length: b.streakLength, bonus: b.streakBonus },
+          },
+        }
+      : {}),
   };
 }
 
 export default function ScoringEditor({ leagueId, ruleset }: Props) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(() => toForm(ruleset));
+  const [bonuses, setBonuses] = useState<BonusesState>(() =>
+    bonusesFromRuleset(ruleset),
+  );
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
@@ -181,8 +278,28 @@ export default function ScoringEditor({ leagueId, ruleset }: Props) {
 
   function reset() {
     setForm(toForm(ruleset));
+    setBonuses(bonusesFromRuleset(ruleset));
     setMsg(null);
     setIsError(false);
+  }
+
+  function setBonusNumber(
+    key: "brace" | "hatTrick" | "streakLength" | "streakBonus",
+    raw: string,
+  ) {
+    const n = Number(raw);
+    setBonuses((prev) => ({ ...prev, [key]: Number.isFinite(n) ? n : prev[key] }));
+  }
+
+  function setStageMultiplier(stage: StageKey, raw: string) {
+    const n = Number(raw);
+    setBonuses((prev) => ({
+      ...prev,
+      stageMultipliers: {
+        ...prev.stageMultipliers,
+        [stage]: Number.isFinite(n) ? n : prev.stageMultipliers[stage],
+      },
+    }));
   }
 
   async function save() {
@@ -193,7 +310,7 @@ export default function ScoringEditor({ leagueId, ruleset }: Props) {
       const res = await fetch(`/api/leagues/${leagueId}/scoring`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(toBody(form)),
+        body: JSON.stringify(toBody(form, bonuses)),
       });
       const json = await res.json();
       if (json.ok) {
@@ -240,6 +357,94 @@ export default function ScoringEditor({ leagueId, ruleset }: Props) {
           </div>
         </fieldset>
       ))}
+
+      <fieldset className="panel scoring-editor-group">
+        <legend>Bonuses (optional)</legend>
+        <label className="scoring-editor-field">
+          <span>Enable bonus scoring</span>
+          <input
+            type="checkbox"
+            checked={bonuses.enabled}
+            onChange={(e) =>
+              setBonuses((prev) => ({ ...prev, enabled: e.target.checked }))
+            }
+          />
+        </label>
+        {bonuses.enabled ? (
+          <>
+            <div className="scoring-editor-fields">
+              <label className="scoring-editor-field">
+                <span>Brace (exactly 2 goals)</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step={0.5}
+                  value={bonuses.brace}
+                  onChange={(e) => setBonusNumber("brace", e.target.value)}
+                />
+              </label>
+              <label className="scoring-editor-field">
+                <span>Hat-trick (3+ goals, replaces brace)</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step={0.5}
+                  value={bonuses.hatTrick}
+                  onChange={(e) => setBonusNumber("hatTrick", e.target.value)}
+                />
+              </label>
+              <label className="scoring-editor-field">
+                <span>Scoring-streak length (2–10 played matches)</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  step={1}
+                  min={2}
+                  max={10}
+                  value={bonuses.streakLength}
+                  onChange={(e) => setBonusNumber("streakLength", e.target.value)}
+                />
+              </label>
+              <label className="scoring-editor-field">
+                <span>Scoring-streak bonus (per match extending it)</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step={0.5}
+                  value={bonuses.streakBonus}
+                  onChange={(e) => setBonusNumber("streakBonus", e.target.value)}
+                />
+              </label>
+            </div>
+            <p className="subtitle">
+              Stage multipliers scale a player&apos;s whole match score
+              (after flat bonuses). 1 = no boost.
+            </p>
+            <div className="scoring-editor-fields">
+              {STAGES.map((stage) => (
+                <label key={stage} className="scoring-editor-field">
+                  <span>{STAGE_LABELS[stage]}</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step={0.25}
+                    min={0}
+                    max={10}
+                    value={bonuses.stageMultipliers[stage]}
+                    onChange={(e) => setStageMultiplier(stage, e.target.value)}
+                  />
+                </label>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="subtitle">
+            Off = scoring is unchanged (same ruleset version). Turning bonuses
+            on re-versions the ruleset and recomputes all scores for this
+            league.
+          </p>
+        )}
+      </fieldset>
 
       <div className="scoring-editor-actions">
         <button className="btn" onClick={save} disabled={busy}>

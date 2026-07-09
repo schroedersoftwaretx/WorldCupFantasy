@@ -11,6 +11,8 @@
  *   - chips.ts         period_captain, chip_play
  *   - social.ts        chat_message, chat_reaction, activity_event
  *   - sidegames.ts     survivor_entry, survivor_pick
+ *   - transactions.ts  roster_transaction, player_waiver, waiver_claim,
+ *                      trade, trade_item
  *   - leagues.ts       manager, league, league_membership, league_invite,
  *                      fantasy_team, roster_slot
  *   - draft.ts         draft_room, draft_order, draft_pick, draft_notification,
@@ -38,5 +40,6 @@ export * from "./schema/h2h.js";
 export * from "./schema/chips.js";
 export * from "./schema/social.js";
 export * from "./schema/sidegames.js";
+export * from "./schema/transactions.js";
 export * from "./schema/odds.js";
 export * from "./schema/notifications.js";

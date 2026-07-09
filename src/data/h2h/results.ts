@@ -25,6 +25,7 @@ import type { Db } from "../db/client.js";
 import { fixture, league, matchup, type MatchupRow } from "../db/schema.js";
 import { computeStandings } from "../standings/standings.js";
 import { H2hError } from "./errors.js";
+import { computeMatchupPreviews, type MatchupPreview } from "./preview.js";
 
 export const H2H_POINTS = { WIN: 3, DRAW: 1, LOSS: 0 } as const;
 
@@ -225,6 +226,8 @@ export interface H2hView {
   results: MatchupResult[];
   table: H2hTableEntry[];
   rivalries: RivalryRecord[];
+  /** Preview cards for the current (first unfinalized) gameweek. */
+  previews: MatchupPreview[];
 }
 
 /**
@@ -264,6 +267,17 @@ export async function computeH2h(db: Db, leagueId: number): Promise<H2hView> {
       totalPoints: s.total,
     })),
   );
+  const rivalries = buildRivalries(results);
+  const previews = await computeMatchupPreviews(
+    db,
+    lg,
+    periods,
+    finalized,
+    standings,
+    results,
+    table,
+    rivalries,
+  );
   return {
     periods: periods.map((p) => ({
       scoringPeriodId: p.id,
@@ -273,6 +287,7 @@ export async function computeH2h(db: Db, leagueId: number): Promise<H2hView> {
     })),
     results,
     table,
-    rivalries: buildRivalries(results),
+    rivalries,
+    previews,
   };
 }
