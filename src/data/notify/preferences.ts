@@ -35,6 +35,9 @@ export const NOTIFICATION_CATEGORIES = [
   "AUTOPICK_MADE",
   "DRAFT_COMPLETE",
   "CHAT_MESSAGE",
+  "TRADE_OFFER",
+  "TRADE_RESULT",
+  "WAIVER_RESULT",
 ] as const;
 
 export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number];
@@ -67,6 +70,18 @@ export const CATEGORY_LABELS: Record<
   CHAT_MESSAGE: {
     label: "League chat",
     description: "When someone posts in one of your leagues (mute here).",
+  },
+  TRADE_OFFER: {
+    label: "Trade offers",
+    description: "When another manager proposes a trade to you.",
+  },
+  TRADE_RESULT: {
+    label: "Trade results",
+    description: "When a trade you proposed is accepted, rejected, or vetoed.",
+  },
+  WAIVER_RESULT: {
+    label: "Waiver results",
+    description: "When one of your waiver claims is processed.",
   },
 };
 

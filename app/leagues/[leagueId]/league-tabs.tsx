@@ -29,6 +29,7 @@ type CurrentTab =
   | "chips"
   | "chat"
   | "survivor"
+  | "transactions"
   | "settings";
 
 interface LeagueTabsProps {
@@ -121,6 +122,15 @@ export default async function LeagueTabs({
           aria-current={current === "chips" ? "page" : undefined}
         >
           Chips
+        </Link>
+      ) : null}
+      {flags && flags.transactions ? (
+        <Link
+          href={`/leagues/${leagueId}/transactions`}
+          className={tabClass("transactions")}
+          aria-current={current === "transactions" ? "page" : undefined}
+        >
+          Transactions
         </Link>
       ) : null}
       {flags && flags.survivor ? (

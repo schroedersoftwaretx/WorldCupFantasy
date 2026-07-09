@@ -22,6 +22,7 @@ export const FLAGS = [
   "survivor",
   "chips",
   "awards",
+  "transactions",
 ] as const;
 
 export type FeatureFlag = (typeof FLAGS)[number];
@@ -35,6 +36,7 @@ export const DEFAULT_FLAGS: Readonly<Record<FeatureFlag, boolean>> = {
   survivor: false,
   chips: false,
   awards: false,
+  transactions: false,
 };
 
 export type FlagMap = Record<FeatureFlag, boolean>;

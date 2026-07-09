@@ -19,6 +19,11 @@ const FLAG_LABELS: ReadonlyArray<{ key: string; label: string; hint: string }> =
     { key: "bracket", label: "Bracket predictor", hint: "Knockout bracket side-game." },
     { key: "survivor", label: "Survivor pool", hint: "Last-team-standing side-game." },
     { key: "chips", label: "Strategy chips", hint: "Per-stage captain and chips." },
+    {
+      key: "transactions",
+      label: "Transactions",
+      hint: "Free agency, waiver claims, and trades.",
+    },
     { key: "awards", label: "Awards", hint: "Golden Boot and tournament awards." },
   ];
 
