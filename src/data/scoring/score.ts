@@ -97,6 +97,8 @@ export type ScorableStatLine = Pick<
   | "bigChancesCreated"
   | "goalsConceded"
   | "teamScoredInRegulationAndEt"
+  | "teamShootoutScored"
+  | "teamShootoutConceded"
 >;
 
 /**
@@ -239,9 +241,17 @@ export function scoreStatLine(
   // Goalkeeper-only rules.
   if (position === "GK") {
     breakdown.goalsConcededByKeeper = stat.goalsConceded * ruleset.goalConcededByKeeper;
-    // Game won = scored strictly more than conceded in regulation + ET. A
-    // shootout-only win is a draw here and earns nothing automatically.
-    if (stat.teamScoredInRegulationAndEt > stat.teamConcededInRegulationAndEt) {
+    // Game won = the team advanced. Either it scored strictly more than it
+    // conceded in regulation + ET, OR the match was level after ET and it won
+    // the penalty shootout (shootout kicks scored > conceded). A shootout win
+    // still counts as a win for the keeper's bonus even though shootout goals
+    // never touch the goal / clean-sheet counters.
+    const wonInRegulationOrEt =
+      stat.teamScoredInRegulationAndEt > stat.teamConcededInRegulationAndEt;
+    const wonShootout =
+      stat.teamScoredInRegulationAndEt === stat.teamConcededInRegulationAndEt &&
+      stat.teamShootoutScored > stat.teamShootoutConceded;
+    if (wonInRegulationOrEt || wonShootout) {
       breakdown.gameWon = ruleset.gameWonKeeper;
     }
   }

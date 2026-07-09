@@ -24,6 +24,8 @@ function makeStat(overrides: Partial<ScorableStatLine> = {}): ScorableStatLine {
     ownGoals: 0,
     teamConcededInRegulationAndEt: 0,
     teamScoredInRegulationAndEt: 0,
+    teamShootoutScored: 0,
+    teamShootoutConceded: 0,
     shotsOnTarget: 0,
     shotsOffTarget: 0,
     tacklesSuccessful: 0,
@@ -358,6 +360,108 @@ describe("scoreStatLine: full composition", () => {
       DEFAULT_RULESET,
     );
     expect(res.points).toBe(15);
+  });
+});
+
+describe("scoreStatLine: goalkeeper win bonus (incl. shootouts)", () => {
+  it("awards the win bonus when the team wins in regulation/ET", () => {
+    // app 1 + 60' 1 + conceded 1*(-1) + win 5 = 6
+    const res = scoreStatLine(
+      makeStat({
+        minutesPlayed: 90,
+        teamScoredInRegulationAndEt: 2,
+        teamConcededInRegulationAndEt: 1,
+        goalsConceded: 1,
+      }),
+      "GK",
+      DEFAULT_RULESET,
+    );
+    expect(res.breakdown.gameWon).toBe(5);
+    expect(res.points).toBe(6);
+  });
+
+  it("awards the win bonus for a shootout win (level after ET)", () => {
+    // 1-1 after ET, won 4-3 on penalties: app 1 + 60' 1 + conceded 1*(-1) + win 5 = 6
+    const res = scoreStatLine(
+      makeStat({
+        minutesPlayed: 120,
+        teamScoredInRegulationAndEt: 1,
+        teamConcededInRegulationAndEt: 1,
+        goalsConceded: 1,
+        teamShootoutScored: 4,
+        teamShootoutConceded: 3,
+      }),
+      "GK",
+      DEFAULT_RULESET,
+    );
+    expect(res.breakdown.gameWon).toBe(5);
+    expect(res.points).toBe(6);
+  });
+
+  it("stacks the shootout win bonus with a goalless-draw clean sheet", () => {
+    // 0-0 after ET, won 5-4 on pens: app 1 + 60' 1 + CS 5 + win 5 = 12
+    const res = scoreStatLine(
+      makeStat({
+        minutesPlayed: 120,
+        teamScoredInRegulationAndEt: 0,
+        teamConcededInRegulationAndEt: 0,
+        goalsConceded: 0,
+        teamShootoutScored: 5,
+        teamShootoutConceded: 4,
+      }),
+      "GK",
+      DEFAULT_RULESET,
+    );
+    expect(res.breakdown.cleanSheet).toBe(5);
+    expect(res.breakdown.gameWon).toBe(5);
+    expect(res.points).toBe(12);
+  });
+
+  it("gives NO win bonus to the shootout loser", () => {
+    const res = scoreStatLine(
+      makeStat({
+        minutesPlayed: 120,
+        teamScoredInRegulationAndEt: 1,
+        teamConcededInRegulationAndEt: 1,
+        goalsConceded: 1,
+        teamShootoutScored: 3,
+        teamShootoutConceded: 4,
+      }),
+      "GK",
+      DEFAULT_RULESET,
+    );
+    expect(res.breakdown.gameWon).toBe(0);
+    expect(res.points).toBe(1); // 1 + 1 - 1
+  });
+
+  it("gives NO win bonus for a genuine draw (no shootout)", () => {
+    const res = scoreStatLine(
+      makeStat({
+        minutesPlayed: 90,
+        teamScoredInRegulationAndEt: 1,
+        teamConcededInRegulationAndEt: 1,
+        goalsConceded: 1,
+      }),
+      "GK",
+      DEFAULT_RULESET,
+    );
+    expect(res.breakdown.gameWon).toBe(0);
+  });
+
+  it("does not award the shootout win bonus to an outfielder", () => {
+    const res = scoreStatLine(
+      makeStat({
+        minutesPlayed: 120,
+        teamScoredInRegulationAndEt: 1,
+        teamConcededInRegulationAndEt: 1,
+        teamShootoutScored: 4,
+        teamShootoutConceded: 3,
+      }),
+      "DEF",
+      DEFAULT_RULESET,
+    );
+    expect(res.breakdown.gameWon).toBe(0);
+    expect(res.points).toBe(2); // app 1 + 60' 1 only
   });
 });
 

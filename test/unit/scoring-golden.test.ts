@@ -54,6 +54,8 @@ function defaults(): ScorableStatLine {
     ownGoals: 0,
     teamConcededInRegulationAndEt: 0,
     teamScoredInRegulationAndEt: 0,
+    teamShootoutScored: 0,
+    teamShootoutConceded: 0,
     shotsOnTarget: 0,
     shotsOffTarget: 0,
     tacklesSuccessful: 0,

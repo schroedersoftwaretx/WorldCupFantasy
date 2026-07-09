@@ -129,6 +129,24 @@
       "expected": { "points": 5 }
     },
     {
+      "name": "v2: GK wins on penalties (1-1 after ET, 4-3 shootout) -> win bonus",
+      "position": "GK",
+      "stat": { "minutesPlayed": 120, "saves": 3, "teamConcededInRegulationAndEt": 1, "teamScoredInRegulationAndEt": 1, "goalsConceded": 1, "teamShootoutScored": 4, "teamShootoutConceded": 3 },
+      "expected": { "points": 9 }
+    },
+    {
+      "name": "v2: GK loses on penalties (1-1 after ET, 3-4 shootout) -> no win bonus",
+      "position": "GK",
+      "stat": { "minutesPlayed": 120, "saves": 3, "teamConcededInRegulationAndEt": 1, "teamScoredInRegulationAndEt": 1, "goalsConceded": 1, "teamShootoutScored": 3, "teamShootoutConceded": 4 },
+      "expected": { "points": 4 }
+    },
+    {
+      "name": "v2: GK goalless draw won on penalties -> clean sheet + win bonus stack",
+      "position": "GK",
+      "stat": { "minutesPlayed": 120, "teamConcededInRegulationAndEt": 0, "teamScoredInRegulationAndEt": 0, "goalsConceded": 0, "teamShootoutScored": 5, "teamShootoutConceded": 4 },
+      "expected": { "points": 12 }
+    },
+    {
       "name": "v2: outfielder gets NO keeper bonuses despite team win",
       "position": "FWD",
       "stat": { "minutesPlayed": 90, "teamConcededInRegulationAndEt": 0, "teamScoredInRegulationAndEt": 3, "goalsConceded": 2 },

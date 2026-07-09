@@ -1,0 +1,36 @@
+import { readFileSync } from "node:fs";
+import { DEFAULT_RULESET } from "./src/data/scoring/ruleset.js";
+import { scoreStatLine, type ScorableStatLine } from "./src/data/scoring/score.js";
+
+function base(): ScorableStatLine {
+  return { minutesPlayed:0,goals:0,assists:0,saves:0,yellowCards:0,redCards:0,
+    penaltiesScored:0,penaltiesMissed:0,penaltiesSaved:0,ownGoals:0,
+    teamConcededInRegulationAndEt:0,teamScoredInRegulationAndEt:0,
+    teamShootoutScored:0,teamShootoutConceded:0,shotsOnTarget:0,shotsOffTarget:0,
+    tacklesSuccessful:0,crosses:0,passesCompleted:0,keyPasses:0,bigChancesCreated:0,goalsConceded:0 };
+}
+let fail=0, pass=0;
+function check(name:string, got:number, exp:number){ if(got!==exp){console.log("FAIL",name,"got",got,"exp",exp);fail++;}else{pass++;} }
+
+// Golden scenarios
+const g=JSON.parse(readFileSync("test/fixtures/golden-scenarios.json","utf8"));
+for(const s of g.scenarios){
+  const stat={...base(),...s.stat};
+  const r=scoreStatLine(stat,s.position,DEFAULT_RULESET);
+  check("golden: "+s.name, r.points, s.expected.points);
+}
+// Shootout unit cases
+const regWin=scoreStatLine({...base(),minutesPlayed:90,teamScoredInRegulationAndEt:2,teamConcededInRegulationAndEt:1,goalsConceded:1},"GK",DEFAULT_RULESET);
+check("regWin gameWon",regWin.breakdown.gameWon,5); check("regWin pts",regWin.points,6);
+const soWin=scoreStatLine({...base(),minutesPlayed:120,teamScoredInRegulationAndEt:1,teamConcededInRegulationAndEt:1,goalsConceded:1,teamShootoutScored:4,teamShootoutConceded:3},"GK",DEFAULT_RULESET);
+check("soWin gameWon",soWin.breakdown.gameWon,5); check("soWin pts",soWin.points,6);
+const soLoss=scoreStatLine({...base(),minutesPlayed:120,teamScoredInRegulationAndEt:1,teamConcededInRegulationAndEt:1,goalsConceded:1,teamShootoutScored:3,teamShootoutConceded:4},"GK",DEFAULT_RULESET);
+check("soLoss gameWon",soLoss.breakdown.gameWon,0); check("soLoss pts",soLoss.points,1);
+const draw=scoreStatLine({...base(),minutesPlayed:90,teamScoredInRegulationAndEt:1,teamConcededInRegulationAndEt:1,goalsConceded:1},"GK",DEFAULT_RULESET);
+check("draw gameWon",draw.breakdown.gameWon,0);
+const outfield=scoreStatLine({...base(),minutesPlayed:120,teamScoredInRegulationAndEt:1,teamConcededInRegulationAndEt:1,teamShootoutScored:4,teamShootoutConceded:3},"DEF",DEFAULT_RULESET);
+check("outfield gameWon",outfield.breakdown.gameWon,0); check("outfield pts",outfield.points,2);
+const csStack=scoreStatLine({...base(),minutesPlayed:120,teamScoredInRegulationAndEt:0,teamConcededInRegulationAndEt:0,teamShootoutScored:5,teamShootoutConceded:4},"GK",DEFAULT_RULESET);
+check("csStack cs",csStack.breakdown.cleanSheet,5); check("csStack win",csStack.breakdown.gameWon,5); check("csStack pts",csStack.points,12);
+console.log(`\nPASS=${pass} FAIL=${fail}`);
+process.exit(fail?1:0);

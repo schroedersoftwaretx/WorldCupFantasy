@@ -134,6 +134,13 @@
       "when": 1783600000000,
       "tag": "0018_survivor",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1783700000000,
+      "tag": "0019_shootout_result",
+      "breakpoints": true
     }
   ]
 }

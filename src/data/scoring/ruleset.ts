@@ -92,9 +92,10 @@ export interface ScoringRuleset {
    */
   readonly goalConcededByKeeper: number;
   /**
-   * Flat bonus when the player's team WON in regulation + extra time,
-   * awarded to the GOALKEEPER only. Shootout-only wins are not counted here
-   * (edit the stat line manually for those rare cases).
+   * Flat bonus when the player's team WON, awarded to the GOALKEEPER only.
+   * A win is either scoring more than conceded in regulation + extra time, or
+   * — when level after ET — winning the penalty shootout. Both are derived
+   * from the stat line (teamScored/Conceded and teamShootoutScored/Conceded).
    */
   readonly gameWonKeeper: number;
 
