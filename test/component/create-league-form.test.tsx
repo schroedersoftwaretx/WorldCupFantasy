@@ -40,7 +40,7 @@ describe("CreateLeagueForm", () => {
       expect.objectContaining({ method: "POST" }),
     );
     const body = JSON.parse((fetchMock.mock.calls[0]![1] as RequestInit).body as string);
-    expect(body).toEqual({ name: "Office Cup", maxManagers: 8 });
+    expect(body).toEqual({ name: "Office Cup", maxManagers: 8, format: "BEST_BALL" });
     expect(window.location.assign).toHaveBeenCalledWith("/leagues/42");
   });
 

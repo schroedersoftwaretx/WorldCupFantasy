@@ -11,6 +11,7 @@ import { useState, type FormEvent } from "react";
 export default function CreateLeagueForm() {
   const [name, setName] = useState("");
   const [maxManagers, setMaxManagers] = useState("2");
+  const [format, setFormat] = useState<"BEST_BALL" | "SET_LINEUP">("BEST_BALL");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,7 +23,7 @@ export default function CreateLeagueForm() {
       const res = await fetch("/api/leagues", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, maxManagers: Number(maxManagers) }),
+        body: JSON.stringify({ name, maxManagers: Number(maxManagers), format }),
       });
       const body = (await res.json().catch(() => null)) as
         | {
@@ -53,6 +54,23 @@ export default function CreateLeagueForm() {
           placeholder="e.g. Office World Cup"
           required
         />
+      </div>
+      <div className="field">
+        <label htmlFor="league-format">Format</label>
+        <select
+          id="league-format"
+          value={format}
+          onChange={(e) =>
+            setFormat(e.target.value === "SET_LINEUP" ? "SET_LINEUP" : "BEST_BALL")
+          }
+        >
+          <option value="BEST_BALL">Best ball — no lineups, best XI counts</option>
+          <option value="SET_LINEUP">Set lineup — submit an XI before each round</option>
+        </select>
+        <span className="field-hint">
+          Best ball scores your optimal XI automatically each round. Set
+          lineup locks your submitted XI (captain doubles) at first kickoff.
+        </span>
       </div>
       <div className="field">
         <label htmlFor="league-size">Managers</label>

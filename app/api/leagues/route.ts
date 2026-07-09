@@ -7,8 +7,9 @@
  */
 import { z } from "zod";
 
+import { scoringPeriod } from "@/data/db/schema";
 import { createLeague } from "@/data/league/service";
-import { handle } from "@/web/api";
+import { handle, HttpError } from "@/web/api";
 import type { LeagueCreatedData } from "@/web/api-types";
 import { requireUserForRoute } from "@/web/auth/current-user";
 import { getDb } from "@/web/db";
@@ -57,6 +58,29 @@ export function POST(request: Request): Promise<Response> {
     }
     if (body.format !== undefined) input.format = body.format;
     if (body.competitionId !== undefined) input.competitionId = body.competitionId;
+
+    // A SET_LINEUP league needs a competition with seeded periods. When the
+    // client sends none (the dashboard form has no competition picker yet),
+    // default to the only competition that has periods - the seeded World
+    // Cup. Ambiguity (several period-bearing competitions) stays an error so
+    // multi-season setups must pick explicitly.
+    if (input.format === "SET_LINEUP" && input.competitionId === undefined) {
+      const db = getDb();
+      const rows = await db
+        .selectDistinct({ competitionId: scoringPeriod.competitionId })
+        .from(scoringPeriod);
+      const first = rows[0];
+      if (rows.length !== 1 || !first) {
+        throw new HttpError(
+          rows.length === 0
+            ? "no competition with scoring periods is seeded yet"
+            : "several competitions exist - specify competitionId",
+          "COMPETITION_AMBIGUOUS",
+          400,
+        );
+      }
+      input.competitionId = first.competitionId;
+    }
 
     const result = await createLeague(getDb(), input);
     const data: LeagueCreatedData = {

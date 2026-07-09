@@ -10,6 +10,7 @@ import {
   fixture,
   nationalTeam,
   player,
+  projectedScoreEntry,
   scoreEntry,
   type Position,
   type Stage,
@@ -256,6 +257,68 @@ describe("head-to-head (integration)", () => {
     const aFirst = riv?.teamAId === teamA;
     expect(aFirst ? riv?.aWins : riv?.bWins).toBe(1);
     expect(riv?.draws).toBe(0);
+  });
+
+
+  it("builds preview cards for the first unfinalized gameweek", async () => {
+    const { leagueId, teamA, teamB, poolA, poolB, ntA, ntB } = await buildLeague();
+    await setFlag(ctx.db, leagueId, "head_to_head", { enabled: true });
+    await generateSchedule(ctx.db, leagueId);
+
+    // GROUP_1 finalized (A wins), GROUP_2 upcoming.
+    const fx1 = await seedFixture("GROUP_1", ntA, ntB, "FINISHED");
+    const fx2 = await seedFixture("GROUP_2", ntB, ntA, "SCHEDULED");
+    const aXi = [
+      ...poolA.GK.slice(0, 1),
+      ...poolA.DEF.slice(0, 5),
+      ...poolA.MID.slice(0, 3),
+      ...poolA.FWD.slice(0, 2),
+    ];
+    const bXi = [
+      ...poolB.GK.slice(0, 1),
+      ...poolB.DEF.slice(0, 5),
+      ...poolB.MID.slice(0, 3),
+      ...poolB.FWD.slice(0, 2),
+    ];
+    for (const pid of aXi) await giveScore(pid, fx1, 10); // A: 110
+    for (const pid of bXi) await giveScore(pid, fx1, 5); // B: 55
+
+    // Projections exist for A's XI only in GROUP_2 (8 pts each).
+    for (const pid of aXi) {
+      await ctx.db.insert(projectedScoreEntry).values({
+        playerId: pid,
+        fixtureId: fx2,
+        rulesetVersion: RULESET,
+        projectedPoints: 8,
+      });
+    }
+
+    const view = await computeH2h(ctx.db, leagueId);
+    expect(view.previews).toHaveLength(1);
+    const pv = view.previews[0]!;
+    expect(pv.ordinal).toBe(2); // the first unfinalized period with a matchup
+
+    const a = pv.home.fantasyTeamId === teamA ? pv.home : pv.away;
+    const b = pv.home.fantasyTeamId === teamB ? pv.home : pv.away;
+    expect(a.rank).toBe(1);
+    expect(b.rank).toBe(2);
+    expect(a.wins).toBe(1);
+    expect(b.losses).toBe(1);
+    expect(a.recentForm).toEqual([110]);
+    expect(b.recentForm).toEqual([55]);
+    expect(a.seasonTotal).toBe(110);
+    expect(a.keyPlayers).toHaveLength(2);
+    expect(a.keyPlayers[0]?.points).toBe(10);
+    // A's projected XI: eleven projected 8s -> 88. B has no projections.
+    expect(a.projected).toBe(88);
+    expect(b.projected).toBeNull();
+    // They met once; A won.
+    const homeIsA = pv.home.fantasyTeamId === teamA;
+    expect(pv.rivalry).toEqual(
+      homeIsA
+        ? { homeWins: 1, awayWins: 0, draws: 0 }
+        : { homeWins: 0, awayWins: 1, draws: 0 },
+    );
   });
 
   it("allows regeneration until a scheduled period finalizes, then locks", async () => {
