@@ -12,6 +12,9 @@ export default function CreateLeagueForm() {
   const [name, setName] = useState("");
   const [maxManagers, setMaxManagers] = useState("2");
   const [format, setFormat] = useState<"BEST_BALL" | "SET_LINEUP">("BEST_BALL");
+  const [formationSet, setFormationSet] = useState<"CLASSIC" | "EXPANDED">(
+    "CLASSIC",
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +26,12 @@ export default function CreateLeagueForm() {
       const res = await fetch("/api/leagues", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, maxManagers: Number(maxManagers), format }),
+        body: JSON.stringify({
+          name,
+          maxManagers: Number(maxManagers),
+          format,
+          formationSet,
+        }),
       });
       const body = (await res.json().catch(() => null)) as
         | {
@@ -70,6 +78,27 @@ export default function CreateLeagueForm() {
         <span className="field-hint">
           Best ball scores your optimal XI automatically each round. Set
           lineup locks your submitted XI (captain doubles) at first kickoff.
+        </span>
+      </div>
+      <div className="field">
+        <label htmlFor="league-formations">Formations</label>
+        <select
+          id="league-formations"
+          value={formationSet}
+          onChange={(e) =>
+            setFormationSet(e.target.value === "EXPANDED" ? "EXPANDED" : "CLASSIC")
+          }
+        >
+          <option value="CLASSIC">
+            Classic - 4-3-3, 4-4-2, 5-2-3, 5-3-2
+          </option>
+          <option value="EXPANDED">
+            Expanded - adds 3-4-3, 3-5-2, 4-5-1, 5-4-1
+          </option>
+        </select>
+        <span className="field-hint">
+          Which XI shapes are legal - for submitted lineups and the best-ball
+          optimizer alike.
         </span>
       </div>
       <div className="field">

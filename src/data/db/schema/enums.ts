@@ -43,6 +43,11 @@ export const leagueFormatEnum = pgEnum("league_format", [
   "SET_LINEUP",
   "HEAD_TO_HEAD",
 ]);
+/** Which preset formation list a league's XIs may use. Applies to submitted
+ * SET_LINEUP XIs and to the best-ball optimizer alike. CLASSIC = the original
+ * World Cup four (4-3-3, 4-4-2, 5-2-3, 5-3-2); EXPANDED = the FPL-style eight
+ * (adds back-three and lone-striker shapes). */
+export const formationSetEnum = pgEnum("formation_set", ["CLASSIC", "EXPANDED"]);
 export const fixtureStatusEnum = pgEnum("fixture_status", [
   "SCHEDULED",
   "LIVE",
@@ -113,6 +118,7 @@ export const appNotificationStatusEnum = pgEnum("app_notification_status", [
 export type ChipType = (typeof chipTypeEnum.enumValues)[number];
 export type CompetitionKind = (typeof competitionKindEnum.enumValues)[number];
 export type LeagueFormat = (typeof leagueFormatEnum.enumValues)[number];
+export type FormationSet = (typeof formationSetEnum.enumValues)[number];
 export type Stage = (typeof stageEnum.enumValues)[number];
 export type Position = (typeof positionEnum.enumValues)[number];
 export type FixtureStatus = (typeof fixtureStatusEnum.enumValues)[number];

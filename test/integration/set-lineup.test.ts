@@ -160,7 +160,11 @@ interface Built {
   ntB: number;
 }
 
-async function buildLeague(format: "BEST_BALL" | "SET_LINEUP", compId = 0): Promise<Built> {
+async function buildLeague(
+  format: "BEST_BALL" | "SET_LINEUP",
+  compId = 0,
+  formationSet?: "CLASSIC" | "EXPANDED",
+): Promise<Built> {
   const ntA = await seedNationalTeam("A");
   const ntB = await seedNationalTeam("B");
   const poolA = await seedPool(ntA);
@@ -177,6 +181,7 @@ async function buildLeague(format: "BEST_BALL" | "SET_LINEUP", compId = 0): Prom
     ...(format === "SET_LINEUP"
       ? { format: format as "SET_LINEUP", competitionId: compId }
       : {}),
+    ...(formationSet ? { formationSet } : {}),
   });
   const joiner = await createManager(ctx.db, {
     firebaseUid: `j-${Math.random()}`,
@@ -282,6 +287,44 @@ describe("SET_LINEUP format (integration)", () => {
         now: BEFORE_LOCK,
       }),
     ).rejects.toMatchObject({ code: "LINEUP_SIZE" });
+  });
+
+  it("honors the league's formation set (3-5-2 EXPANDED-only)", async () => {
+    const compId = await worldCupCompetitionId();
+    const g1Stage = "GROUP_1" as const;
+
+    // A 3-5-2 from a pool: GK 1, DEF 3, MID 5, FWD 2.
+    const xi352 = (pool: Record<Position, number[]>): number[] => [
+      ...pool.GK.slice(0, 1),
+      ...pool.DEF.slice(0, 3),
+      ...pool.MID.slice(0, 5),
+      ...pool.FWD.slice(0, 2),
+    ];
+
+    // CLASSIC league (the default): 3-5-2 is illegal.
+    const classic = await buildLeague("SET_LINEUP", compId);
+    const g1 = await periodIdByStage(compId, g1Stage);
+    await expect(
+      submitLineup(ctx.db, {
+        fantasyTeamId: classic.teamA,
+        scoringPeriodId: g1,
+        playerIds: xi352(classic.poolA),
+        captainPlayerId: xi352(classic.poolA)[0] as number,
+        now: BEFORE_LOCK,
+      }),
+    ).rejects.toMatchObject({ code: "ILLEGAL_FORMATION" });
+
+    // EXPANDED league: the same shape is accepted.
+    const expanded = await buildLeague("SET_LINEUP", compId, "EXPANDED");
+    const xi = xi352(expanded.poolA);
+    const row = await submitLineup(ctx.db, {
+      fantasyTeamId: expanded.teamA,
+      scoringPeriodId: g1,
+      playerIds: xi,
+      captainPlayerId: xi[0] as number,
+      now: BEFORE_LOCK,
+    });
+    expect(row.playerIds).toEqual(xi);
   });
 
   it("rejects lineups for a best-ball league", async () => {

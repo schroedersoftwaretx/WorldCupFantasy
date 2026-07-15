@@ -28,6 +28,7 @@ const CreateLeagueSchema = z.object({
   name: z.string().refine((v) => v.trim().length > 0, "league name is required"),
   maxManagers: z.number().optional().catch(undefined),
   format: z.enum(["BEST_BALL", "SET_LINEUP"]).optional(),
+  formationSet: z.enum(["CLASSIC", "EXPANDED"]).optional(),
   competitionId: z.number().int().positive().optional(),
 });
 
@@ -51,12 +52,14 @@ export function POST(request: Request): Promise<Response> {
       name: string;
       maxManagers?: number;
       format?: "BEST_BALL" | "SET_LINEUP";
+      formationSet?: "CLASSIC" | "EXPANDED";
       competitionId?: number;
     } = { ownerManagerId: manager.id, name: body.name.trim() };
     if (typeof body.maxManagers === "number") {
       input.maxManagers = body.maxManagers;
     }
     if (body.format !== undefined) input.format = body.format;
+    if (body.formationSet !== undefined) input.formationSet = body.formationSet;
     if (body.competitionId !== undefined) input.competitionId = body.competitionId;
 
     // A SET_LINEUP league needs a competition with seeded periods. When the

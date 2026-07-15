@@ -55,7 +55,9 @@ import {
 } from "../db/schema.js";
 import type { ScoringRuleset } from "../scoring/ruleset.js";
 import {
+  canFieldFormation,
   formationLabel,
+  formationsForSet,
   optimizeBestBall,
   type ScoredPlayer,
 } from "./lineup.js";
@@ -119,6 +121,8 @@ export async function computeStandings(
   const [lg] = await db.select().from(league).where(eq(league.id, leagueId));
   if (!lg) throw new Error(`league ${leagueId} does not exist`);
   const rulesetVersion = (lg.scoringRuleset as ScoringRuleset).version;
+  // The league's legal formations (CLASSIC default = byte-identical scoring).
+  const leagueFormations = formationsForSet(lg.formationSet);
 
   // Scoring periods are data since Phase 9: the league's competition's
   // scoring_period rows, or the stage-enum fallback (identical for the WC).
@@ -359,8 +363,8 @@ export async function computeStandings(
       const result =
         chip === "BENCH_BOOST"
           ? allRosterResult(scored)
-          : canFieldXi(scored)
-            ? optimizeBestBall(scored)
+          : canFieldFormation(scored, leagueFormations)
+            ? optimizeBestBall(scored, leagueFormations)
             : { formation: LEGAL_NONE, xi: [], points: 0 };
       const periodPoints =
         chip === "STAGE_BOOST" ? round2(result.points * 2) : result.points;
@@ -448,13 +452,6 @@ function sumPlayerPointsInPeriod(
     sum += scoreByKey.get(`${playerId}:${fixtureId}`) ?? 0;
   }
   return sum;
-}
-
-/** A roster can field an XI once it has 1 GK, 4 DEF, 2 MID, 2 FWD minimum. */
-function canFieldXi(scored: readonly ScoredPlayer[]): boolean {
-  const c: Record<Position, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-  for (const p of scored) c[p.position] += 1;
-  return c.GK >= 1 && c.DEF >= 4 && c.MID >= 2 && c.FWD >= 2 && c.DEF + c.MID + c.FWD >= 10;
 }
 
 /**

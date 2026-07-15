@@ -13,6 +13,7 @@ import {
   assignFixturesToPeriods,
   getScoringPeriods,
 } from "@/data/competition/periods";
+import { formationLabel, formationsForSet } from "@/data/standings/lineup";
 import { fantasyTeam, fixture, league, player, rosterSlot } from "@/data/db/schema";
 import { getLineups } from "@/data/lineup/service";
 import { getCurrentUser } from "@/web/auth/current-user";
@@ -22,6 +23,7 @@ import { getMembershipRole } from "@/web/queries";
 import LeagueTabs from "../league-tabs";
 import LineupEditor, {
   type ExistingLineup,
+  type LineupFormation,
   type LineupPeriod,
   type LineupRosterPlayer,
 } from "./lineup-editor";
@@ -117,6 +119,10 @@ export default async function LineupPage({
       locksAtUtc: firstKickoffByOrdinal.get(p.ordinal)?.toISOString() ?? null,
     }));
 
+  const formations: LineupFormation[] = formationsForSet(lg.formationSet).map(
+    (f) => ({ label: formationLabel(f), GK: f.GK, DEF: f.DEF, MID: f.MID, FWD: f.FWD }),
+  );
+
   const rows = await getLineups(db, team.id);
   const lineups: ExistingLineup[] = rows.map((r) => ({
     scoringPeriodId: r.scoringPeriodId,
@@ -133,10 +139,11 @@ export default async function LineupPage({
       <LeagueTabs leagueId={id} isOwner={isOwner} current="lineup" />
       <h1>Set your lineup</h1>
       <p className="subtitle">
-        {team.name}: pick 11 (1 GK, DEF 4-5, MID 2-4, FWD 2-3), name a captain
-        (double points; vice steps in if the captain doesn&apos;t play). Locks
-        at the period&apos;s first kickoff; unsaved periods reuse your most
-        recent lineup.
+        {team.name}: pick 11 in one of your league&apos;s shapes (
+        {formations.map((f) => f.label).join(", ")}), name a captain (double
+        points; vice steps in if the captain doesn&apos;t play). Locks at the
+        period&apos;s first kickoff; unsaved periods reuse your most recent
+        lineup.
       </p>
       <LineupEditor
         leagueId={id}
@@ -144,6 +151,7 @@ export default async function LineupPage({
         roster={roster}
         periods={periods}
         lineups={lineups}
+        formations={formations}
       />
     </main>
   );

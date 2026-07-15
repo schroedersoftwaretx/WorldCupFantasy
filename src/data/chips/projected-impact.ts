@@ -37,7 +37,8 @@ import {
 } from "../db/schema.js";
 import type { ScoringRuleset } from "../scoring/ruleset.js";
 import {
-  LEGAL_FORMATIONS,
+  canFieldFormation,
+  formationsForSet,
   optimizeBestBall,
   type ScoredPlayer,
 } from "../standings/lineup.js";
@@ -61,18 +62,6 @@ export interface ProjectedChipImpact {
 
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
-}
-
-function canFieldXi(players: readonly ScoredPlayer[]): boolean {
-  const counts: Record<Position, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-  for (const p of players) counts[p.position] += 1;
-  return LEGAL_FORMATIONS.some(
-    (f) =>
-      counts.GK >= f.GK &&
-      counts.DEF >= f.DEF &&
-      counts.MID >= f.MID &&
-      counts.FWD >= f.FWD,
-  );
 }
 
 /**
@@ -147,8 +136,9 @@ export async function projectedChipImpact(
     position: s.position as Position,
     points: pointsByPlayer.get(s.playerId) ?? 0,
   }));
-  if (!canFieldXi(scored)) return null;
-  const best = optimizeBestBall(scored);
+  const leagueFormations = formationsForSet(lg.formationSet);
+  if (!canFieldFormation(scored, leagueFormations)) return null;
+  const best = optimizeBestBall(scored, leagueFormations);
   const base = round2(best.points);
   const allSum = round2(scored.reduce((sum, p) => sum + p.points, 0));
 

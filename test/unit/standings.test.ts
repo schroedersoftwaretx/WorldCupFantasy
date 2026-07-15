@@ -5,8 +5,11 @@ import { describe, expect, it } from "vitest";
 
 import type { Position } from "../../src/data/db/schema.js";
 import {
+  FORMATION_SETS,
   LEGAL_FORMATIONS,
+  canFieldFormation,
   formationLabel,
+  formationsForSet,
   optimizeBestBall,
   type ScoredPlayer,
 } from "../../src/data/standings/lineup.js";
@@ -45,7 +48,68 @@ describe("LEGAL_FORMATIONS", () => {
   });
 });
 
+describe("FORMATION_SETS", () => {
+  it("CLASSIC is LEGAL_FORMATIONS (same reference - byte-identical default)", () => {
+    expect(formationsForSet("CLASSIC")).toBe(LEGAL_FORMATIONS);
+    expect(FORMATION_SETS.CLASSIC).toBe(LEGAL_FORMATIONS);
+  });
+
+  it("EXPANDED derives exactly the FPL-style eight", () => {
+    const labels = FORMATION_SETS.EXPANDED.map(formationLabel).sort();
+    expect(labels).toEqual([
+      "3-4-3",
+      "3-5-2",
+      "4-3-3",
+      "4-4-2",
+      "4-5-1",
+      "5-2-3",
+      "5-3-2",
+      "5-4-1",
+    ]);
+    for (const f of FORMATION_SETS.EXPANDED) {
+      expect(f.GK).toBe(1);
+      expect(f.DEF + f.MID + f.FWD).toBe(10);
+    }
+  });
+});
+
+describe("canFieldFormation", () => {
+  it("needs a back three to be legal before 3 DEF suffice", () => {
+    // 1 GK, 3 DEF, 5 MID, 3 FWD: fields 3-4-3 / 3-5-2 but no CLASSIC shape.
+    const pool = [
+      ...squad("GK", 1, 0, 100),
+      ...squad("DEF", 3, 0, 200),
+      ...squad("MID", 5, 0, 300),
+      ...squad("FWD", 3, 0, 400),
+    ];
+    expect(canFieldFormation(pool)).toBe(false);
+    expect(canFieldFormation(pool, FORMATION_SETS.EXPANDED)).toBe(true);
+  });
+});
+
 describe("optimizeBestBall", () => {
+  it("finds a better XI under EXPANDED when a back three is the optimum", () => {
+    // Third-best DEF is worthless; third FWD and fifth MID are strong, so
+    // 3-4-3 / 3-5-2 beat every CLASSIC shape.
+    const roster: ScoredPlayer[] = [
+      ...squad("GK", 2, 5, 100),
+      ...squad("DEF", 2, 10, 200),
+      ...squad("DEF", 6, 0, 210),
+      ...squad("MID", 5, 8, 300),
+      ...squad("MID", 3, 0, 310),
+      ...squad("FWD", 3, 9, 400),
+      ...squad("FWD", 2, 0, 410),
+    ];
+    const classic = optimizeBestBall(roster);
+    const expanded = optimizeBestBall(roster, FORMATION_SETS.EXPANDED);
+    // CLASSIC best is 4-3-3: 5 + (10+10+0+0) + (8+8+8) + (9+9+9) = 76.
+    // EXPANDED best is 3-4-3: 5 + (10+10+0) + (8+8+8+8) + (9+9+9) = 84.
+    expect(formationLabel(classic.formation)).toBe("4-3-3");
+    expect(classic.points).toBe(76);
+    expect(formationLabel(expanded.formation)).toBe("3-4-3");
+    expect(expanded.points).toBe(84);
+  });
+
   it("picks 11 players that form a legal formation", () => {
     const result = optimizeBestBall(blankRoster());
     expect(result.xi).toHaveLength(11);
