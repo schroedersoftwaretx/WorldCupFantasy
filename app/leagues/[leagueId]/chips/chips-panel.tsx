@@ -34,6 +34,17 @@ export interface CaptainPick {
   playerId: number;
 }
 
+export interface ChipImpactView {
+  ordinal: number;
+  label: string;
+  base: number;
+  tripleCaptain: number;
+  captainName: string;
+  captainNominated: boolean;
+  benchBoost: number;
+  stageBoost: number;
+}
+
 interface ChipsPanelProps {
   leagueId: number;
   teamId: number;
@@ -43,6 +54,8 @@ interface ChipsPanelProps {
   played: PlayedChip[];
   remaining: string[];
   captains: CaptainPick[];
+  /** Projected impact for the next period; null without projections. */
+  impact: ChipImpactView | null;
 }
 
 const CHIP_LABEL: Record<string, string> = {
@@ -60,6 +73,7 @@ export default function ChipsPanel({
   played,
   remaining,
   captains,
+  impact,
 }: ChipsPanelProps) {
   const now = Date.now();
   const openPeriods = periods.filter(
@@ -143,6 +157,41 @@ export default function ChipsPanel({
 
   return (
     <div className="chips-panel">
+      {impact ? (
+        <section>
+          <h2>
+            Projected impact — {impact.label}{" "}
+            <span className="tag tag-projected">Estimate</span>
+          </h2>
+          <p className="subtitle">
+            From match-odds projections for the next period. Your projected
+            best XI: <strong>{impact.base}</strong> pts.
+          </p>
+          <table>
+            <tbody>
+              <tr>
+                <td>Triple Captain</td>
+                <td className="num">+{impact.tripleCaptain}</td>
+                <td>
+                  {impact.captainNominated
+                    ? `on ${impact.captainName}`
+                    : `assuming ${impact.captainName} (no captain nominated yet)`}
+                </td>
+              </tr>
+              <tr>
+                <td>Bench Boost</td>
+                <td className="num">+{impact.benchBoost}</td>
+                <td>everyone outside the best XI counts</td>
+              </tr>
+              <tr>
+                <td>Stage Boost</td>
+                <td className="num">+{impact.stageBoost}</td>
+                <td>doubles the whole period</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      ) : null}
       {format !== "SET_LINEUP" ? (
         <section>
           <h2>Period captain</h2>

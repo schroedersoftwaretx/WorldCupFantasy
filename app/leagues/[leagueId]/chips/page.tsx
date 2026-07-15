@@ -9,6 +9,7 @@ import Link from "next/link";
 import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
+import { projectedChipImpact } from "@/data/chips/projected-impact";
 import { getChipState } from "@/data/chips/service";
 import {
   assignFixturesToPeriods,
@@ -121,6 +122,7 @@ export default async function ChipsPage({
     .sort((a, b) => a.fullName.localeCompare(b.fullName));
 
   const state = await getChipState(db, team.id);
+  const impact = await projectedChipImpact(db, lg, team.id);
   const played: PlayedChip[] = state.played.map((p) => ({
     chip: p.chip,
     scoringPeriodId: p.scoringPeriodId,
@@ -147,6 +149,7 @@ export default async function ChipsPage({
         played={played}
         remaining={state.remaining}
         captains={captains}
+        impact={impact ? JSON.parse(JSON.stringify(impact)) : null}
       />
     </main>
   );

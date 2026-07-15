@@ -32,7 +32,8 @@ import {
 } from "../db/schema.js";
 import type { ScoringRuleset } from "../scoring/ruleset.js";
 import {
-  LEGAL_FORMATIONS,
+  canFieldFormation,
+  formationsForSet,
   optimizeBestBall,
   type ScoredPlayer,
 } from "../standings/lineup.js";
@@ -75,19 +76,6 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-/** Can this set of players field at least one legal XI? */
-function canFieldXi(players: readonly ScoredPlayer[]): boolean {
-  const counts: Record<Position, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-  for (const p of players) counts[p.position] += 1;
-  return LEGAL_FORMATIONS.some(
-    (f) =>
-      counts.GK >= f.GK &&
-      counts.DEF >= f.DEF &&
-      counts.MID >= f.MID &&
-      counts.FWD >= f.FWD,
-  );
-}
-
 /**
  * Projected best-ball period totals per team, from projected_score_entry.
  * Returns an empty map when the period has no projected rows (the common
@@ -100,6 +88,7 @@ async function projectedTotalsForOrdinal(
   ordinal: number,
 ): Promise<Map<number, number>> {
   const out = new Map<number, number>();
+  const leagueFormations = formationsForSet(lg.formationSet);
   const fixtures = await db.select().from(fixture);
   const byFixture = assignFixturesToPeriods(periods, fixtures);
   const periodFixtureIds = fixtures
@@ -151,8 +140,8 @@ async function projectedTotalsForOrdinal(
       position: (positionById.get(pid) ?? "MID") as Position,
       points: pointsByPlayer.get(pid) ?? 0,
     }));
-    if (!canFieldXi(scored)) continue;
-    out.set(teamId, round2(optimizeBestBall(scored).points));
+    if (!canFieldFormation(scored, leagueFormations)) continue;
+    out.set(teamId, round2(optimizeBestBall(scored, leagueFormations).points));
   }
   return out;
 }

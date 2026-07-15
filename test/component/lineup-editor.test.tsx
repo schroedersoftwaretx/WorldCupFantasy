@@ -29,6 +29,13 @@ function roster(): LineupRosterPlayer[] {
   return out;
 }
 
+const CLASSIC = [
+  { label: "4-3-3", GK: 1, DEF: 4, MID: 3, FWD: 3 },
+  { label: "4-4-2", GK: 1, DEF: 4, MID: 4, FWD: 2 },
+  { label: "5-2-3", GK: 1, DEF: 5, MID: 2, FWD: 3 },
+  { label: "5-3-2", GK: 1, DEF: 5, MID: 3, FWD: 2 },
+];
+
 const XI_433 = [1, 11, 12, 13, 14, 21, 22, 23, 31, 32, 33];
 
 const openPeriod: LineupPeriod = {
@@ -55,6 +62,7 @@ describe("LineupEditor", () => {
         roster={roster()}
         periods={[openPeriod]}
         lineups={[]}
+        formations={CLASSIC}
       />,
     );
     const save = screen.getByRole("button", { name: /Save lineup/ });
@@ -85,6 +93,7 @@ describe("LineupEditor", () => {
         roster={roster()}
         periods={[openPeriod]}
         lineups={[]}
+        formations={CLASSIC}
       />,
     );
     await pickXi(user);
@@ -119,6 +128,7 @@ describe("LineupEditor", () => {
         roster={roster()}
         periods={[{ ...openPeriod, locksAtUtc: PAST }]}
         lineups={[]}
+        formations={CLASSIC}
       />,
     );
     expect(screen.getByRole("button", { name: /Save lineup/ })).toBeDisabled();
@@ -147,10 +157,72 @@ describe("LineupEditor", () => {
         roster={roster()}
         periods={[locked, open2]}
         lineups={[existing]}
+        formations={CLASSIC}
       />,
     );
     // Defaults to the first open period (Group 2) and rolls Group 1 forward.
     expect(screen.getByText(/rolls forward/)).toBeInTheDocument();
     expect(screen.getByText(/Selected 11\/11/)).toBeInTheDocument();
+  });
+
+  it("gates legality on the chosen formation preset", async () => {
+    const user = userEvent.setup();
+    render(
+      <LineupEditor
+        leagueId={1}
+        teamId={5}
+        roster={roster()}
+        periods={[openPeriod]}
+        lineups={[]}
+        formations={CLASSIC}
+      />,
+    );
+    // Pick a legal 4-3-3 + captain, then demand 4-4-2: Save must disable.
+    await pickXi(user);
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: /Captain/ }),
+      "1",
+    );
+    const save = screen.getByRole("button", { name: /Save lineup/ });
+    expect(save).toBeEnabled();
+
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: /Formation/ }),
+      "4-4-2",
+    );
+    expect(save).toBeDisabled();
+    expect(screen.getByText(/not a legal formation \(4-4-2\)/)).toBeInTheDocument();
+
+    // Swap F3 out for M4: 4-4-2 satisfied again.
+    await user.click(screen.getByRole("checkbox", { name: /^F3$/ }));
+    await user.click(screen.getByRole("checkbox", { name: /^M4$/ }));
+    expect(save).toBeEnabled();
+  });
+
+  it("offers every formation of the league's set as a preset", () => {
+    const expanded = [
+      ...CLASSIC,
+      { label: "3-4-3", GK: 1, DEF: 3, MID: 4, FWD: 3 },
+      { label: "3-5-2", GK: 1, DEF: 3, MID: 5, FWD: 2 },
+      { label: "4-5-1", GK: 1, DEF: 4, MID: 5, FWD: 1 },
+      { label: "5-4-1", GK: 1, DEF: 5, MID: 4, FWD: 1 },
+    ];
+    render(
+      <LineupEditor
+        leagueId={1}
+        teamId={5}
+        roster={roster()}
+        periods={[openPeriod]}
+        lineups={[]}
+        formations={expanded}
+      />,
+    );
+    const options = Array.from(
+      (screen.getByRole("combobox", { name: /Formation/ }) as HTMLSelectElement)
+        .options,
+    ).map((o) => o.value);
+    expect(options).toEqual(["", ...expanded.map((f) => f.label)]);
+    // DEF legend reflects the widened range.
+    expect(screen.getByText(/DEF \(3-5\)/)).toBeInTheDocument();
   });
 });

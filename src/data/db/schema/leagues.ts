@@ -24,6 +24,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import {
+  formationSetEnum,
   inviteStatusEnum,
   leagueFormatEnum,
   leagueRoleEnum,
@@ -71,6 +72,9 @@ export const league = pgTable("league", {
   }),
   /** How a period score is produced. BEST_BALL = retroactive optimal XI. */
   format: leagueFormatEnum("format").notNull().default("BEST_BALL"),
+  /** Which formation list XIs may use. Default CLASSIC keeps every existing
+   * league (and the default scoring path) byte-identical. */
+  formationSet: formationSetEnum("formation_set").notNull().default("CLASSIC"),
   maxManagers: integer("max_managers").notNull().default(24),
   rosterSize: integer("roster_size").notNull().default(23),
   status: leagueStatusEnum("status").notNull().default("SETUP"),

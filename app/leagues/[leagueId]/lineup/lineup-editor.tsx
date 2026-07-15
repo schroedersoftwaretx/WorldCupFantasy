@@ -2,8 +2,9 @@
  * LineupEditor - client-side XI picker for SET_LINEUP leagues.
  *
  * Pick a scoring period, toggle 11 players from the 23-man roster into the
- * XI (legal formation: 1 GK, DEF 4-5, MID 2-4, FWD 2-3), choose captain and
- * optional vice, submit via PUT /api/leagues/:id/lineup. Locked periods
+ * XI (any formation of the league's formation set, or a chosen preset),
+ * choose captain and optional vice, submit via PUT /api/leagues/:id/lineup.
+ * Locked periods
  * (first kickoff passed) are read-only. A period with no submission shows
  * the rolled-forward lineup the scorer would use, when one exists.
  */
@@ -15,6 +16,15 @@ export interface LineupRosterPlayer {
   playerId: number;
   fullName: string;
   position: "GK" | "DEF" | "MID" | "FWD";
+}
+
+/** One legal XI shape, e.g. { label: "4-4-2", GK: 1, DEF: 4, MID: 4, FWD: 2 }. */
+export interface LineupFormation {
+  label: string;
+  GK: number;
+  DEF: number;
+  MID: number;
+  FWD: number;
 }
 
 export interface LineupPeriod {
@@ -38,15 +48,24 @@ interface LineupEditorProps {
   roster: LineupRosterPlayer[];
   periods: LineupPeriod[];
   lineups: ExistingLineup[];
+  /** The league's legal formations (its formation set). */
+  formations: LineupFormation[];
 }
 
 const POSITIONS = ["GK", "DEF", "MID", "FWD"] as const;
-const RANGE: Record<(typeof POSITIONS)[number], [number, number]> = {
-  GK: [1, 1],
-  DEF: [4, 5],
-  MID: [2, 4],
-  FWD: [2, 3],
-};
+type Pos = (typeof POSITIONS)[number];
+
+/** Per-position [min, max] across a formation list (for the Any option). */
+function rangesFrom(
+  formations: readonly LineupFormation[],
+): Record<Pos, [number, number]> {
+  const out = {} as Record<Pos, [number, number]>;
+  for (const pos of POSITIONS) {
+    const ns = formations.map((f) => f[pos]);
+    out[pos] = [Math.min(...ns), Math.max(...ns)];
+  }
+  return out;
+}
 
 /** The submitted (or rolled-forward) lineup covering a period, if any. */
 function effectiveFor(
@@ -74,6 +93,7 @@ export default function LineupEditor({
   roster,
   periods,
   lineups,
+  formations,
 }: LineupEditorProps) {
   const now = Date.now();
   const firstOpen =
@@ -105,6 +125,10 @@ export default function LineupEditor({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** "" = any legal formation; otherwise a preset's label, e.g. "4-4-2". */
+  const [preset, setPreset] = useState<string>("");
+  const chosen = formations.find((f) => f.label === preset) ?? null;
+  const range = useMemo(() => rangesFrom(formations), [formations]);
 
   function selectPeriod(nextId: number): void {
     setPeriodId(nextId);
@@ -136,11 +160,13 @@ export default function LineupEditor({
     return c;
   }, [xi, roster]);
 
+  // Legal = the XI's counts exactly match some formation of the set (or the
+  // chosen preset). The server enforces the same rule.
   const formationOk =
     xi.size === 11 &&
-    POSITIONS.every(
-      (pos) => counts[pos] >= RANGE[pos][0] && counts[pos] <= RANGE[pos][1],
-    );
+    (chosen
+      ? POSITIONS.every((pos) => counts[pos] === chosen[pos])
+      : formations.some((f) => POSITIONS.every((pos) => counts[pos] === f[pos])));
   const ready = formationOk && captain !== null && xi.has(captain);
 
   async function handleSave(): Promise<void> {
@@ -219,19 +245,42 @@ export default function LineupEditor({
         </p>
       ) : null}
 
+      <label>
+        Formation{" "}
+        <select
+          disabled={locked}
+          value={preset}
+          onChange={(e) => setPreset(e.target.value)}
+        >
+          <option value="">Any legal formation</option>
+          {formations.map((f) => (
+            <option key={f.label} value={f.label}>
+              {f.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
       <p aria-live="polite">
         Selected {xi.size}/11 &middot; GK {counts.GK} &middot; DEF {counts.DEF}{" "}
         &middot; MID {counts.MID} &middot; FWD {counts.FWD}
         {!formationOk && xi.size === 11
-          ? " - not a legal formation (1 GK, DEF 4-5, MID 2-4, FWD 2-3)"
+          ? ` - not a legal formation (${
+              chosen ? chosen.label : formations.map((f) => f.label).join(", ")
+            })`
           : ""}
       </p>
 
       {POSITIONS.map((pos) => (
         <fieldset key={pos} disabled={locked}>
           <legend>
-            {pos} ({RANGE[pos][0]}
-            {RANGE[pos][0] === RANGE[pos][1] ? "" : `-${RANGE[pos][1]}`})
+            {pos} (
+            {chosen
+              ? chosen[pos]
+              : range[pos][0] === range[pos][1]
+                ? range[pos][0]
+                : `${range[pos][0]}-${range[pos][1]}`}
+            )
           </legend>
           {roster
             .filter((p) => p.position === pos)

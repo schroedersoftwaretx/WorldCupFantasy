@@ -27,6 +27,7 @@ import {
   leagueMembership,
   manager,
   scoringPeriod,
+  type FormationSet,
   type LeagueFormat,
   type FantasyTeamRow,
   type LeagueInviteRow,
@@ -109,6 +110,9 @@ export interface CreateLeagueInput {
   ownerTeamName?: string;
   /** How period scores are produced (Phase 9). Defaults to BEST_BALL. */
   format?: LeagueFormat;
+  /** Which preset formation list XIs may use. Defaults to CLASSIC (the
+   * original four), keeping existing behavior byte-identical. */
+  formationSet?: FormationSet;
   /** The competition-season this league plays. Required for SET_LINEUP
    * (lineups key on its scoring_period rows); optional for BEST_BALL,
    * where null falls back to the World Cup stage periods. */
@@ -189,6 +193,7 @@ export async function createLeague(
         scoringRuleset: ruleset,
         maxManagers,
         format,
+        formationSet: input.formationSet ?? "CLASSIC",
         competitionId: input.competitionId ?? null,
       })
       .returning();

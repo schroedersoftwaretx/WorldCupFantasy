@@ -29,7 +29,9 @@ import { DEFAULT_RULESET } from "../data/scoring/ruleset.js";
 import { league } from "../data/db/schema.js";
 import { getTournamentAliveState } from "./alive.js";
 import {
+  canFieldFormation,
   formationLabel,
+  formationsForSet,
   optimizeBestBall,
   type ScoredPlayer,
 } from "../data/standings/lineup.js";
@@ -55,6 +57,7 @@ export async function getRosterScores(
   const [lg] = await db.select().from(league).where(eq(league.id, leagueId));
   if (!lg) throw new Error(`league ${leagueId} does not exist`);
   const rulesetVersion = (lg.scoringRuleset as ScoringRuleset).version;
+  const leagueFormations = formationsForSet(lg.formationSet);
 
   const [team] = await db
     .select()
@@ -176,19 +179,12 @@ export async function getRosterScores(
       position: p.position,
       points: playerPointsInStage(p.id, stage),
     }));
-    // Can we field a legal XI?
-    const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-    for (const sp of scored) counts[sp.position] += 1;
-    const canField =
-      counts.GK >= 1 &&
-      counts.DEF >= 4 &&
-      counts.MID >= 2 &&
-      counts.FWD >= 2 &&
-      counts.DEF + counts.MID + counts.FWD >= 10;
+    // Can we field a legal XI (of the league's formation set)?
+    const canField = canFieldFormation(scored, leagueFormations);
 
     const xiIds = new Set<number>();
     if (canField) {
-      const result = optimizeBestBall(scored);
+      const result = optimizeBestBall(scored, leagueFormations);
       for (const sp of result.xi) xiIds.add(sp.playerId);
       teamTotal += result.points;
     }
@@ -275,6 +271,8 @@ export async function getProjectedStandings(
   db: Db,
   leagueId: number,
 ): Promise<ProjectedStandingsEntry[]> {
+  const [lgRow] = await db.select().from(league).where(eq(league.id, leagueId));
+  const leagueFormations = formationsForSet(lgRow?.formationSet ?? "CLASSIC");
   const teams = await db
     .select()
     .from(fantasyTeam)
@@ -356,16 +354,9 @@ export async function getProjectedStandings(
         points: projByPlayer.get(pid) ?? 0,
       };
     });
-    const counts = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
-    for (const sp of scored) counts[sp.position] += 1;
-    const canField =
-      counts.GK >= 1 &&
-      counts.DEF >= 4 &&
-      counts.MID >= 2 &&
-      counts.FWD >= 2 &&
-      counts.DEF + counts.MID + counts.FWD >= 10;
+    const canField = canFieldFormation(scored, leagueFormations);
     const projectedTotal = canField
-      ? round1(optimizeBestBall(scored).points)
+      ? round1(optimizeBestBall(scored, leagueFormations).points)
       : round1(scored.reduce((a, sp) => a + sp.points, 0));
 
     let champExposure: number | null = null;

@@ -28,7 +28,12 @@ import {
   type LineupRow,
   type Position,
 } from "../db/schema.js";
-import { LEGAL_FORMATIONS, type XiFormation } from "../standings/lineup.js";
+import {
+  formationLabel,
+  formationsForSet,
+  LEGAL_FORMATIONS,
+  type XiFormation,
+} from "../standings/lineup.js";
 import { LineupError } from "./errors.js";
 
 export const XI_SIZE = 11;
@@ -46,13 +51,15 @@ export interface SubmitLineupInput {
 
 /**
  * Validate an XI selection against the roster - pure. Returns the formation
- * the XI forms. Throws LineupError on any violation.
+ * the XI forms. Throws LineupError on any violation. `formations` is the
+ * league's legal set (default CLASSIC).
  */
 export function validateLineupSelection(
   positionByPlayerId: ReadonlyMap<number, Position>,
   playerIds: readonly number[],
   captainPlayerId: number,
   viceCaptainPlayerId: number | null,
+  formations: readonly XiFormation[] = LEGAL_FORMATIONS,
 ): XiFormation {
   if (playerIds.length !== XI_SIZE) {
     throw new LineupError(
@@ -74,7 +81,7 @@ export function validateLineupSelection(
     }
     counts[pos] += 1;
   }
-  const formation = LEGAL_FORMATIONS.find(
+  const formation = formations.find(
     (f) =>
       counts.GK === f.GK &&
       counts.DEF === f.DEF &&
@@ -84,7 +91,7 @@ export function validateLineupSelection(
   if (!formation) {
     throw new LineupError(
       `illegal formation ${counts.GK}GK ${counts.DEF}-${counts.MID}-${counts.FWD}; ` +
-        "legal: 1 GK with DEF 4-5, MID 2-4, FWD 2-3",
+        `legal: 1 GK with ${formations.map(formationLabel).join(", ")}`,
       "ILLEGAL_FORMATION",
     );
   }
@@ -204,6 +211,7 @@ export async function submitLineup(
     input.playerIds,
     input.captainPlayerId,
     input.viceCaptainPlayerId ?? null,
+    formationsForSet(lg.formationSet),
   );
 
   const [row] = await db

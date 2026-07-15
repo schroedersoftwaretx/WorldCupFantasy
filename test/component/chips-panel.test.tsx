@@ -41,6 +41,7 @@ describe("ChipsPanel", () => {
         played={[]}
         remaining={ALL}
         captains={[]}
+        impact={null}
       />,
     );
     expect(screen.queryByText(/Period captain/)).not.toBeInTheDocument();
@@ -65,6 +66,7 @@ describe("ChipsPanel", () => {
         played={[]}
         remaining={ALL}
         captains={[]}
+        impact={null}
       />,
     );
     await user.selectOptions(screen.getByRole("combobox", { name: /Player/ }), "11");
@@ -99,6 +101,7 @@ describe("ChipsPanel", () => {
         played={[]}
         remaining={["STAGE_BOOST"]}
         captains={[]}
+        impact={null}
       />,
     );
     await user.selectOptions(
@@ -137,6 +140,7 @@ describe("ChipsPanel", () => {
         played={[]}
         remaining={["TRIPLE_CAPTAIN"]}
         captains={[]}
+        impact={null}
       />,
     );
     await user.click(screen.getByRole("button", { name: /Play chip/ }));

@@ -35,6 +35,7 @@ describe("isNotificationCategory", () => {
       "TRADE_OFFER",
       "TRADE_RESULT",
       "WAIVER_RESULT",
+      "LOCK_REMINDER",
     ]);
   });
 });

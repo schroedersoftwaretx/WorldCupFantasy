@@ -10,6 +10,7 @@ import {
   effectiveLineupForOrdinal,
   validateLineupSelection,
 } from "../../src/data/lineup/service.js";
+import { FORMATION_SETS } from "../../src/data/standings/lineup.js";
 import {
   scoreSetLineupPeriod,
   type SetLineupSlotInput,
@@ -62,6 +63,22 @@ describe("validateLineupSelection", () => {
     expect(code(() => validateLineupSelection(roster(), off, 1, null))).toBe(
       "PLAYER_NOT_ON_ROSTER",
     );
+  });
+
+  it("accepts a 3-5-2 under the EXPANDED formation set", () => {
+    // GK 1, DEF 10-12, MID 20-24, FWD 30-31.
+    const xi352 = [1, 10, 11, 12, 20, 21, 22, 23, 24, 30, 31];
+    expect(code(() => validateLineupSelection(roster(), xi352, 1, null))).toBe(
+      "ILLEGAL_FORMATION",
+    );
+    const f = validateLineupSelection(
+      roster(),
+      xi352,
+      1,
+      null,
+      FORMATION_SETS.EXPANDED,
+    );
+    expect(f).toEqual({ GK: 1, DEF: 3, MID: 5, FWD: 2 });
   });
 
   it("rejects illegal formations (3 DEF)", () => {
